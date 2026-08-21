@@ -1,0 +1,48 @@
+{
+  "name": "cc-powerline",
+  "version": "0.1.0",
+  "description": "A precise-cost, powerline-capable statusline for Claude Code.",
+  "type": "module",
+  "bin": {
+    "cc-powerline": "dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "pricing:snapshot": "tsx scripts/build-pricing-snapshot.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "claude-code",
+    "statusline",
+    "powerline",
+    "cost"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
