@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { buildStatus } from '../src/pipeline.js';
 import { stripAnsi } from '../src/render/stripAnsi.js';
 import { ZERO_TOTALS } from '../src/transcript/parseTranscript.js';
+import { SettingsSchema } from '../src/types/Settings.js';
 import type { Settings } from '../src/types/Settings.js';
 import type { WidgetContext } from '../src/widgets/Widget.js';
 
@@ -59,5 +60,35 @@ describe('buildStatus', () => {
     const out = stripAnsi(buildStatus(settings, ctx, 80));
     expect(out).toContain('Opus');
     expect(out).not.toContain('5h:');
+  });
+
+  it('applies line-level default colors through resolveSettings', () => {
+    const settings = SettingsSchema.parse({
+      style: 'powerline',
+      lines: [{ defaults: { bg: '#654321' }, left: [{ type: 'model' }] }],
+    });
+    const line = buildStatus(settings, ctx, 200);
+    // the model segment must be colored with the line default bg (48;2;101;67;33)
+    expect(line).toContain('48;2;101;67;33');
+  });
+
+  it('does not colorize builtin segments that only inherit the theme default', () => {
+    const settings = SettingsSchema.parse({
+      style: 'builtin',
+      lines: [{ left: [{ type: 'model' }] }],
+    });
+    const out = buildStatus(settings, ctx, 80);
+    // no item/line color was set, so builtin must stay plain text (no ANSI
+    // codes), matching the pre-resolver behavior the golden snapshots pin.
+    expect(out).toBe(stripAnsi(out));
+  });
+
+  it('still colorizes builtin segments with an explicit item color', () => {
+    const settings = SettingsSchema.parse({
+      style: 'builtin',
+      lines: [{ left: [{ type: 'model', fg: '#005f87' }] }],
+    });
+    const out = buildStatus(settings, ctx, 80);
+    expect(out).toContain('38;2;0;95;135');
   });
 });
