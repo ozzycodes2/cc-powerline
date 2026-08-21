@@ -14,9 +14,18 @@ export const WidgetItemSchema = z.object({
   options: z.record(z.unknown()).optional(),
 });
 
+export const GroupDefaultsSchema = z
+  .object({
+    fg: ColorSchema.optional(),
+    bg: ColorSchema.optional(),
+  })
+  .optional();
+
 export const LineConfigSchema = z.object({
   left: z.array(WidgetItemSchema).default([]),
   right: z.array(WidgetItemSchema).default([]),
+  /** Fallback fg/bg for items in this line that omit their own. */
+  defaults: GroupDefaultsSchema,
 });
 
 export const ThemeSchema = z
