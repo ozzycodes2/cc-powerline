@@ -55,13 +55,3 @@ export function formatDuration(ms: number): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return h > 0 ? `${h}:${pad(m)}` : `${m}:${pad(s)}`;
 }
-
-/** Read an optional string option with a default. */
-export function optString(
-  options: Record<string, unknown> | undefined,
-  key: string,
-  fallback: string,
-): string {
-  const v = options?.[key];
-  return typeof v === 'string' ? v : fallback;
-}
