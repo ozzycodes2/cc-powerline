@@ -1,83 +1,83 @@
 /**
- * The v1 widget manifest. Each widget maps context → display text (or null to
- * hide). Consolidated into one module — the widgets are small and share the
- * same shape, so a registry object reads better than a file each.
+ * The v1 widget manifest. Each widget is a self-describing descriptor: a typed
+ * options schema (with defaults), a composed render, and a mock `sample()`
+ * slice for the init preview.
  */
-import type { Widget, WidgetContext } from './Widget.js';
-import {
-  basename,
-  compressPath,
-  formatCost,
-  formatDuration,
-  formatPercent,
-  optString,
-} from './format.js';
+import { z } from 'zod';
+import { defineWidget, type WidgetContext, type WidgetDef } from './Widget.js';
+import { prefixIcon, prefixLabel, prefixed, type Core } from './compose.js';
+import { basename, compressPath, formatCost, formatDuration, formatPercent } from './format.js';
 
-// Default Nerd Font glyphs (classic Font-Awesome/Octicons range, present in
-// virtually every Nerd Font). Every one is overridable via `options.icon`.
+// Default Nerd Font glyphs (present in virtually every Nerd Font).
 const ICON_EFFORT = '\u{f0e7}'; //  bolt
 const ICON_CHANGES = '\u{f440}'; //  diff
-const ICON_CONTEXT = '\u{f0e4}'; //  tachometer/gauge
+const ICON_CONTEXT = '\u{f0e4}'; //  gauge
 const ICON_COMPACT = '\u{f066}'; //  compress
 const ICON_CLOCK = '\u{f017}'; //  clock
+const ICON_BRANCH = '\u{e0a0}'; //  powerline branch
 
-const model: Widget = {
+const NO_OPTS = z.object({});
+
+const model = defineWidget({
   type: 'model',
+  options: NO_OPTS,
   render: (ctx) => ctx.status.model?.display_name ?? ctx.status.model?.id ?? null,
-};
+  sample: () => ({ status: { model: { id: 'claude-opus-4-8', display_name: 'Opus 4.8' } } }),
+});
 
-/** The model's reasoning-effort level (e.g. `high`), hidden when unset. */
-const modelEffort: Widget = {
+const modelEffort = defineWidget({
   type: 'model-effort',
-  render: (ctx, options) => {
+  options: z.object({ icon: z.string().default(ICON_EFFORT) }),
+  render: prefixIcon((ctx) => {
     const level = ctx.status.effort?.level;
-    if (typeof level !== 'string' || level.length === 0) {
-      return null;
-    }
-    const icon = optString(options, 'icon', ICON_EFFORT);
-    return icon ? `${icon} ${level}` : level;
-  },
-};
+    return typeof level === 'string' && level.length > 0 ? level : null;
+  }),
+  sample: () => ({ status: { effort: { level: 'high' } } }),
+});
 
-const gitBranch: Widget = {
+const gitBranch = defineWidget({
   type: 'git-branch',
-  render: (ctx, options) => {
-    if (!ctx.git.branch) {
+  options: z.object({ icon: z.string().default(ICON_BRANCH) }),
+  render: prefixIcon((ctx) => ctx.git.branch ?? null),
+  sample: () => ({ git: { branch: 'main' } }),
+});
+
+const gitChanges = defineWidget({
+  type: 'git-changes',
+  options: z.object({ icon: z.string().default(ICON_CHANGES) }),
+  render: prefixIcon((ctx) => {
+    const c = ctx.git.changes;
+    if (!c || (c.added === 0 && c.deleted === 0)) {
       return null;
     }
-    const icon = optString(options, 'icon', ''); //  Powerline branch glyph
-    return icon ? `${icon} ${ctx.git.branch}` : ctx.git.branch;
-  },
-};
+    return `+${c.added} -${c.deleted}`;
+  }),
+  sample: () => ({ git: { changes: { added: 12, deleted: 3 } } }),
+});
 
-/**
- * The working directory. Default `compressed` mode is powerline-style — `~`
- * for home, parents shortened to one char, last segment in full. `basename`
- * and `full` are available via `options.mode`.
- */
-const directory: Widget = {
+const directory = defineWidget({
   type: 'directory',
-  render: (ctx, options) => {
+  options: z.object({ mode: z.enum(['compressed', 'basename', 'full']).default('compressed') }),
+  render: (ctx, opts) => {
     const dir = ctx.status.cwd ?? ctx.status.workspace?.project_dir;
     if (!dir) {
       return null;
     }
-    const mode = optString(options, 'mode', 'compressed');
-    if (mode === 'basename') {
+    if (opts.mode === 'basename') {
       return basename(dir);
     }
-    if (mode === 'full') {
+    if (opts.mode === 'full') {
       return dir;
     }
     return compressPath(dir, ctx.home);
   },
-};
+  sample: () => ({ status: { cwd: '/Users/you/Documents/work/voice-connect' } }),
+});
 
-/** Percentage of the context window consumed. */
-const contextLength: Widget = {
+const contextLength = defineWidget({
   type: 'context-length',
-  render: (ctx, options) => {
-    const label = optString(options, 'label', ICON_CONTEXT);
+  options: z.object({ label: z.string().default(ICON_CONTEXT) }),
+  render: prefixed<{ label: string }>('label', ' ', 'skip-empty', (ctx) => {
     const cw = ctx.status.context_window;
     let pct: number | null = null;
     if (typeof cw?.used_percentage === 'number') {
@@ -85,97 +85,73 @@ const contextLength: Widget = {
     } else if (typeof cw?.context_window_size === 'number' && cw.context_window_size > 0) {
       pct = (ctx.totals.contextTokens / cw.context_window_size) * 100;
     }
-    if (pct === null) {
-      return null;
-    }
-    return label ? `${label} ${formatPercent(pct)}` : formatPercent(pct);
-  },
-};
+    return pct === null ? null : formatPercent(pct);
+  }),
+  sample: () => ({ status: { context_window: { used_percentage: 42 } }, totals: { contextTokens: 84_000 } }),
+});
 
-/** Working-tree line churn vs. HEAD, e.g. ` +12 -3`, hidden when clean. */
-const gitChanges: Widget = {
-  type: 'git-changes',
-  render: (ctx, options) => {
-    const c = ctx.git.changes;
-    if (!c || (c.added === 0 && c.deleted === 0)) {
-      return null;
-    }
-    const icon = optString(options, 'icon', ICON_CHANGES);
-    const body = `+${c.added} -${c.deleted}`;
-    return icon ? `${icon} ${body}` : body;
+const sessionCost = defineWidget({
+  type: 'session-cost',
+  options: NO_OPTS,
+  render: (ctx) => {
+    const cost = ctx.totals.costUsd > 0 ? ctx.totals.costUsd : ctx.status.cost?.total_cost_usd ?? 0;
+    return formatCost(cost);
   },
-};
+  sample: () => ({ status: { cost: { total_cost_usd: 1.23 } }, totals: { costUsd: 1.23 } }),
+});
 
-/** Count of compaction events so far this session, hidden at zero. */
-const compactions: Widget = {
-  type: 'compactions',
-  render: (ctx, options) => {
-    const n = ctx.totals.compactions;
-    if (!n || n <= 0) {
-      return null;
-    }
-    const icon = optString(options, 'icon', ICON_COMPACT);
-    return icon ? `${icon} ${n}` : `${n}`;
-  },
-};
+const cacheHitRate = defineWidget({
+  type: 'cache-hit-rate',
+  options: z.object({ label: z.string().default('cache') }),
+  render: prefixLabel<{ label: string }>((ctx) => {
+    const { cacheReadTokens, cacheCreationTokens } = ctx.totals;
+    const denom = cacheReadTokens + cacheCreationTokens;
+    return denom <= 0 ? null : formatPercent((cacheReadTokens / denom) * 100);
+  }),
+  sample: () => ({ totals: { cacheReadTokens: 9000, cacheCreationTokens: 1000 } }),
+});
 
-/** Countdown to prompt-cache expiry, e.g. ` 4:12`, hidden once expired/unknown. */
-const cacheWindow: Widget = {
+const cacheWindow = defineWidget({
   type: 'cache-window',
-  render: (ctx, options) => {
+  options: z.object({ icon: z.string().default(ICON_CLOCK) }),
+  render: prefixIcon((ctx) => {
     const exp = ctx.totals.cacheExpiresAt;
     if (exp === null || typeof ctx.now !== 'number') {
       return null;
     }
     const remaining = exp - ctx.now;
-    if (remaining <= 0) {
-      return null;
-    }
-    const icon = optString(options, 'icon', ICON_CLOCK);
-    const body = formatDuration(remaining);
-    return icon ? `${icon} ${body}` : body;
-  },
-};
+    return remaining <= 0 ? null : formatDuration(remaining);
+  }),
+  sample: () => ({ totals: { cacheExpiresAt: 300_000 } }),
+});
 
-/** Precise running session cost from the transcript, falling back to Claude
- * Code's reported cost when no transcript spend is available. */
-const sessionCost: Widget = {
-  type: 'session-cost',
-  render: (ctx) => {
-    const cost =
-      ctx.totals.costUsd > 0 ? ctx.totals.costUsd : ctx.status.cost?.total_cost_usd ?? 0;
-    return formatCost(cost);
-  },
-};
+const compactions = defineWidget({
+  type: 'compactions',
+  options: z.object({ icon: z.string().default(ICON_COMPACT) }),
+  render: prefixIcon((ctx) => {
+    const n = ctx.totals.compactions;
+    return !n || n <= 0 ? null : `${n}`;
+  }),
+  sample: () => ({ totals: { compactions: 1 } }),
+});
 
-const cacheHitRate: Widget = {
-  type: 'cache-hit-rate',
-  render: (ctx, options) => {
-    const label = optString(options, 'label', 'cache');
-    const { cacheReadTokens, cacheCreationTokens } = ctx.totals;
-    const denom = cacheReadTokens + cacheCreationTokens;
-    if (denom <= 0) {
-      return null;
-    }
-    return `${label}:${formatPercent((cacheReadTokens / denom) * 100)}`;
-  },
-};
-
-const rateLimit: Widget = {
+const rateLimit = defineWidget({
   type: 'rate-limit',
-  render: (ctx, options) => {
-    const label = optString(options, 'label', '5h');
+  options: z.object({ label: z.string().default('5h') }),
+  render: prefixLabel<{ label: string }>((ctx) => {
     const pct = ctx.status.rate_limits?.five_hour?.used_percentage;
-    return typeof pct === 'number' ? `${label}:${formatPercent(pct)}` : null;
-  },
-};
+    return typeof pct === 'number' ? formatPercent(pct) : null;
+  }),
+  sample: () => ({ status: { rate_limits: { five_hour: { used_percentage: 18 } } } }),
+});
 
-const separator: Widget = {
+const separator = defineWidget({
   type: 'separator',
-  render: (_ctx, options) => optString(options, 'char', '|'),
-};
+  options: z.object({ char: z.string().default('|') }),
+  render: (_ctx, opts) => opts.char,
+});
 
-const ALL: Widget[] = [
+export const WIDGET_DEFS: WidgetDef[] = [
   model,
   modelEffort,
   gitBranch,
@@ -190,19 +166,33 @@ const ALL: Widget[] = [
   separator,
 ];
 
-export const WIDGET_REGISTRY: Record<string, Widget> = Object.fromEntries(
-  ALL.map((w) => [w.type, w]),
+export const WIDGET_REGISTRY: Record<string, WidgetDef> = Object.fromEntries(
+  WIDGET_DEFS.map((w) => [w.type, w]),
 );
 
 /** Every widget type available in v1. */
-export const WIDGET_TYPES: string[] = ALL.map((w) => w.type);
+export const WIDGET_TYPES: string[] = WIDGET_DEFS.map((w) => w.type);
+
+/**
+ * Parse raw config options through a widget's schema, filling defaults.
+ * Unknown widget → `{}`; invalid options degrade to the schema defaults so a
+ * bad config never throws into the render path.
+ */
+export function parseWidgetOptions(type: string, raw: unknown): unknown {
+  const widget = WIDGET_REGISTRY[type];
+  if (!widget) {
+    return {};
+  }
+  const parsed = widget.options.safeParse(raw ?? {});
+  return parsed.success ? parsed.data : widget.options.parse({});
+}
 
 /** Render one widget by type; unknown types and null results are omitted. */
 export function renderWidget(
   type: string,
   ctx: WidgetContext,
-  options?: Record<string, unknown>,
+  options?: unknown,
 ): string | null {
   const widget = WIDGET_REGISTRY[type];
-  return widget ? widget.render(ctx, options) : null;
+  return widget ? widget.render(ctx, parseWidgetOptions(type, options)) : null;
 }
