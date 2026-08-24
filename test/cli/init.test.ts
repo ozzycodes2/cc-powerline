@@ -10,8 +10,7 @@ describe('buildSettingsFromAnswers', () => {
     const preset = presetByKey('mono');
     const s = buildSettingsFromAnswers({
       style: 'powerline',
-      left: ['model', 'git-branch'],
-      right: ['session-cost'],
+      lines: [{ left: ['model', 'git-branch'], right: [] }],
       preset: 'mono',
     });
     expect(s.style).toBe('powerline');
@@ -19,7 +18,24 @@ describe('buildSettingsFromAnswers', () => {
       { type: 'model', fg: preset.fg, bg: preset.bgs[0] },
       { type: 'git-branch', fg: preset.fg, bg: preset.bgs[1] },
     ]);
-    expect(s.lines[0]!.right).toEqual([
+    expect(s.lines[0]!.right).toEqual([]);
+  });
+
+  it('restarts the background ring on each line rather than continuing it', () => {
+    const preset = presetByKey('mono');
+    const s = buildSettingsFromAnswers({
+      style: 'powerline',
+      lines: [
+        { left: ['model', 'git-branch'], right: [] },
+        { left: [], right: ['session-cost'] },
+      ],
+      preset: 'mono',
+    });
+    // Each line's populated side leads with the preset's first color, so the
+    // second line does not pick up where the first left off.
+    expect(s.lines[0]!.left[0]!.bg).toBe(preset.bgs[0]);
+    expect(s.lines[1]!.left).toEqual([]);
+    expect(s.lines[1]!.right).toEqual([
       { type: 'session-cost', fg: preset.fg, bg: preset.bgs[0] },
     ]);
   });
@@ -27,8 +43,7 @@ describe('buildSettingsFromAnswers', () => {
   it('drops the right group entirely for the builtin style', () => {
     const s = buildSettingsFromAnswers({
       style: 'builtin',
-      left: ['model'],
-      right: ['session-cost', 'context-length'],
+      lines: [{ left: ['model'], right: ['session-cost', 'context-length'] }],
       preset: 'slate',
     });
     expect(s.style).toBe('builtin');
@@ -39,8 +54,9 @@ describe('buildSettingsFromAnswers', () => {
     const preset = presetByKey('mono'); // 4 colors
     const s = buildSettingsFromAnswers({
       style: 'powerline',
-      left: ['model', 'git-branch', 'directory', 'context-length', 'session-cost'],
-      right: [],
+      lines: [
+        { left: ['model', 'git-branch', 'directory', 'context-length', 'session-cost'], right: [] },
+      ],
       preset: 'mono',
     });
     expect(s.lines[0]!.left[4]!.bg).toBe(preset.bgs[0]); // wraps at index 4
@@ -95,13 +111,15 @@ function scriptedIO(answers: string[]): PromptIO {
 }
 
 describe('runInit', () => {
-  it('drives the powerline flow and persists the built settings', async () => {
+  it('drives a multi-line powerline flow and persists the built settings', async () => {
     let written: Settings | null = null;
     const logs: string[] = [];
-    // style=1(powerline); left picks model(1),git-branch(3),directory(5);
-    // right picks context-length(6),session-cost(7),next-cost(8); preset=3(ocean)
+    // style=1(powerline); 2 lines.
+    // line 1: left model(1),git-branch(3),directory(5); right skipped.
+    // line 2: left skipped; right context-length(6),session-cost(7).
+    // preset=3(ocean).
     const settings = await runInit({
-      io: scriptedIO(['1', '1,3,5', '6,7,8', '3']),
+      io: scriptedIO(['1', '2', '1,3,5', '', '', '6,7', '3']),
       previewWidth: 200,
       writeConfig: async (s) => {
         written = s;
@@ -117,43 +135,123 @@ describe('runInit', () => {
     expect(stripAnsi(logs.join('\n'))).toContain('main'); // git-branch populated in preview
 
     expect(settings.style).toBe('powerline');
+    expect(settings.lines).toHaveLength(2);
     expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model', 'git-branch', 'directory']);
-    expect(settings.lines[0]!.right.map((w) => w.type)).toEqual([
-      'context-length',
-      'session-cost',
-      'next-cost',
-    ]);
+    expect(settings.lines[0]!.right).toEqual([]);
+    expect(settings.lines[1]!.left).toEqual([]);
+    expect(settings.lines[1]!.right.map((w) => w.type)).toEqual(['context-length', 'session-cost']);
+    // Every line's populated side restarts the color ring.
     expect(settings.lines[0]!.left[0]!.bg).toBe(presetByKey('ocean').bgs[0]);
+    expect(settings.lines[1]!.right[0]!.bg).toBe(presetByKey('ocean').bgs[0]);
     expect(written).toEqual(settings);
     // The wizard no longer logs the settings path.
     expect(logs.join('\n')).not.toContain('/cfg/settings.json');
   });
 
-  it('skips the right-widget prompt when builtin is chosen', async () => {
+  it('re-asks a powerline line whose picks land on both sides', async () => {
+    const notes: string[] = [];
+    // style=1; 1 line. First attempt: left=1 AND right=1 (rejected). Retry:
+    // left=2, right skipped. preset default.
+    const settings = await runInit({
+      io: {
+        ask: (() => {
+          const queue = ['1', '1', '1', '1', '2', '', ''];
+          return async () => queue.shift() ?? '';
+        })(),
+        write: (t) => notes.push(t),
+        close: () => {},
+      },
+      previewWidth: 80,
+      writeConfig: async () => '/x',
+      log: () => {},
+    });
+    expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model-effort']);
+    expect(settings.lines[0]!.right).toEqual([]);
+    expect(notes.some((n) => /one side only/i.test(n))).toBe(true);
+  });
+
+  it('re-asks a powerline line left entirely empty', async () => {
+    const notes: string[] = [];
+    // style=1; 1 line. First attempt: both sides empty (rejected). Retry:
+    // left=1, right skipped. preset default.
+    const settings = await runInit({
+      io: {
+        ask: (() => {
+          const queue = ['1', '1', '', '', '1', '', ''];
+          return async () => queue.shift() ?? '';
+        })(),
+        write: (t) => notes.push(t),
+        close: () => {},
+      },
+      previewWidth: 80,
+      writeConfig: async () => '/x',
+      log: () => {},
+    });
+    expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model']);
+    expect(notes.some((n) => /at least one widget/i.test(n))).toBe(true);
+  });
+
+  it('never prompts for a right group under the builtin style', async () => {
+    const prompts: string[] = [];
     const asked: string[] = [];
     const io: PromptIO = {
       ask: async (q) => {
         asked.push(q);
-        // style prompt → builtin (2); left prompt → defaults (empty); preset → default (empty)
-        if (asked.length === 1) return '2';
-        return '';
+        if (asked.length === 1) return '2'; // style → builtin
+        if (asked.length === 2) return '1'; // how many lines → 1
+        if (asked.length === 3) return '1'; // line 1 widgets → model
+        return ''; // preset → default
       },
-      write: () => {},
+      write: (t) => prompts.push(t),
       close: () => {},
     };
-    const settings = await runInit({ io, writeConfig: async () => '/x', log: () => {} });
+    const settings = await runInit({ io, previewWidth: 80, writeConfig: async () => '/x', log: () => {} });
     expect(settings.style).toBe('builtin');
+    expect(settings.lines).toHaveLength(1);
+    expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model']);
     expect(settings.lines[0]!.right).toEqual([]);
-    // exactly three questions asked: style, left, preset (no right)
-    expect(asked).toHaveLength(3);
+    // Built-in has no right group, so no prompt ever mentions one.
+    expect(prompts.some((p) => /right/i.test(p))).toBe(false);
+    // style, how-many-lines, line-1 widgets, preset — and nothing more.
+    expect(asked).toHaveLength(4);
+  });
+
+  it('re-asks a builtin line that selects no widgets', async () => {
+    const notes: string[] = [];
+    // style=2; 1 line. First attempt: no widgets (rejected). Retry: model(1).
+    // preset default.
+    const settings = await runInit({
+      io: {
+        ask: (() => {
+          const queue = ['2', '1', '', '1', ''];
+          return async () => queue.shift() ?? '';
+        })(),
+        write: (t) => notes.push(t),
+        close: () => {},
+      },
+      previewWidth: 80,
+      writeConfig: async () => '/x',
+      log: () => {},
+    });
+    expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model']);
+    expect(notes.some((n) => /at least one widget for this line/i.test(n))).toBe(true);
   });
 
   it('closes the IO even if writing throws', async () => {
     let closed = false;
-    const io: PromptIO = { ask: async () => '', write: () => {}, close: () => (closed = true) };
+    // powerline, 1 line, left=model, right skipped, default preset.
+    const queue = ['1', '1', '1', '', ''];
+    const io: PromptIO = {
+      ask: async () => queue.shift() ?? '',
+      write: () => {},
+      close: () => {
+        closed = true;
+      },
+    };
     await expect(
       runInit({
         io,
+        previewWidth: 80,
         writeConfig: async () => {
           throw new Error('disk full');
         },

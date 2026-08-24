@@ -41,6 +41,24 @@ function parseIndex(raw: string, count: number): number | null {
   return Number.isInteger(n) && n >= 1 && n <= count ? n - 1 : null;
 }
 
+/**
+ * Ask for a whole number in `[min, max]`. Empty, non-numeric, or out-of-range
+ * input falls back to `def`, so the wizard never stalls on a fat-fingered
+ * count.
+ */
+export async function promptNumber(
+  io: PromptIO,
+  message: string,
+  opts: { def: number; min: number; max: number },
+): Promise<number> {
+  const raw = await io.ask(`${message} [${opts.min}-${opts.max}] (default ${opts.def}): `);
+  if (raw === '') {
+    return opts.def;
+  }
+  const n = Number.parseInt(raw, 10);
+  return Number.isInteger(n) && n >= opts.min && n <= opts.max ? n : opts.def;
+}
+
 /** Pick exactly one choice. Empty or invalid input selects `defaultIndex`. */
 export async function select<T>(
   io: PromptIO,

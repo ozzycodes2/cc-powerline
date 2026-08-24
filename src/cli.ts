@@ -38,8 +38,7 @@ function showPreview(opts: { style?: string; width?: number }): void {
   const style = opts.style === 'builtin' ? 'builtin' : 'powerline';
   const settings = buildSettingsFromAnswers({
     style,
-    left: WIDGET_TYPES,
-    right: [],
+    lines: [{ left: WIDGET_TYPES, right: [] }],
     preset: DEFAULT_PRESET_KEY,
   });
   const width = opts.width && opts.width > 0 ? opts.width : detectTerminalWidth();

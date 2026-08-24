@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { select, multiSelect, type PromptIO, type Choice } from '../../src/cli/prompts.js';
+import { select, multiSelect, promptNumber, type PromptIO, type Choice } from '../../src/cli/prompts.js';
 
 /** A scripted IO: dequeues answers in order, records everything written. */
 function scriptedIO(answers: string[]): { io: PromptIO; out: string[]; asked: string[] } {
@@ -45,6 +45,32 @@ describe('select', () => {
   it('falls back to the default on out-of-range or garbage input', async () => {
     expect(await select(scriptedIO(['9']).io, 'pick', abc, 1)).toBe('b');
     expect(await select(scriptedIO(['xyz']).io, 'pick', abc, 0)).toBe('a');
+  });
+});
+
+describe('promptNumber', () => {
+  const opts = { def: 1, min: 1, max: 5 };
+
+  it('returns a valid in-range number', async () => {
+    const { io } = scriptedIO(['3']);
+    expect(await promptNumber(io, 'how many', opts)).toBe(3);
+  });
+
+  it('renders the range and default in the prompt text', async () => {
+    const { io, asked } = scriptedIO(['1']);
+    await promptNumber(io, 'how many', opts);
+    expect(asked[0]).toBe('how many [1-5] (default 1): ');
+  });
+
+  it('falls back to the default on empty input', async () => {
+    const { io } = scriptedIO(['']);
+    expect(await promptNumber(io, 'how many', { def: 2, min: 1, max: 5 })).toBe(2);
+  });
+
+  it('falls back to the default on out-of-range or garbage input', async () => {
+    expect(await promptNumber(scriptedIO(['9']).io, 'how many', opts)).toBe(1);
+    expect(await promptNumber(scriptedIO(['0']).io, 'how many', opts)).toBe(1);
+    expect(await promptNumber(scriptedIO(['xyz']).io, 'how many', opts)).toBe(1);
   });
 });
 

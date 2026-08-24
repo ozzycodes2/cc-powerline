@@ -8,19 +8,27 @@
  */
 import { writeSettings } from './writeConfig.js';
 import { DEFAULT_PRESET_KEY, PRESETS, presetByKey } from './presets.js';
-import { multiSelect, readlineIO, select, type Choice, type PromptIO } from './prompts.js';
+import { multiSelect, promptNumber, readlineIO, select, type Choice, type PromptIO } from './prompts.js';
 import { previewContext } from './previewContext.js';
 import { buildStatus } from '../pipeline.js';
 import { detectTerminalWidth } from '../render/terminalWidth.js';
 import { WIDGET_TYPES } from '../widgets/registry.js';
 import type { Settings, WidgetItem } from '../types/Settings.js';
 
-export interface WizardAnswers {
-  style: 'powerline' | 'builtin';
+/** One line's picks: widgets on the left group or the right group (not both). */
+export interface LineAnswer {
   left: string[];
   right: string[];
+}
+
+export interface WizardAnswers {
+  style: 'powerline' | 'builtin';
+  lines: LineAnswer[];
   preset: string;
 }
+
+/** The most lines the wizard offers to configure. */
+export const MAX_LINES = 5;
 
 /** Assign a group's widgets their fg + a round-robin bg from the preset. */
 function toItems(types: string[], presetKey: string): WidgetItem[] {
@@ -34,21 +42,54 @@ function toItems(types: string[], presetKey: string): WidgetItem[] {
 
 /** Pure: turn wizard answers into a Settings object. */
 export function buildSettingsFromAnswers(answers: WizardAnswers): Settings {
-  // Built-in style ignores the right group entirely, so never write one.
-  const right = answers.style === 'powerline' ? answers.right : [];
   return {
     style: answers.style,
-    lines: [
-      {
-        left: toItems(answers.left, answers.preset),
-        right: toItems(right, answers.preset),
-      },
-    ],
+    // The background ring restarts per group, so each line leads with the
+    // preset's first color regardless of the lines before it.
+    lines: answers.lines.map((line) => ({
+      left: toItems(line.left, answers.preset),
+      // Built-in style ignores the right group entirely, so never write one.
+      right: answers.style === 'powerline' ? toItems(line.right, answers.preset) : [],
+    })),
   };
 }
 
 const widgetChoices = (defaults: string[]): Choice<string>[] =>
   WIDGET_TYPES.map((type) => ({ label: type, value: type, checked: defaults.includes(type) }));
+
+/**
+ * Prompt one line's widgets. A powerline line is one-sided — widgets go left OR
+ * right, never both — so the loop re-asks until exactly one side is populated.
+ * A built-in line only has a left group.
+ */
+async function promptLine(
+  io: PromptIO,
+  style: WizardAnswers['style'],
+  n: number,
+): Promise<LineAnswer> {
+  if (style === 'builtin') {
+    for (;;) {
+      const left = await multiSelect(io, `Line ${n} widgets (in order):`, widgetChoices([]));
+      if (left.length > 0) {
+        return { left, right: [] };
+      }
+      io.write('  Pick at least one widget for this line.');
+    }
+  }
+  for (;;) {
+    const left = await multiSelect(io, `Line ${n} — left widgets (empty to skip):`, widgetChoices([]));
+    const right = await multiSelect(io, `Line ${n} — right widgets (empty to skip):`, widgetChoices([]));
+    if (left.length > 0 && right.length > 0) {
+      io.write('  A line takes widgets on one side only — left or right, not both.');
+      continue;
+    }
+    if (left.length === 0 && right.length === 0) {
+      io.write('  Pick at least one widget, on the left or the right.');
+      continue;
+    }
+    return { left, right };
+  }
+}
 
 export interface InitDeps {
   io?: PromptIO;
@@ -81,20 +122,13 @@ export async function runInit(deps: InitDeps = {}): Promise<Settings> {
       { label: 'builtin — plain single-line (left group only)', value: 'builtin' },
     ]);
 
-    const left = await multiSelect(
-      io,
-      'Left widgets (in order):',
-      widgetChoices(['model', 'git-branch', 'directory']),
-    );
-
-    const right =
-      style === 'powerline'
-        ? await multiSelect(
-            io,
-            'Right widgets (in order):',
-            widgetChoices(['context-length', 'cache-hit-rate', 'session-cost']),
-          )
-        : [];
+    const count = await promptNumber(io, 'How many lines?', { def: 1, min: 1, max: MAX_LINES });
+    const lines: LineAnswer[] = [];
+    for (let i = 0; i < count; i += 1) {
+      // Prompts are inherently sequential — each waits on the user's answer.
+      // eslint-disable-next-line no-await-in-loop
+      lines.push(await promptLine(io, style, i + 1));
+    }
 
     const preset = await select(
       io,
@@ -103,7 +137,7 @@ export async function runInit(deps: InitDeps = {}): Promise<Settings> {
       PRESETS.findIndex((p) => p.key === DEFAULT_PRESET_KEY),
     );
 
-    const settings = buildSettingsFromAnswers({ style, left, right, preset });
+    const settings = buildSettingsFromAnswers({ style, lines, preset });
     const width = deps.previewWidth ?? detectTerminalWidth();
     log('');
     log('Preview (with sample data):');
