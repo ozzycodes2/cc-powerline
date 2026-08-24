@@ -72,16 +72,18 @@ describe('mergeTotals', () => {
       compactions: 1,
       lastContextTokens: 42,
       lastCacheExpiresAt: 1000,
+      lastCacheTtlMs: 300_000,
     });
     expect(merged.costUsd).toBe(1.5);
     expect(merged.inputTokens).toBe(15);
     expect(merged.compactions).toBe(1);
     expect(merged.contextTokens).toBe(42);
     expect(merged.cacheExpiresAt).toBe(1000);
+    expect(merged.cacheTtlMs).toBe(300_000);
   });
 
-  it('keeps the previous contextTokens and cache expiry when the chunk had no messages', () => {
-    const prev = { ...ZERO_TOTALS, contextTokens: 99, cacheExpiresAt: 500 };
+  it('keeps the previous contextTokens and cache state when the chunk had no messages', () => {
+    const prev = { ...ZERO_TOTALS, contextTokens: 99, cacheExpiresAt: 500, cacheTtlMs: 3_600_000 };
     const merged = mergeTotals(prev, {
       costUsd: 0,
       inputTokens: 0,
@@ -91,9 +93,11 @@ describe('mergeTotals', () => {
       compactions: 0,
       lastContextTokens: null,
       lastCacheExpiresAt: null,
+      lastCacheTtlMs: null,
     });
     expect(merged.contextTokens).toBe(99);
     expect(merged.cacheExpiresAt).toBe(500);
+    expect(merged.cacheTtlMs).toBe(3_600_000);
   });
 });
 
@@ -107,6 +111,7 @@ describe('parseTranscript cache expiry', () => {
       PRICING,
     );
     expect(r.lastCacheExpiresAt).toBe(Date.parse('2026-08-21T00:05:00.000Z'));
+    expect(r.lastCacheTtlMs).toBe(5 * 60 * 1000);
   });
 
   it('uses the 1-hour window when the message created 1h cache', () => {
@@ -118,6 +123,7 @@ describe('parseTranscript cache expiry', () => {
       PRICING,
     );
     expect(r.lastCacheExpiresAt).toBe(Date.parse('2026-08-21T01:00:00.000Z'));
+    expect(r.lastCacheTtlMs).toBe(60 * 60 * 1000);
   });
 
   it('ignores messages that only read cache or lack a timestamp', () => {
@@ -131,6 +137,9 @@ describe('parseTranscript cache expiry', () => {
       type: 'assistant',
       message: { model: 'm', usage: { cache_creation_input_tokens: 100 } },
     });
-    expect(parseTranscript(noTs, PRICING).lastCacheExpiresAt).toBeNull();
+    const noTsResult = parseTranscript(noTs, PRICING);
+    expect(noTsResult.lastCacheExpiresAt).toBeNull();
+    // The tier needs no timestamp, so a cache write still pins down the TTL.
+    expect(noTsResult.lastCacheTtlMs).toBe(5 * 60 * 1000);
   });
 });

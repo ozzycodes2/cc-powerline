@@ -8,6 +8,22 @@ export function formatCost(n: number): string {
   return n < 1 ? `$${n.toFixed(4)}` : `$${n.toFixed(2)}`;
 }
 
+/**
+ * Compact money for the next-cost projection: `<1¢` for dust, `20¢` below a
+ * dollar, `$4.00` above. Rounds to integer cents first so the chosen branch and
+ * the printed value can never disagree (a bare `$0.004` would read as `$0.00`).
+ */
+export function formatMoney(usd: number): string {
+  const cents = Math.round((Number.isFinite(usd) ? usd : 0) * 100);
+  if (cents <= 0) {
+    return '<1¢';
+  }
+  if (cents < 100) {
+    return `${cents}¢`;
+  }
+  return `$${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, '0')}`;
+}
+
 /** Round to a whole-percent string, e.g. `42%`. */
 export function formatPercent(n: number): string {
   return `${Math.round(n)}%`;

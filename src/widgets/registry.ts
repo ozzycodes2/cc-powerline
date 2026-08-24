@@ -6,15 +6,22 @@
 import { z } from 'zod';
 import { defineWidget, type WidgetContext, type WidgetDef } from './Widget.js';
 import { prefixIcon, prefixLabel, prefixed, type Core } from './compose.js';
-import { basename, compressPath, formatCost, formatDuration, formatPercent } from './format.js';
+import {
+  basename,
+  compressPath,
+  formatCost,
+  formatDuration,
+  formatMoney,
+  formatPercent,
+} from './format.js';
 
 // Default Nerd Font glyphs (present in virtually every Nerd Font).
-const ICON_EFFORT = '\u{f0e7}'; //  bolt
 const ICON_CHANGES = '\u{f440}'; //  diff
 const ICON_CONTEXT = '\u{f0e4}'; //  gauge
 const ICON_COMPACT = '\u{f066}'; //  compress
 const ICON_CLOCK = '\u{f017}'; //  clock
 const ICON_BRANCH = '\u{e0a0}'; //  powerline branch
+const ICON_CACHE = '\u{f1c0}'; //  database (cache)
 
 const NO_OPTS = z.object({});
 
@@ -27,11 +34,11 @@ const model = defineWidget({
 
 const modelEffort = defineWidget({
   type: 'model-effort',
-  options: z.object({ icon: z.string().default(ICON_EFFORT) }),
-  render: prefixIcon((ctx) => {
+  options: NO_OPTS,
+  render: (ctx) => {
     const level = ctx.status.effort?.level;
     return typeof level === 'string' && level.length > 0 ? level : null;
-  }),
+  },
   sample: () => ({ status: { effort: { level: 'high' } } }),
 });
 
@@ -100,10 +107,63 @@ const sessionCost = defineWidget({
   sample: () => ({ status: { cost: { total_cost_usd: 1.23 } }, totals: { costUsd: 1.23 } }),
 });
 
+/**
+ * ceejbot's per-family input rate in $/MTok, keyed off the model display name —
+ * the only model signal the status hook provides. An unknown family returns
+ * null so the projection hides rather than quoting a wrong number.
+ */
+function baseInputPrice(name: string | undefined): number | null {
+  const n = (name ?? '').toLowerCase();
+  if (n.includes('fable') || n.includes('mythos')) {
+    return 10;
+  }
+  if (n.includes('opus')) {
+    return 5;
+  }
+  if (n.includes('sonnet')) {
+    return 3;
+  }
+  if (n.includes('haiku')) {
+    return 1;
+  }
+  return null;
+}
+
+const nextCost = defineWidget({
+  type: 'next-cost',
+  options: z.object({ icon: z.string().default('') }),
+  render: prefixIcon((ctx) => {
+    const tokens = ctx.totals.contextTokens;
+    const base = baseInputPrice(ctx.status.model?.display_name ?? ctx.status.model?.id);
+    if (base === null || tokens <= 0) {
+      return null;
+    }
+    const mtok = tokens / 1_000_000;
+    // Warm = re-read the context from a live cache (0.1x). Cold = rebuild it
+    // after expiry: 2x for the 1-hour tier, 1.25x for the 5-minute tier. An
+    // unknown tier defaults to the cheaper 5-minute rate. Output tokens are
+    // unknowable in advance and, like ceejbot, deliberately excluded.
+    const oneHour = ctx.totals.cacheTtlMs !== null && ctx.totals.cacheTtlMs >= 3_600_000;
+    const warm = mtok * base * 0.1;
+    const cold = mtok * base * (oneHour ? 2 : 1.25);
+    // Once the cache has gone cold the warm price is unreachable, so collapse to
+    // the rebuild cost alone — it is now the floor for the next message. Expiry
+    // is only known when a timestamped cache write and a clock are both present;
+    // absent either, assume still-warm and show the full projection.
+    const exp = ctx.totals.cacheExpiresAt;
+    const expired = exp !== null && typeof ctx.now === 'number' && ctx.now >= exp;
+    return expired ? formatMoney(cold) : `${formatMoney(warm)}→${formatMoney(cold)}`;
+  }),
+  sample: () => ({
+    status: { model: { display_name: 'Opus 4.8' } },
+    totals: { contextTokens: 84_000, cacheTtlMs: 300_000 },
+  }),
+});
+
 const cacheHitRate = defineWidget({
   type: 'cache-hit-rate',
-  options: z.object({ label: z.string().default('cache') }),
-  render: prefixLabel<{ label: string }>((ctx) => {
+  options: z.object({ icon: z.string().default(ICON_CACHE) }),
+  render: prefixIcon((ctx) => {
     const { cacheReadTokens, cacheCreationTokens } = ctx.totals;
     const denom = cacheReadTokens + cacheCreationTokens;
     return denom <= 0 ? null : formatPercent((cacheReadTokens / denom) * 100);
@@ -159,6 +219,7 @@ export const WIDGET_DEFS: WidgetDef[] = [
   directory,
   contextLength,
   sessionCost,
+  nextCost,
   cacheHitRate,
   cacheWindow,
   compactions,

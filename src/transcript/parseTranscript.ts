@@ -28,13 +28,23 @@ export interface TranscriptTotals {
    * survives incremental caching and the widget just compares it to "now".
    */
   cacheExpiresAt: number | null;
+  /**
+   * TTL of the most recently written prompt cache in ms (5m or 1h tier), or
+   * null before any cache-creating message. The next-cost projection uses the
+   * tier to price a cache rebuild; unlike `cacheExpiresAt` it needs no
+   * timestamp, so a tier is known as soon as a cache-creating message appears.
+   */
+  cacheTtlMs: number | null;
 }
 
-export interface ParseResult extends Omit<TranscriptTotals, 'contextTokens' | 'cacheExpiresAt'> {
+export interface ParseResult
+  extends Omit<TranscriptTotals, 'contextTokens' | 'cacheExpiresAt' | 'cacheTtlMs'> {
   /** Context size of the last assistant message in this chunk, or null. */
   lastContextTokens: number | null;
   /** Cache expiry from the last cache-creating message in this chunk, or null. */
   lastCacheExpiresAt: number | null;
+  /** Cache TTL tier from the last cache-creating message in this chunk, or null. */
+  lastCacheTtlMs: number | null;
 }
 
 export const ZERO_TOTALS: TranscriptTotals = {
@@ -46,6 +56,7 @@ export const ZERO_TOTALS: TranscriptTotals = {
   compactions: 0,
   contextTokens: 0,
   cacheExpiresAt: null,
+  cacheTtlMs: null,
 };
 
 function num(v: unknown): number {
@@ -93,6 +104,7 @@ export function parseTranscript(text: string, pricing: PricingTable): ParseResul
     compactions: 0,
     lastContextTokens: null,
     lastCacheExpiresAt: null,
+    lastCacheTtlMs: null,
   };
 
   for (const line of text.split('\n')) {
@@ -129,15 +141,17 @@ export function parseTranscript(text: string, pricing: PricingTable): ParseResul
     result.lastContextTokens =
       usage.inputTokens + usage.cacheReadInputTokens + cacheCreationTotal;
 
-    // Only a cache-*creating* message tells us when a fresh cache will expire;
-    // a plain cache read doesn't reveal the original creation time.
+    // Only a cache-*creating* message reveals the cache tier and, given a
+    // timestamp, when the fresh cache expires; a plain cache read tells us
+    // neither. The tier is known without a timestamp, the expiry is not.
     if (cacheCreationTotal > 0) {
+      const ttl =
+        (usage.cacheCreation?.ephemeral1hInputTokens ?? 0) > 0
+          ? CACHE_TTL_1H_MS
+          : CACHE_TTL_5M_MS;
+      result.lastCacheTtlMs = ttl;
       const ts = typeof entry.timestamp === 'string' ? Date.parse(entry.timestamp) : NaN;
       if (Number.isFinite(ts)) {
-        const ttl =
-          (usage.cacheCreation?.ephemeral1hInputTokens ?? 0) > 0
-            ? CACHE_TTL_1H_MS
-            : CACHE_TTL_5M_MS;
         result.lastCacheExpiresAt = ts + ttl;
       }
     }
@@ -157,5 +171,6 @@ export function mergeTotals(prev: TranscriptTotals, delta: ParseResult): Transcr
     compactions: prev.compactions + delta.compactions,
     contextTokens: delta.lastContextTokens ?? prev.contextTokens,
     cacheExpiresAt: delta.lastCacheExpiresAt ?? prev.cacheExpiresAt,
+    cacheTtlMs: delta.lastCacheTtlMs ?? prev.cacheTtlMs,
   };
 }

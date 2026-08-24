@@ -24,9 +24,10 @@ describe('previewContext derivation', () => {
     const ctx = previewContext();
     expect(renderWidget('model', ctx)).toBe('Opus 4.8');
     expect(renderWidget('directory', ctx)).toBe('~/D/w/voice-connect');
-    expect(renderWidget('cache-hit-rate', ctx)).toBe('cache:90%');
+    expect(renderWidget('cache-hit-rate', ctx)).toBe('\u{f1c0} 90%');
     expect(renderWidget('cache-window', ctx)).toBe(`${'\u{f017}'} 4:43`);
     expect(renderWidget('session-cost', ctx)).toBe('$1.23');
+    expect(renderWidget('next-cost', ctx)).toBe('4¢→53¢');
   });
 
   it('auto-includes a newly registered widget in the preview (extensibility invariant)', () => {

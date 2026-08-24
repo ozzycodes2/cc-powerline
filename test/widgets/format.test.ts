@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { basename, compressPath, formatCost, formatDuration, formatPercent } from '../../src/widgets/format.js';
+import {
+  basename,
+  compressPath,
+  formatCost,
+  formatDuration,
+  formatMoney,
+  formatPercent,
+} from '../../src/widgets/format.js';
 
 describe('formatCost', () => {
   it('formats sub-dollar to 4dp, dollar+ to 2dp, and non-positive to $0.00', () => {
@@ -8,6 +15,20 @@ describe('formatCost', () => {
     expect(formatCost(0)).toBe('$0.00');
     expect(formatCost(-1)).toBe('$0.00');
     expect(formatCost(Number.NaN)).toBe('$0.00');
+  });
+});
+
+describe('formatMoney', () => {
+  it('shows dust as <1¢, sub-dollar as cents, and a dollar or more as $D.CC', () => {
+    expect(formatMoney(0.004)).toBe('<1¢'); // rounds to 0 cents
+    expect(formatMoney(0)).toBe('<1¢');
+    expect(formatMoney(-1)).toBe('<1¢');
+    expect(formatMoney(Number.NaN)).toBe('<1¢');
+    expect(formatMoney(0.2)).toBe('20¢');
+    expect(formatMoney(0.005)).toBe('1¢'); // rounds up to a cent
+    expect(formatMoney(0.999)).toBe('$1.00'); // rounds up across the dollar
+    expect(formatMoney(4)).toBe('$4.00');
+    expect(formatMoney(12.05)).toBe('$12.05');
   });
 });
 

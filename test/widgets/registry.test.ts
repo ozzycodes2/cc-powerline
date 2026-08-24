@@ -31,6 +31,7 @@ describe('renderWidget', () => {
       'directory',
       'context-length',
       'session-cost',
+      'next-cost',
       'cache-hit-rate',
       'cache-window',
       'compactions',
@@ -62,13 +63,13 @@ describe('renderWidget', () => {
   });
 
   describe('model-effort', () => {
-    it('renders the effort level with an icon, hides when absent', () => {
+    it('renders the bare effort level (no icon), hides when absent', () => {
       expect(
-        renderWidget('model-effort', ctx({ status: { effort: { level: 'high' } } }), { icon: '' }),
+        renderWidget('model-effort', ctx({ status: { effort: { level: 'high' } } })),
       ).toBe('high');
       expect(
-        renderWidget('model-effort', ctx({ status: { effort: { level: 'low' } } }), { icon: '*' }),
-      ).toBe('* low');
+        renderWidget('model-effort', ctx({ status: { effort: { level: 'low' } } })),
+      ).toBe('low');
       expect(renderWidget('model-effort', ctx({ status: { effort: { level: '' } } }))).toBeNull();
       expect(renderWidget('model-effort', ctx({}))).toBeNull();
     });
@@ -175,11 +176,96 @@ describe('renderWidget', () => {
     });
   });
 
+  describe('next-cost', () => {
+    // 200k context on Opus ($5/MTok): warm = 0.2 * 5 * 0.1 = $0.10;
+    // cold 5m = 0.2 * 5 * 1.25 = $1.25; cold 1h = 0.2 * 5 * 2 = $2.00.
+    const opus = { model: { display_name: 'Opus 4.8' } };
+
+    it('projects warm→cold, pricing the rebuild by the cache tier', () => {
+      expect(
+        renderWidget('next-cost', ctx({ status: opus, totals: { contextTokens: 200_000, cacheTtlMs: 300_000 } })),
+      ).toBe('10¢→$1.25');
+      expect(
+        renderWidget('next-cost', ctx({ status: opus, totals: { contextTokens: 200_000, cacheTtlMs: 3_600_000 } })),
+      ).toBe('10¢→$2.00');
+    });
+
+    it('prices each model family by its base input rate', () => {
+      // 200k @ 5m tier, warm = tokens/1e6 * base * 0.1, cold = * 1.25.
+      const at = (display_name: string) =>
+        renderWidget(
+          'next-cost',
+          ctx({ status: { model: { display_name } }, totals: { contextTokens: 200_000, cacheTtlMs: 300_000 } }),
+        );
+      expect(at('Fable 5')).toBe('20¢→$2.50'); // $10/MTok
+      expect(at('Sonnet 5')).toBe('6¢→75¢'); // $3/MTok
+      expect(at('Haiku 4.5')).toBe('2¢→25¢'); // $1/MTok
+    });
+
+    it('defaults an unknown tier to the cheaper 5-minute rebuild rate', () => {
+      expect(
+        renderWidget('next-cost', ctx({ status: opus, totals: { contextTokens: 200_000 } })),
+      ).toBe('10¢→$1.25');
+    });
+
+    it('collapses to the rebuild cost alone once the cache is cold', () => {
+      // now past expiry → warm price is gone, only the cold figure remains.
+      expect(
+        renderWidget(
+          'next-cost',
+          ctx({
+            status: opus,
+            totals: { contextTokens: 200_000, cacheTtlMs: 300_000, cacheExpiresAt: 1000 },
+            now: 2000,
+          }),
+        ),
+      ).toBe('$1.25');
+      // still warm (now before expiry) → both figures.
+      expect(
+        renderWidget(
+          'next-cost',
+          ctx({
+            status: opus,
+            totals: { contextTokens: 200_000, cacheTtlMs: 300_000, cacheExpiresAt: 5000 },
+            now: 2000,
+          }),
+        ),
+      ).toBe('10¢→$1.25');
+      // expiry known but no clock → assume warm, show the pair.
+      expect(
+        renderWidget(
+          'next-cost',
+          ctx({ status: opus, totals: { contextTokens: 200_000, cacheTtlMs: 300_000, cacheExpiresAt: 1000 } }),
+        ),
+      ).toBe('10¢→$1.25');
+    });
+
+    it('honors a configured icon', () => {
+      expect(
+        renderWidget(
+          'next-cost',
+          ctx({ status: opus, totals: { contextTokens: 200_000, cacheTtlMs: 300_000 } }),
+          { icon: '$' },
+        ),
+      ).toBe('$ 10¢→$1.25');
+    });
+
+    it('hides for an unknown model family or an empty context', () => {
+      expect(
+        renderWidget('next-cost', ctx({ status: { model: { display_name: 'Gemini' } }, totals: { contextTokens: 200_000 } })),
+      ).toBeNull();
+      expect(
+        renderWidget('next-cost', ctx({ status: opus, totals: { contextTokens: 0 } })),
+      ).toBeNull();
+      expect(renderWidget('next-cost', ctx({ totals: { contextTokens: 200_000 } }))).toBeNull();
+    });
+  });
+
   describe('cache-hit-rate', () => {
     it('is the read share of all cache tokens, hidden when there are none', () => {
       expect(
         renderWidget('cache-hit-rate', ctx({ totals: { cacheReadTokens: 3, cacheCreationTokens: 1 } })),
-      ).toBe('cache:75%');
+      ).toBe('\u{f1c0} 75%');
       expect(renderWidget('cache-hit-rate', ctx({}))).toBeNull();
     });
   });

@@ -109,8 +109,7 @@ export async function runInit(deps: InitDeps = {}): Promise<Settings> {
     log('Preview (with sample data):');
     log(renderPreview(settings, width));
     log('');
-    const path = await writeConfig(settings);
-    log(`Wrote settings to ${path}`);
+    await writeConfig(settings);
     return settings;
   } finally {
     io.close();

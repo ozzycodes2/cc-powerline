@@ -10,7 +10,10 @@ import {
   resolvePricing,
 } from './pricing/resolvePricing.js';
 import { pricingCachePath, writePricingCache } from './pricing/pricingCache.js';
-import { runInit } from './cli/init.js';
+import { buildSettingsFromAnswers, renderPreview, runInit } from './cli/init.js';
+import { DEFAULT_PRESET_KEY } from './cli/presets.js';
+import { detectTerminalWidth } from './render/terminalWidth.js';
+import { WIDGET_TYPES } from './widgets/registry.js';
 
 /* eslint-disable no-console */
 
@@ -23,6 +26,24 @@ async function refreshPricing(): Promise<void> {
   }
   await writePricingCache(table, Date.now());
   console.log(`Cached ${Object.keys(table).length} models to ${pricingCachePath()}`);
+}
+
+/**
+ * Render every widget over the shared all-widgets mock context, so the output
+ * exercises the full palette regardless of the caller's real config. Uses the
+ * same `previewContext()`/`renderPreview` path as `init`, so it can never drift
+ * from what the wizard shows or from production output.
+ */
+function showPreview(opts: { style?: string; width?: number }): void {
+  const style = opts.style === 'builtin' ? 'builtin' : 'powerline';
+  const settings = buildSettingsFromAnswers({
+    style,
+    left: WIDGET_TYPES,
+    right: [],
+    preset: DEFAULT_PRESET_KEY,
+  });
+  const width = opts.width && opts.width > 0 ? opts.width : detectTerminalWidth();
+  console.log(renderPreview(settings, width));
 }
 
 async function showPricing(opts: { model?: string }): Promise<void> {
@@ -54,6 +75,13 @@ export function buildProgram(): Command {
     .action(async () => {
       await runInit();
     });
+
+  program
+    .command('preview')
+    .description('Render every widget over sample data (no config required).')
+    .option('--style <style>', 'render style: powerline or builtin', 'powerline')
+    .option('--width <cols>', 'render width in columns', (v) => Number.parseInt(v, 10))
+    .action((opts: { style?: string; width?: number }) => showPreview(opts));
 
   const config = program.command('config').description('Configuration file helpers.');
   config

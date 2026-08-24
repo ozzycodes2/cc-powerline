@@ -78,7 +78,7 @@ describe('renderPreview', () => {
     expect(out).toContain('+12 -3'); // churn
     expect(out).toContain('~/D/w/voice-connect'); // compressed dir
     expect(out).toContain('42%'); // context
-    expect(out).toContain('cache:90%');
+    expect(out).toContain('\u{f1c0} 90%'); // cache-hit-rate icon + value
     expect(out).toContain('4:43'); // cache-window countdown
     expect(out).toContain('5h:18%');
   });
@@ -97,10 +97,9 @@ function scriptedIO(answers: string[]): PromptIO {
 describe('runInit', () => {
   it('drives the powerline flow and persists the built settings', async () => {
     let written: Settings | null = null;
-    let logged = '';
     const logs: string[] = [];
     // style=1(powerline); left picks model(1),git-branch(3),directory(5);
-    // right picks context-length(6),session-cost(7),cache-hit-rate(8); preset=3(ocean)
+    // right picks context-length(6),session-cost(7),next-cost(8); preset=3(ocean)
     const settings = await runInit({
       io: scriptedIO(['1', '1,3,5', '6,7,8', '3']),
       previewWidth: 200,
@@ -109,7 +108,6 @@ describe('runInit', () => {
         return '/cfg/settings.json';
       },
       log: (m) => {
-        logged = m;
         logs.push(m);
       },
     });
@@ -123,11 +121,12 @@ describe('runInit', () => {
     expect(settings.lines[0]!.right.map((w) => w.type)).toEqual([
       'context-length',
       'session-cost',
-      'cache-hit-rate',
+      'next-cost',
     ]);
     expect(settings.lines[0]!.left[0]!.bg).toBe(presetByKey('ocean').bgs[0]);
     expect(written).toEqual(settings);
-    expect(logged).toContain('/cfg/settings.json');
+    // The wizard no longer logs the settings path.
+    expect(logs.join('\n')).not.toContain('/cfg/settings.json');
   });
 
   it('skips the right-widget prompt when builtin is chosen', async () => {

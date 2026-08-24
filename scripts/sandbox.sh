@@ -4,7 +4,7 @@
 # ~/.config, ~/.cache, or ~/.claude/settings.json.
 #
 # Usage:
-#   scripts/sandbox.sh render [powerline|builtin]   # render the fixture (default: both)
+#   scripts/sandbox.sh render [powerline|builtin]   # render every widget (default: both)
 #   scripts/sandbox.sh init                          # run the wizard into the sandbox
 #   scripts/sandbox.sh shell                         # print exports to source into your shell
 #
@@ -12,11 +12,25 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SANDBOX="$(mktemp -d "${TMPDIR:-/tmp}/cc-powerline-sandbox.XXXXXX")"
-FIXTURE="$ROOT/test/fixtures/statusline-basic.json"
 
 export XDG_CONFIG_HOME="$SANDBOX/config"
 export XDG_CACHE_HOME="$SANDBOX/cache"
-export CC_POWERLINE_WIDTH="${CC_POWERLINE_WIDTH:-80}"
+# Pin the preview to the real terminal width so it fills the window. The CLI's
+# own detection reads process.stdout.columns, which several terminals report as
+# 0 under a pty — it then falls back to an 80-column default and the line hugs
+# the left of a wide terminal. Bash can query the controlling tty directly, so
+# measure it here and hand it to the CLI via CC_POWERLINE_WIDTH (its
+# top-priority width override). An explicit CC_POWERLINE_WIDTH still wins.
+if [[ -z "${CC_POWERLINE_WIDTH:-}" ]]; then
+  # `tput cols` reports the live width when stdout is the terminal (the usual
+  # case); fall back to the controlling tty when stdout is redirected. Both are
+  # best-effort — failures leave CC_POWERLINE_WIDTH unset and the CLI defaults.
+  term_cols="$(tput cols 2>/dev/null || true)"
+  if ! [[ "$term_cols" =~ ^[0-9]+$ ]]; then
+    term_cols="$( { stty size </dev/tty; } 2>/dev/null | awk '{print $2}' )" || true
+  fi
+  [[ "$term_cols" =~ ^[0-9]+$ ]] && export CC_POWERLINE_WIDTH="$term_cols"
+fi
 mkdir -p "$XDG_CONFIG_HOME/cc-powerline" "$XDG_CACHE_HOME/cc-powerline"
 
 cleanup() { rm -rf "$SANDBOX"; }
@@ -27,32 +41,12 @@ if [[ ! -f "$ROOT/dist/index.js" ]]; then
   (cd "$ROOT" && npm run build >/dev/null)
 fi
 
-write_settings() { # $1 = style
-  cat >"$XDG_CONFIG_HOME/cc-powerline/settings.json" <<JSON
-{
-  "style": "$1",
-  "lines": [
-    {
-      "left": [
-        { "type": "model", "fg": "brightWhite", "bg": "#2d3142" },
-        { "type": "directory", "fg": "brightWhite", "bg": "#3d5a80" },
-        { "type": "context-length", "fg": "brightWhite", "bg": "#5c6b73" },
-        { "type": "session-cost", "fg": "black", "bg": "#2a9d8f" }
-      ],
-      "right": [
-        { "type": "context-length", "fg": "brightWhite", "bg": "#5c6b73" },
-        { "type": "session-cost", "fg": "black", "bg": "#2a9d8f" }
-      ]
-    }
-  ]
-}
-JSON
-}
-
 render() { # $1 = style
-  write_settings "$1"
-  echo "--- style: $1 (width $CC_POWERLINE_WIDTH) ---"
-  node "$ROOT/dist/index.js" <"$FIXTURE"
+  echo "--- style: $1 (width ${CC_POWERLINE_WIDTH:-auto}) ---"
+  # `preview` renders every widget over shared mock data, so widgets that would
+  # hide against a sparse fixture (git, cache, rate-limit) all show up. Width
+  # comes from the CC_POWERLINE_WIDTH measured above.
+  node "$ROOT/dist/cli.js" preview --style "$1"
   echo
 }
 
@@ -63,18 +57,15 @@ case "$cmd" in
     if [[ -n "$style" ]]; then render "$style"; else render powerline; render builtin; fi
     ;;
   init)
-    # `init` prints its own mock-data preview, so no fixture re-render here.
+    # `init` renders its own mock-data preview at the CC_POWERLINE_WIDTH measured
+    # above, so it fills the terminal like `render`. No fixture re-render here.
     node "$ROOT/dist/cli.js" init
-    echo
-    echo "Wrote to $XDG_CONFIG_HOME/cc-powerline/settings.json:"
-    cat "$XDG_CONFIG_HOME/cc-powerline/settings.json"
-    echo
     ;;
   shell)
     trap - EXIT  # keep the sandbox alive for an interactive session
     echo "export XDG_CONFIG_HOME=$XDG_CONFIG_HOME"
     echo "export XDG_CACHE_HOME=$XDG_CACHE_HOME"
-    echo "export CC_POWERLINE_WIDTH=$CC_POWERLINE_WIDTH"
+    [[ -n "${CC_POWERLINE_WIDTH:-}" ]] && echo "export CC_POWERLINE_WIDTH=$CC_POWERLINE_WIDTH"
     echo "# sandbox left at $SANDBOX (delete when done)"
     ;;
   *)
