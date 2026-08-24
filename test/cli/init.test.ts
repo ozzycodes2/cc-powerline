@@ -148,26 +148,16 @@ describe('runInit', () => {
     expect(logs.join('\n')).not.toContain('/cfg/settings.json');
   });
 
-  it('re-asks a powerline line whose picks land on both sides', async () => {
-    const notes: string[] = [];
-    // style=1; 1 line. First attempt: left=1 AND right=1 (rejected). Retry:
-    // left=2, right skipped. preset default.
+  it('accepts a powerline line with widgets on both sides', async () => {
+    // style=1; 1 line; left=model(1), right=session-cost(7). preset default.
     const settings = await runInit({
-      io: {
-        ask: (() => {
-          const queue = ['1', '1', '1', '1', '2', '', ''];
-          return async () => queue.shift() ?? '';
-        })(),
-        write: (t) => notes.push(t),
-        close: () => {},
-      },
+      io: scriptedIO(['1', '1', '1', '7', '']),
       previewWidth: 80,
       writeConfig: async () => '/x',
       log: () => {},
     });
-    expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model-effort']);
-    expect(settings.lines[0]!.right).toEqual([]);
-    expect(notes.some((n) => /one side only/i.test(n))).toBe(true);
+    expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model']);
+    expect(settings.lines[0]!.right.map((w) => w.type)).toEqual(['session-cost']);
   });
 
   it('re-asks a powerline line left entirely empty', async () => {

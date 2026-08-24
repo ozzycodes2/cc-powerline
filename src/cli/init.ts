@@ -15,7 +15,7 @@ import { detectTerminalWidth } from '../render/terminalWidth.js';
 import { WIDGET_TYPES } from '../widgets/registry.js';
 import type { Settings, WidgetItem } from '../types/Settings.js';
 
-/** One line's picks: widgets on the left group or the right group (not both). */
+/** One line's picks: widgets on the left group, the right group, or both. */
 export interface LineAnswer {
   left: string[];
   right: string[];
@@ -58,9 +58,9 @@ const widgetChoices = (defaults: string[]): Choice<string>[] =>
   WIDGET_TYPES.map((type) => ({ label: type, value: type, checked: defaults.includes(type) }));
 
 /**
- * Prompt one line's widgets. A powerline line is one-sided — widgets go left OR
- * right, never both — so the loop re-asks until exactly one side is populated.
- * A built-in line only has a left group.
+ * Prompt one line's widgets. A powerline line may carry a left group, a right
+ * group, or both; the loop only re-asks when a line ends up empty on both
+ * sides. A built-in line only has a left group.
  */
 async function promptLine(
   io: PromptIO,
@@ -79,10 +79,6 @@ async function promptLine(
   for (;;) {
     const left = await multiSelect(io, `Line ${n} — left widgets (empty to skip):`, widgetChoices([]));
     const right = await multiSelect(io, `Line ${n} — right widgets (empty to skip):`, widgetChoices([]));
-    if (left.length > 0 && right.length > 0) {
-      io.write('  A line takes widgets on one side only — left or right, not both.');
-      continue;
-    }
     if (left.length === 0 && right.length === 0) {
       io.write('  Pick at least one widget, on the left or the right.');
       continue;
