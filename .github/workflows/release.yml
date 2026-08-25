@@ -2,6 +2,12 @@ name: Release
 
 # Publishes to npm when a GitHub Release is published. Cut a release for a
 # `vX.Y.Z` tag that matches the version in package.json to trigger it.
+#
+# Auth is npm Trusted Publishing (OIDC) — no NPM_TOKEN. npm exchanges the
+# workflow's short-lived OIDC token for publish rights, so the trusted
+# publisher must be configured for this package on npmjs.com first (which in
+# turn requires the package to already exist — the initial 0.1.0 was published
+# manually to bootstrap it).
 on:
   release:
     types: [published]
@@ -10,22 +16,25 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      # Required for npm provenance (--provenance signs the package via OIDC).
+      # Lets the job mint the OIDC token npm exchanges for publish rights; also
+      # what signs the provenance attestation.
       id-token: write
       contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Trusted publishing needs Node >= 22.14.0.
+          node-version: 22
           cache: npm
           registry-url: https://registry.npmjs.org
+      # setup-node ships npm ~10.x; trusted publishing needs npm >= 11.5.1.
+      - run: npm install -g npm@latest
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run coverage
       - run: npm run build
       # prepublishOnly rebuilds, so dist/ is always fresh at publish time.
+      # No NODE_AUTH_TOKEN: OIDC provides auth, and provenance is automatic.
       - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
