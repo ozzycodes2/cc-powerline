@@ -26,7 +26,7 @@ export function MainMenu({ dispatch, onSave, onQuit }: MainMenuProps) {
   const entries: MenuEntry[] = [
     { label: 'Lines & widgets', hint: 'add, remove, reorder', run: go('lines') },
     { label: 'Style', hint: 'powerline / builtin', run: go('style') },
-    { label: 'Theme & colors', hint: 'separators, defaults, presets', run: go('theme') },
+    { label: 'Theme', hint: 'recolor from a preset or a detected prompt theme', run: go('theme') },
     { label: 'Import / export', hint: 'presets, reset, load', run: go('io') },
     { label: 'Save', hint: 'write settings.json', run: onSave },
     { label: 'Quit', hint: '', run: onQuit },

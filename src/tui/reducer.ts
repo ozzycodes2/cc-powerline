@@ -12,7 +12,6 @@
  */
 import type { Settings, WidgetItem, LineConfig } from '../types/Settings.js';
 import type { Color } from '../render/types.js';
-import { presetByKey } from '../cli/presets.js';
 
 export type Side = 'left' | 'right';
 
@@ -71,7 +70,10 @@ export type Action =
   | { type: 'ADD_LINE' }
   | { type: 'REMOVE_LINE'; lineIndex: number }
   | { type: 'MOVE_LINE'; lineIndex: number; dir: -1 | 1 }
-  | { type: 'APPLY_PRESET'; presetKey: string }
+  /** Recolor every widget from a palette. The caller resolves the palette (a
+   *  built-in preset or a theme detected on disk), so the reducer stays free of
+   *  the preset registry and treats detected themes and built-ins identically. */
+  | { type: 'APPLY_PRESET'; fg: Color; bgs: Color[] }
   /** Swap in a whole config (reset to defaults / import a file). Keeps `saved`
    *  so the swap shows as unsaved until the user writes it. */
   | { type: 'REPLACE_SETTINGS'; settings: Settings; message?: string };
@@ -122,11 +124,10 @@ function withItem(
   });
 }
 
-/** Assign the preset's fg to every item and a round-robin bg per group. */
-function applyPreset(settings: Settings, presetKey: string): Settings {
-  const preset = presetByKey(presetKey);
+/** Assign the palette's fg to every item and a round-robin bg per group. */
+function applyPreset(settings: Settings, fg: Color, bgs: Color[]): Settings {
   const paint = (group: WidgetItem[]): WidgetItem[] =>
-    group.map((item, i) => ({ ...item, fg: preset.fg, bg: preset.bgs[i % preset.bgs.length] }));
+    group.map((item, i) => ({ ...item, fg, bg: bgs[i % bgs.length] }));
   return {
     ...settings,
     lines: settings.lines.map((line) => ({
@@ -308,7 +309,7 @@ export function reducer(state: TuiState, action: Action): TuiState {
     }
 
     case 'APPLY_PRESET':
-      return commit(state, applyPreset(state.settings, action.presetKey));
+      return commit(state, applyPreset(state.settings, action.fg, action.bgs));
 
     case 'REPLACE_SETTINGS':
       return { ...commit(state, action.settings), message: action.message ?? null };

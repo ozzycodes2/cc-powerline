@@ -138,11 +138,11 @@ describe('App shell', () => {
     await delay();
     stdin.write(KEY.down); // "Style"
     await delay();
-    stdin.write(KEY.down); // "Theme & colors"
+    stdin.write(KEY.down); // "Theme"
     await delay();
     stdin.write(KEY.enter);
     await delay();
-    expect(stripAnsi(lastFrame() ?? '')).toContain('preset');
+    expect(stripAnsi(lastFrame() ?? '')).toContain('recolors');
   });
 
   it('opens the color picker for a focused widget', async () => {

@@ -27,6 +27,7 @@ import { HelpOverlay } from './components/HelpOverlay.js';
 import { isQuit, isSave, isHelp } from './keymap.js';
 import { detectTerminalWidth } from '../render/terminalWidth.js';
 import type { Settings } from '../types/Settings.js';
+import type { Preset } from '../cli/presets.js';
 
 export interface AppProps {
   initialSettings: Settings;
@@ -35,6 +36,8 @@ export interface AppProps {
   save: (settings: Settings) => Promise<void>;
   /** Read + validate a config from a path (import); rejects on failure. */
   loadFrom?: (path: string) => Promise<Settings>;
+  /** Palettes detected from the user's prompt config, shown in the Theme panel. */
+  themes?: Preset[];
   /** Fixed width for tests; defaults to the detected terminal width. */
   width?: number;
 }
@@ -43,7 +46,14 @@ export interface AppProps {
 const rejectingLoad = (path: string): Promise<Settings> =>
   Promise.reject(new Error(`no importer configured for ${path}`));
 
-export function App({ initialSettings, sourcePath, save, loadFrom = rejectingLoad, width }: AppProps) {
+export function App({
+  initialSettings,
+  sourcePath,
+  save,
+  loadFrom = rejectingLoad,
+  themes,
+  width,
+}: AppProps) {
   const [state, dispatch] = useReducer(
     reducer,
     initialState(initialSettings, sourcePath),
@@ -105,7 +115,7 @@ export function App({ initialSettings, sourcePath, save, loadFrom = rejectingLoa
     <Box flexDirection="column">
       <PreviewPane settings={state.settings} width={cols} />
       <Box marginTop={1}>
-        {helpVisible ? <HelpOverlay /> : renderScreen(state, dispatch, doSave, doQuit, loadFrom)}
+        {helpVisible ? <HelpOverlay /> : renderScreen(state, dispatch, doSave, doQuit, loadFrom, themes)}
       </Box>
       <StatusBar screen={state.screen} dirty={dirty} message={state.message} sourcePath={sourcePath} />
     </Box>
@@ -118,6 +128,7 @@ function renderScreen(
   onSave: () => void,
   onQuit: () => void,
   loadFrom: (path: string) => Promise<Settings>,
+  themes?: Preset[],
 ) {
   switch (state.screen) {
     case 'menu':
@@ -133,7 +144,7 @@ function renderScreen(
     case 'style':
       return <StylePanel state={state} dispatch={dispatch} />;
     case 'theme':
-      return <ThemePanel state={state} dispatch={dispatch} />;
+      return <ThemePanel state={state} dispatch={dispatch} themes={themes} />;
     case 'io':
       return <ImportExport state={state} dispatch={dispatch} loadFrom={loadFrom} />;
   }

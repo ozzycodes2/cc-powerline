@@ -10,12 +10,16 @@ import { render } from 'ink';
 import { App } from './App.js';
 import { loadSettings, settingsPath } from '../config/loadSettings.js';
 import { writeSettings } from '../cli/writeConfig.js';
+import { scanThemes } from './themeScan.js';
 import { SettingsSchema, type Settings } from '../types/Settings.js';
+import type { Preset } from '../cli/presets.js';
 
 export interface RunTuiDeps {
   load?: () => Promise<{ settings: Settings; sourcePath: string }>;
   save?: (settings: Settings) => Promise<void>;
   loadFrom?: (path: string) => Promise<Settings>;
+  /** Palettes for the Theme panel; defaults to scanning the user's prompt config. */
+  themes?: Preset[];
   stdin?: NodeJS.ReadStream;
   stdout?: NodeJS.WriteStream;
 }
@@ -43,6 +47,7 @@ export async function runTui(deps: RunTuiDeps = {}): Promise<void> {
   const load = deps.load ?? defaultLoad;
   const save = deps.save ?? ((s: Settings) => writeSettings(s).then(() => undefined));
   const loadFrom = deps.loadFrom ?? defaultLoadFrom;
+  const themes = deps.themes ?? scanThemes();
 
   const { settings, sourcePath } = await load();
   // Only forward stdin/stdout when injected: Ink defaults them to the real
@@ -52,7 +57,7 @@ export async function runTui(deps: RunTuiDeps = {}): Promise<void> {
   if (deps.stdin) options.stdin = deps.stdin;
   if (deps.stdout) options.stdout = deps.stdout;
   const app = render(
-    createElement(App, { initialSettings: settings, sourcePath, save, loadFrom }),
+    createElement(App, { initialSettings: settings, sourcePath, save, loadFrom, themes }),
     options,
   );
   await app.waitUntilExit();

@@ -193,12 +193,19 @@ describe('reducer — lines', () => {
 describe('reducer — presets', () => {
   it('APPLY_PRESET paints fg on all items and round-robins bg per group', () => {
     const preset = presetByKey('mono');
-    const s = reducer(start(), { type: 'APPLY_PRESET', presetKey: 'mono' });
+    const s = reducer(start(), { type: 'APPLY_PRESET', fg: preset.fg, bgs: preset.bgs });
     const left = s.settings.lines[0]!.left;
     expect(left[0]).toMatchObject({ fg: preset.fg, bg: preset.bgs[0] });
     expect(left[1]).toMatchObject({ fg: preset.fg, bg: preset.bgs[1] });
     // The ring restarts per group, so the right group leads with bg[0] again.
     expect(s.settings.lines[0]!.right[0]).toMatchObject({ fg: preset.fg, bg: preset.bgs[0] });
+  });
+
+  it('APPLY_PRESET accepts an arbitrary palette (e.g. a detected theme)', () => {
+    const s = reducer(start(), { type: 'APPLY_PRESET', fg: 'black', bgs: ['#111111', '#222222'] });
+    const left = s.settings.lines[0]!.left;
+    expect(left[0]).toMatchObject({ fg: 'black', bg: '#111111' });
+    expect(left[1]).toMatchObject({ fg: 'black', bg: '#222222' });
   });
 });
 
