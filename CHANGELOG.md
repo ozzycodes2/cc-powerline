@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-08-25
+## [0.2.1] - 2026-08-25
+
+### Fixed
+
+- The post-save "wire into Claude Code?" confirmation was unusable in the
+  interactive editor. It ran as a readline prompt after Ink had already torn
+  down the terminal, so it never rendered in place — the question only surfaced,
+  broken, after quitting, leaving the terminal blocked on input. The
+  confirmation is now a screen inside the TUI: saving an unwired config opens it
+  (offered once per session, skipped when Claude Code already points at
+  cc-powerline), and answering returns to the main menu with the outcome shown.
+  The non-interactive (`--no-tui` / piped) path keeps its readline prompt, which
+  never conflicted with Ink.
 
 ### Added
 
@@ -66,7 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context-length, session-cost, cache-hit-rate, cache-window, compactions,
   rate-limit, and separator.
 
-[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.0...v0.1.1

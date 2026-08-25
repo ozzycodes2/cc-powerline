@@ -8,11 +8,11 @@ import { createRequire } from 'node:module';
 import { Command } from 'commander';
 import { isMainEntry } from './isMainEntry.js';
 import { main as renderStatusline } from './index.js';
-import { saveConfig, settingsPath } from './config/store.js';
+import { settingsPath } from './config/store.js';
 import {
-  claudeSettingsPath,
+  describeWireResult,
+  manualWiringHint,
   wireStatusLine,
-  STATUSLINE_COMMAND,
   type WireResult,
 } from './config/claudeSettings.js';
 import { confirm, readlineIO, type PromptIO } from './cli/prompts.js';
@@ -64,14 +64,6 @@ function showPreview(opts: { style?: string; width?: number }): void {
   console.log(renderPreview(settings, width));
 }
 
-/** The manual wiring snippet, shown when auto-wiring is declined or fails. */
-function manualWiringHint(): string {
-  return [
-    `Add this to ${claudeSettingsPath()} yourself:`,
-    `  "statusLine": { "type": "command", "command": "${STATUSLINE_COMMAND}" }`,
-  ].join('\n');
-}
-
 export interface WireCliDeps {
   /** Whether to prompt; defaults to a real (TTY) terminal on both streams. */
   interactive?: boolean;
@@ -111,17 +103,7 @@ export async function wireIntoClaudeCode(deps: WireCliDeps = {}): Promise<void> 
   }
 
   try {
-    const res = await wire();
-    if (res.outcome === 'unchanged') {
-      log(`Claude Code already renders cc-powerline (${res.path}).`);
-    } else if (res.previousCommand !== undefined) {
-      log(
-        `Wired cc-powerline into Claude Code (${res.path}); ` +
-          `replaced statusLine command "${res.previousCommand}".`,
-      );
-    } else {
-      log(`Wired cc-powerline into Claude Code (${res.path}).`);
-    }
+    log(describeWireResult(await wire()));
   } catch (err) {
     const reason = err instanceof Error ? err.message : String(err);
     log(`Could not update Claude Code settings: ${reason}.`);
@@ -136,26 +118,17 @@ export async function wireIntoClaudeCode(deps: WireCliDeps = {}): Promise<void> 
  * import so they never load on the non-interactive path or the hot statusline
  * entry.
  *
- * Whichever path runs, a successful save is followed by the Claude Code wiring
- * step; the TUI can be quit without saving, so its save is tracked to avoid
- * wiring on a no-op edit.
+ * The Claude Code wiring prompt lives *inside* the TUI (a readline prompt after
+ * Ink exits fights the terminal teardown and renders broken), so only the
+ * readline path wires here — after its save, and auto-confirmed when piped.
  */
 async function runConfigUi(opts: { tui?: boolean }): Promise<void> {
   const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY);
-  let saved = false;
   if (opts.tui !== false && interactive) {
     const { runTui } = await import('./tui/run.js');
-    await runTui({
-      save: async (s) => {
-        await saveConfig(s);
-        saved = true;
-      },
-    });
+    await runTui();
   } else {
     await runInit();
-    saved = true;
-  }
-  if (saved) {
     await wireIntoClaudeCode();
   }
 }

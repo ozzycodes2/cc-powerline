@@ -192,7 +192,7 @@ describe('wireIntoClaudeCode', () => {
       wire: ok({ outcome: 'updated', previousCommand: 'old-line' }),
       log,
     });
-    expect(text()).toContain('replaced statusLine command "old-line"');
+    expect(text()).toContain('replaced "old-line"');
   });
 
   it('notes an already-wired config', async () => {

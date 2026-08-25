@@ -22,12 +22,14 @@ import { ColorPicker } from './ColorPicker.js';
 import { StylePanel } from './StylePanel.js';
 import { ThemePanel } from './ThemePanel.js';
 import { ImportExport } from './ImportExport.js';
+import { WirePanel } from './WirePanel.js';
 import { StatusBar } from './components/StatusBar.js';
 import { HelpOverlay } from './components/HelpOverlay.js';
 import { isQuit, isSave, isHelp } from './keymap.js';
 import { detectTerminalWidth } from '../render/terminalWidth.js';
 import type { Settings } from '../types/Settings.js';
 import type { Preset } from '../cli/presets.js';
+import type { WireResult } from '../config/claudeSettings.js';
 
 export interface AppProps {
   initialSettings: Settings;
@@ -38,6 +40,14 @@ export interface AppProps {
   loadFrom?: (path: string) => Promise<Settings>;
   /** Palettes detected from the user's prompt config, shown in the Theme panel. */
   themes?: Preset[];
+  /**
+   * Add cc-powerline's statusLine hook to Claude Code's settings. When both
+   * this and {@link checkWired} are given, the first save that finds Claude Code
+   * unwired opens the wire prompt. Omitted (e.g. in tests) → no prompt.
+   */
+  wire?: () => Promise<WireResult>;
+  /** Whether Claude Code already runs cc-powerline; gates the wire prompt. */
+  checkWired?: () => Promise<boolean>;
   /** Fixed width for tests; defaults to the detected terminal width. */
   width?: number;
 }
@@ -52,6 +62,8 @@ export function App({
   save,
   loadFrom = rejectingLoad,
   themes,
+  wire,
+  checkWired,
   width,
 }: AppProps) {
   const [state, dispatch] = useReducer(
@@ -62,6 +74,9 @@ export function App({
   const { stdout } = useStdout();
   const [confirmQuit, setConfirmQuit] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
+  // The wire prompt is offered at most once per session, so declining it sticks
+  // and repeated saves don't nag.
+  const [wireOffered, setWireOffered] = useState(false);
   // A no-op counter bumped on terminal resize to re-derive `cols` and reflow.
   const [, bumpResize] = useState(0);
 
@@ -78,7 +93,16 @@ export function App({
   const dirty = isDirty(state);
 
   const doSave = () => {
-    void save(state.settings).then(() => dispatch({ type: 'SAVED' }));
+    void save(state.settings).then(async () => {
+      dispatch({ type: 'SAVED' });
+      // After the config lands, offer to wire Claude Code — but only once, and
+      // only if it isn't already pointed at cc-powerline.
+      if (!wire || !checkWired || wireOffered) return;
+      if (!(await checkWired())) {
+        setWireOffered(true);
+        dispatch({ type: 'NAVIGATE', screen: 'wire' });
+      }
+    });
   };
 
   const doQuit = () => {
@@ -121,7 +145,7 @@ export function App({
         {helpVisible ? (
           <HelpOverlay />
         ) : (
-          renderScreen(state, dispatch, doSave, doQuit, loadFrom, themes)
+          renderScreen(state, dispatch, doSave, doQuit, loadFrom, themes, wire)
         )}
       </Box>
       <StatusBar
@@ -141,6 +165,7 @@ function renderScreen(
   onQuit: () => void,
   loadFrom: (path: string) => Promise<Settings>,
   themes?: Preset[],
+  wire?: () => Promise<WireResult>,
 ) {
   switch (state.screen) {
     case 'menu':
@@ -160,6 +185,14 @@ function renderScreen(
     case 'io':
       return (
         <ImportExport state={state} dispatch={dispatch} loadFrom={loadFrom} />
+      );
+    case 'wire':
+      // Only reachable when `wire` was provided (doSave gates on it), but guard
+      // so the screen degrades to the menu rather than crashing if it isn't.
+      return wire ? (
+        <WirePanel dispatch={dispatch} wire={wire} />
+      ) : (
+        <MainMenu dispatch={dispatch} onSave={onSave} onQuit={onQuit} />
       );
   }
 }

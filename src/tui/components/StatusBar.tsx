@@ -16,6 +16,7 @@ const HINTS: Record<Screen, string> = {
   style: '↑↓ move · ⏎ toggle · esc back',
   theme: '↑↓ move · ⏎ edit · esc back',
   io: '↑↓ move · ⏎ choose · esc back',
+  wire: 'y wire · n skip · ↑↓ move · ⏎ choose',
 };
 
 export interface StatusBarProps {

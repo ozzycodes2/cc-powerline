@@ -67,6 +67,54 @@ function commandOf(statusLine: unknown): string | undefined {
   return undefined;
 }
 
+/** The manual wiring snippet, shown when auto-wiring is declined or fails. */
+export function manualWiringHint(): string {
+  return (
+    `Add this to ${claudeSettingsPath()}: ` +
+    `"statusLine": { "type": "command", "command": "${STATUSLINE_COMMAND}" }`
+  );
+}
+
+/** A one-line human summary of a completed {@link wireStatusLine}. */
+export function describeWireResult(res: WireResult): string {
+  if (res.outcome === 'unchanged') {
+    return `Claude Code already renders cc-powerline (${res.path}).`;
+  }
+  if (res.previousCommand !== undefined) {
+    return `Wired cc-powerline into Claude Code — replaced "${res.previousCommand}" (${res.path}).`;
+  }
+  return `Wired cc-powerline into Claude Code (${res.path}).`;
+}
+
+/**
+ * Whether Claude Code's `statusLine` already runs cc-powerline. A missing,
+ * unreadable, or unparseable settings file counts as not wired — the caller
+ * should offer to wire it, and {@link wireStatusLine} reports the parse error
+ * at write time rather than here.
+ */
+export async function isStatusLineWired(
+  deps: Pick<WireDeps, 'path' | 'readText'> = {},
+): Promise<boolean> {
+  const path = deps.path ?? claudeSettingsPath();
+  const readText = deps.readText ?? defaultReadText;
+  const text = await readText(path);
+  if (text === null) {
+    return false;
+  }
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return false;
+    }
+    return (
+      commandOf((parsed as Record<string, unknown>).statusLine) ===
+      STATUSLINE_COMMAND
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Add or update Claude Code's `statusLine` hook so it renders cc-powerline,
  * preserving all other settings. Idempotent: a hook already pointing at us is

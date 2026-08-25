@@ -33,6 +33,27 @@ const mount = (save = vi.fn().mockResolvedValue(undefined)) => {
   return { ...app, save };
 };
 
+// Mount with the wire hooks injected, as the real `runTui` does. `wired`
+// seeds whether Claude Code already points at us (gates the post-save prompt).
+const mountWithWire = (opts: { wired?: boolean } = {}) => {
+  const save = vi.fn().mockResolvedValue(undefined);
+  const wire = vi
+    .fn()
+    .mockResolvedValue({ path: '/tmp/settings.json', outcome: 'created' });
+  const checkWired = vi.fn().mockResolvedValue(opts.wired ?? false);
+  const app = render(
+    createElement(App, {
+      initialSettings: DEFAULT_SETTINGS,
+      sourcePath: '/tmp/s.json',
+      save,
+      wire,
+      checkWired,
+      width: 80,
+    }),
+  );
+  return { ...app, save, wire, checkWired };
+};
+
 describe('App shell', () => {
   it('renders the live preview and the main menu', () => {
     const { lastFrame } = mount();
@@ -170,5 +191,115 @@ describe('App shell', () => {
     stdin.write(KEY.enter); // pick the first type (model)
     await delay();
     expect(stripAnsi(lastFrame() ?? '')).toContain('unsaved');
+  });
+
+  it('offers to wire Claude Code after a save when it is not wired, and wires on yes', async () => {
+    const { lastFrame, stdin, save, wire, checkWired } = mountWithWire();
+    await delay();
+    stdin.write(KEY.ctrlS); // save -> triggers the wire prompt
+    await delay();
+    expect(save).toHaveBeenCalledOnce();
+    expect(checkWired).toHaveBeenCalledOnce();
+    expect(stripAnsi(lastFrame() ?? '')).toContain(
+      'Wire cc-powerline into Claude Code?',
+    );
+    stdin.write('y'); // accept
+    await delay();
+    expect(wire).toHaveBeenCalledOnce();
+    // Back on the menu with the outcome shown.
+    const frame = stripAnsi(lastFrame() ?? '');
+    expect(frame).toContain('Wired cc-powerline into Claude Code');
+    expect(frame).toContain('Lines & widgets');
+  });
+
+  it('returns to the menu without wiring when the prompt is declined', async () => {
+    const { lastFrame, stdin, wire } = mountWithWire();
+    await delay();
+    stdin.write(KEY.ctrlS);
+    await delay();
+    expect(stripAnsi(lastFrame() ?? '')).toContain(
+      'Wire cc-powerline into Claude Code?',
+    );
+    stdin.write('n'); // decline
+    await delay();
+    expect(wire).not.toHaveBeenCalled();
+    const frame = stripAnsi(lastFrame() ?? '');
+    expect(frame).toContain('Skipped');
+    expect(frame).toContain('Lines & widgets');
+  });
+
+  it('does not offer to wire when Claude Code already points at us', async () => {
+    const { lastFrame, stdin, checkWired, wire } = mountWithWire({ wired: true });
+    await delay();
+    stdin.write(KEY.ctrlS);
+    await delay();
+    expect(checkWired).toHaveBeenCalledOnce();
+    expect(wire).not.toHaveBeenCalled();
+    expect(stripAnsi(lastFrame() ?? '')).not.toContain(
+      'Wire cc-powerline into Claude Code?',
+    );
+  });
+
+  it('offers the wire prompt at most once per session', async () => {
+    const { stdin, checkWired } = mountWithWire();
+    await delay();
+    stdin.write(KEY.ctrlS); // first save -> prompt
+    await delay();
+    stdin.write('n'); // decline, back to menu
+    await delay();
+    stdin.write(KEY.ctrlS); // second save -> must not re-prompt
+    await delay();
+    expect(checkWired).toHaveBeenCalledOnce();
+  });
+
+  it('selects a wire choice with the arrow keys and enter', async () => {
+    const { lastFrame, stdin, wire } = mountWithWire();
+    await delay();
+    stdin.write(KEY.ctrlS);
+    await delay();
+    stdin.write(KEY.down); // move cursor from Yes to No
+    await delay();
+    stdin.write(KEY.enter); // choose the focused option (No)
+    await delay();
+    expect(wire).not.toHaveBeenCalled();
+    expect(stripAnsi(lastFrame() ?? '')).toContain('Skipped');
+  });
+
+  it('treats escape on the wire prompt as skip', async () => {
+    const { lastFrame, stdin, wire } = mountWithWire();
+    await delay();
+    stdin.write(KEY.ctrlS);
+    await delay();
+    stdin.write(KEY.esc); // esc == back == skip
+    await delay();
+    expect(wire).not.toHaveBeenCalled();
+    const frame = stripAnsi(lastFrame() ?? '');
+    expect(frame).toContain('Skipped');
+    expect(frame).toContain('Lines & widgets');
+  });
+
+  it('reports a failed wire with the manual snippet', async () => {
+    const save = vi.fn().mockResolvedValue(undefined);
+    const wire = vi.fn().mockRejectedValue(new Error('not a JSON object'));
+    const checkWired = vi.fn().mockResolvedValue(false);
+    const { lastFrame, stdin } = render(
+      createElement(App, {
+        initialSettings: DEFAULT_SETTINGS,
+        sourcePath: '/tmp/s.json',
+        save,
+        wire,
+        checkWired,
+        width: 80,
+      }),
+    );
+    await delay();
+    stdin.write(KEY.ctrlS);
+    await delay();
+    stdin.write('y');
+    await delay();
+    const frame = stripAnsi(lastFrame() ?? '');
+    expect(frame).toContain('Could not wire Claude Code');
+    expect(frame).toContain('not a JSON object');
+    expect(frame).toContain('Add this to');
   });
 });

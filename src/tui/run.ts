@@ -14,6 +14,11 @@ import {
   loadConfigStrict,
 } from '../config/store.js';
 import { scanThemes } from './themeScan.js';
+import {
+  isStatusLineWired,
+  wireStatusLine,
+  type WireResult,
+} from '../config/claudeSettings.js';
 import type { Settings } from '../types/Settings.js';
 import type { Preset } from '../config/palette.js';
 
@@ -23,6 +28,10 @@ export interface RunTuiDeps {
   loadFrom?: (path: string) => Promise<Settings>;
   /** Palettes for the Theme panel; defaults to scanning the user's prompt config. */
   themes?: Preset[];
+  /** Add the statusLine hook to Claude Code's settings; defaults to the real write. */
+  wire?: () => Promise<WireResult>;
+  /** Whether Claude Code already runs cc-powerline; defaults to the real read. */
+  checkWired?: () => Promise<boolean>;
   stdin?: NodeJS.ReadStream;
   stdout?: NodeJS.WriteStream;
 }
@@ -46,6 +55,8 @@ export async function runTui(deps: RunTuiDeps = {}): Promise<void> {
     deps.save ?? ((s: Settings) => saveConfig(s).then(() => undefined));
   const loadFrom = deps.loadFrom ?? defaultLoadFrom;
   const themes = deps.themes ?? scanThemes();
+  const wire = deps.wire ?? (() => wireStatusLine());
+  const checkWired = deps.checkWired ?? (() => isStatusLineWired());
 
   const { settings, sourcePath } = await load();
   // Only forward stdin/stdout when injected: Ink defaults them to the real
@@ -61,6 +72,8 @@ export async function runTui(deps: RunTuiDeps = {}): Promise<void> {
       save,
       loadFrom,
       themes,
+      wire,
+      checkWired,
     }),
     options,
   );

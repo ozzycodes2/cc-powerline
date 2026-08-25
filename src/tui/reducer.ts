@@ -31,7 +31,15 @@ export type { Side };
 
 /** Which editor screen is showing. Unimplemented screens render a placeholder. */
 export type Screen =
-  'menu' | 'lines' | 'widgets' | 'picker' | 'color' | 'style' | 'theme' | 'io';
+  | 'menu'
+  | 'lines'
+  | 'widgets'
+  | 'picker'
+  | 'color'
+  | 'style'
+  | 'theme'
+  | 'io'
+  | 'wire';
 
 export interface Focus {
   lineIndex: number;
