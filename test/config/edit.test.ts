@@ -69,6 +69,13 @@ describe('moveWidgetAcross', () => {
     expect(r.lines[0]!.right.map((i) => i.type)).toEqual(['model']);
   });
 
+  it('moves from the right group back to the left', () => {
+    const s = parse({ lines: [{ left: [{ type: 'model' }], right: [{ type: 'directory' }] }] });
+    const r = moveWidgetAcross(s, 0, 'right', 0);
+    expect(r.lines[0]!.left.map((i) => i.type)).toEqual(['model', 'directory']);
+    expect(r.lines[0]!.right).toEqual([]);
+  });
+
   it('no-ops on an out-of-range item', () => {
     const s = twoLeft();
     expect(moveWidgetAcross(s, 0, 'left', 9)).toEqual(s);
@@ -81,6 +88,11 @@ describe('setWidgetColor', () => {
     expect(set.lines[0]!.left[0]!.fg).toBe('red');
     const cleared = setWidgetColor(set, 0, 'left', 0, 'fg', undefined);
     expect(cleared.lines[0]!.left[0]!.fg).toBeUndefined();
+  });
+
+  it('no-ops on an out-of-range item', () => {
+    const s = twoLeft();
+    expect(setWidgetColor(s, 0, 'left', 9, 'fg', 'red')).toEqual(s);
   });
 });
 
