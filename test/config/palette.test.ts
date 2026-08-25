@@ -5,12 +5,21 @@ import { SettingsSchema } from '../../src/types/Settings.js';
 const parse = (raw: unknown) => SettingsSchema.parse(raw);
 
 describe('applyPalette', () => {
-  it('paints the shared fg on every item', () => {
+  it('picks a contrasting fg per item from its background', () => {
     const r = applyPalette(
       parse({ lines: [{ left: [{ type: 'model' }, { type: 'directory' }] }] }),
-      { fg: 'red', bgs: ['blue'] },
+      { fg: 'brightWhite', bgs: ['white', 'blue'] },
     );
-    expect(r.lines[0]!.left.every((i) => i.fg === 'red')).toBe(true);
+    // white bg -> dark text; blue bg -> light text. Not a single shared fg.
+    expect(r.lines[0]!.left.map((i) => i.fg)).toEqual(['black', 'brightWhite']);
+  });
+
+  it('falls back to the palette fg when the ring leaves bg untouched', () => {
+    const r = applyPalette(
+      parse({ lines: [{ left: [{ type: 'model' }] }] }),
+      { fg: 'red', bgs: [] },
+    );
+    expect(r.lines[0]!.left[0]!.fg).toBe('red');
   });
 
   it('cycles the bg ring per group, restarting each group at bgs[0]', () => {
@@ -49,7 +58,8 @@ describe('applyPalette', () => {
       }),
       { fg: 'white', bgs: ['cyan'] },
     );
-    expect(r.lines[0]!.left[0]).toMatchObject({ fg: 'white', bg: 'cyan' });
+    // cyan is dark, so the contrasting fg is brightWhite, not the palette fg.
+    expect(r.lines[0]!.left[0]).toMatchObject({ fg: 'brightWhite', bg: 'cyan' });
   });
 
   it('is a no-op on a config with no lines', () => {

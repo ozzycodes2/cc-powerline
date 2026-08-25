@@ -7,6 +7,7 @@
  */
 import type { Color } from '../render/types.js';
 import type { Settings, WidgetItem } from '../types/Settings.js';
+import { readableFg } from '../render/colors.js';
 
 /** A foreground plus a background ring, cycled across each group's widgets. */
 export interface Palette {
@@ -21,21 +22,23 @@ export interface Preset extends Palette {
 }
 
 /**
- * Paint every widget from `palette`: the shared fg on each item, and a
- * per-group round-robin over `bgs` (each group restarts at `bgs[0]`, so a line
- * always leads with the palette's first color). An empty ring leaves bg
- * untouched. Pure.
+ * Paint every widget from `palette`: a per-group round-robin over `bgs` (each
+ * group restarts at `bgs[0]`, so a line always leads with the palette's first
+ * color) and, for each painted background, a foreground chosen for contrast
+ * against it. Auto-contrast keeps imported prompt themes legible — their rings
+ * often mix light and dark backgrounds, and a single shared fg would leave the
+ * light ones with unreadable white-on-white text. An empty ring leaves bg (and
+ * so the palette's `fg`) untouched. Pure.
  */
 export function applyPalette(settings: Settings, palette: Palette): Settings {
   const paint = (group: WidgetItem[]): WidgetItem[] =>
-    group.map((item, i) => ({
-      ...item,
-      fg: palette.fg,
-      bg:
-        palette.bgs.length === 0
-          ? item.bg
-          : palette.bgs[i % palette.bgs.length],
-    }));
+    group.map((item, i) => {
+      if (palette.bgs.length === 0) {
+        return { ...item, fg: palette.fg, bg: item.bg };
+      }
+      const bg = palette.bgs[i % palette.bgs.length]!;
+      return { ...item, fg: readableFg(bg), bg };
+    });
   return {
     ...settings,
     lines: settings.lines.map((line) => ({

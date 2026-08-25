@@ -3,6 +3,7 @@ import {
   fgParams,
   bgParams,
   colorize,
+  readableFg,
   RESET,
 } from '../../src/render/colors.js';
 
@@ -21,6 +22,25 @@ describe('fgParams / bgParams', () => {
   it('returns null for an unrecognized color', () => {
     expect(fgParams('#xyz' as `#${string}`)).toBeNull();
     expect(fgParams('mauve' as never)).toBeNull();
+  });
+});
+
+describe('readableFg', () => {
+  it('picks dark text on a light background', () => {
+    expect(readableFg('white')).toBe('black');
+    expect(readableFg('brightWhite')).toBe('black');
+    expect(readableFg('brightYellow')).toBe('black');
+    expect(readableFg('#ffffff')).toBe('black');
+  });
+
+  it('picks light text on a dark background', () => {
+    expect(readableFg('blue')).toBe('brightWhite');
+    expect(readableFg('black')).toBe('brightWhite');
+    expect(readableFg('#000080')).toBe('brightWhite');
+  });
+
+  it('falls back to light text when the background is unrecognized', () => {
+    expect(readableFg('mauve' as never)).toBe('brightWhite');
   });
 });
 

@@ -293,8 +293,9 @@ describe('reducer — presets', () => {
       bgs: ['#111111', '#222222'],
     });
     const left = s.settings.lines[0]!.left;
-    expect(left[0]).toMatchObject({ fg: 'black', bg: '#111111' });
-    expect(left[1]).toMatchObject({ fg: 'black', bg: '#222222' });
+    // Dark backgrounds auto-contrast to light text regardless of the passed fg.
+    expect(left[0]).toMatchObject({ fg: 'brightWhite', bg: '#111111' });
+    expect(left[1]).toMatchObject({ fg: 'brightWhite', bg: '#222222' });
   });
 });
 

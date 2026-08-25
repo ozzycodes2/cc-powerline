@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-25
+
+### Fixed
+
+- Applying an imported prompt theme (Powerlevel10k, oh-my-posh, Powerline) left
+  segments with unreadable foregrounds — the theme parsers keep only each
+  segment's background and a single hardcoded `brightWhite` was painted on every
+  widget, so light backgrounds in the ring (white, bright yellow) rendered as
+  white-on-white. Foreground is now chosen per segment for contrast against its
+  background (dark text on light backgrounds, light text on dark), so any
+  imported palette stays legible. Built-in presets are unaffected. Re-pick your
+  theme in the Theme panel to repaint an already-saved config.
+
 ## [0.2.1] - 2026-08-25
 
 ### Fixed
@@ -78,7 +91,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context-length, session-cost, cache-hit-rate, cache-window, compactions,
   rate-limit, and separator.
 
-[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.1...v0.1.2

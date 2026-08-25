@@ -62,8 +62,8 @@ describe('ThemePanel', () => {
     const detected: Preset = {
       key: 'detected:p10k',
       label: 'Powerlevel10k (detected)',
-      fg: 'black',
-      bgs: ['#111111', '#222222'],
+      fg: 'brightWhite',
+      bgs: ['#eeeeee', '#222222'],
     };
     const h = mount([detected]);
     await delay();
@@ -78,7 +78,8 @@ describe('ThemePanel', () => {
     h.stdin.write(KEY.enter);
     await delay();
     const first = h.state.settings.lines[0]!.left[0]!;
+    // The light imported background auto-contrasts to dark, readable text.
     expect(first.fg).toBe('black');
-    expect(first.bg).toBe('#111111');
+    expect(first.bg).toBe('#eeeeee');
   });
 });

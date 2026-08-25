@@ -29,6 +29,27 @@ const NAMED_FG: Record<string, number> = {
 /** The basic named colors, in SGR order — the palette the color picker offers. */
 export const NAMED_COLORS = Object.keys(NAMED_FG) as Color[];
 
+// Approximate sRGB for each named color, so luminance can be judged uniformly
+// with hex colors. Values follow the common xterm default palette.
+const NAMED_RGB: Record<string, [number, number, number]> = {
+  black: [0, 0, 0],
+  red: [128, 0, 0],
+  green: [0, 128, 0],
+  yellow: [128, 128, 0],
+  blue: [0, 0, 128],
+  magenta: [128, 0, 128],
+  cyan: [0, 128, 128],
+  white: [192, 192, 192],
+  gray: [128, 128, 128],
+  brightRed: [255, 0, 0],
+  brightGreen: [0, 255, 0],
+  brightYellow: [255, 255, 0],
+  brightBlue: [0, 0, 255],
+  brightMagenta: [255, 0, 255],
+  brightCyan: [0, 255, 255],
+  brightWhite: [255, 255, 255],
+};
+
 function hexToRgb(hex: string): [number, number, number] | null {
   const m = /^#([0-9a-fA-F]{6})$/.exec(hex);
   if (!m) {
@@ -57,6 +78,22 @@ export function bgParams(color: Color): string | null {
   const code = NAMED_FG[color];
   // Background codes are the foreground code + 10.
   return code === undefined ? null : String(code + 10);
+}
+
+/**
+ * Choose a foreground that stays legible on `bg`: dark text on a light
+ * background, light text on a dark one. Uses perceived (YIQ) luminance so
+ * imported theme rings with light segments (white, bright yellow) don't end up
+ * with unreadable white-on-white text. Unrecognized colors default to light
+ * text, matching the powerline default.
+ */
+export function readableFg(bg: Color): Color {
+  const rgb = hexToRgb(bg) ?? NAMED_RGB[bg];
+  if (!rgb) {
+    return 'brightWhite';
+  }
+  const luminance = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
+  return luminance > 128 ? 'black' : 'brightWhite';
 }
 
 /** Wrap `text` in the given fg/bg colors, resetting afterward. */
