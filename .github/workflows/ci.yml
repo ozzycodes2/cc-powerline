@@ -7,7 +7,23 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  # Lint and formatting run once on the dev-toolchain floor. ESLint 9 requires
+  # Node >= 20.19, which is newer than the package's runtime floor (see below).
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+
+  # The published tool supports Node >= 18 (its runtime deps do), so prove
+  # typecheck/tests/build pass across the whole supported range.
+  test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -20,8 +36,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
       - run: npm run typecheck
       - run: npm run coverage
       - run: npm run build
