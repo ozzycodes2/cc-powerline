@@ -18,9 +18,10 @@ export default defineConfig({
   // dependencies and let Node resolve them from node_modules. The CLI only
   // pulls them in via a lazy import() when the interactive TUI actually runs.
   external: ['react', 'ink'],
-  // The statusline entry and the CLI are both executed directly by Node
-  // (Claude Code spawns `index.js`; users run `cc-powerline`), so both need
-  // a shebang. tsup rewrites it into every entry file.
+  // `cli.js` is the package's only binary (both `cc-powerline <cmd>` and the
+  // Claude Code statusline go through it), so it needs a shebang. `index.js` is
+  // the importable library; the shebang there is harmless. tsup rewrites it
+  // into every entry file, so both get one.
   banner: {
     js: '#!/usr/bin/env node',
   },

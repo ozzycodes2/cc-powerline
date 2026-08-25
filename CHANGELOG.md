@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-25
+
+### Fixed
+
+- The statusline never rendered through the documented wiring. `cc-powerline`
+  (the only binary) is `cli.js`, but `cli.js` had no statusline behavior — the
+  renderer lived in `index.js`, which was not exposed as a bin. Pointing Claude
+  Code's `statusLine.command` at `cc-powerline` therefore produced nothing.
+  `cli.js` now renders the statusline itself when invoked with no subcommand and
+  a piped stdin, delegating to the statusline library; subcommands and an
+  interactive (TTY) invocation are unaffected (the latter now prints help).
+- `cc-powerline --version` reported a hardcoded `0.1.0` that drifted from the
+  real version. It is now read from `package.json`.
+
+### Changed
+
+- `index.js` is now a pure library (no self-executing entry guard); the CLI is
+  the sole executable. Consumers importing the package are unaffected.
+
 ## [0.1.1] - 2026-08-25
 
 ### Fixed
@@ -36,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context-length, session-cost, cache-hit-rate, cache-window, compactions,
   rate-limit, and separator.
 
-[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ozzycodes2/cc-powerline/releases/tag/v0.1.0

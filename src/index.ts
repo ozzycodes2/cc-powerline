@@ -16,7 +16,6 @@ import {
   type TranscriptTotals,
 } from './transcript/parseTranscript.js';
 import { resolveGitBranch, resolveGitChanges, type GitChanges } from './git.js';
-import { isMainEntry } from './isMainEntry.js';
 import { homedir } from 'node:os';
 import { detectTerminalWidth } from './render/terminalWidth.js';
 import { buildStatus } from './pipeline.js';
@@ -99,6 +98,11 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString('utf8');
 }
 
+/**
+ * Read status JSON from stdin, render the statusline, write it to stdout.
+ * Invoked by `cli.ts` when `cc-powerline` runs with no subcommand and piped
+ * input — the path Claude Code uses. Never throws: emits an empty line instead.
+ */
 export async function main(): Promise<void> {
   let output = '';
   try {
@@ -107,9 +111,4 @@ export async function main(): Promise<void> {
     output = '';
   }
   process.stdout.write(output);
-}
-
-// Run only when executed directly (not when imported by tests).
-if (isMainEntry(process.argv[1], import.meta.url)) {
-  void main();
 }

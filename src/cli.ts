@@ -1,10 +1,13 @@
 /**
- * `cc-powerline` command-line interface: config management and pricing cache
- * control. The statusline itself is `index.ts` (run by Claude Code); this is
- * the human-facing entry point.
+ * `cc-powerline` command-line interface. This is the package's only binary, so
+ * it does double duty: with a subcommand it's the human-facing config/pricing
+ * tool, and with no subcommand + piped stdin it renders the statusline Claude
+ * Code spawns (delegating to `index.ts`, the pure statusline library).
  */
+import { createRequire } from 'node:module';
 import { Command } from 'commander';
 import { isMainEntry } from './isMainEntry.js';
+import { main as renderStatusline } from './index.js';
 import { settingsPath } from './config/store.js';
 import { fetchLiteLLMTable, resolvePricing } from './pricing/resolvePricing.js';
 import { pricingCachePath, writePricingCache } from './pricing/pricingCache.js';
@@ -16,6 +19,12 @@ import {
 import { DEFAULT_PRESET_KEY } from './cli/presets.js';
 import { detectTerminalWidth } from './render/terminalWidth.js';
 import { WIDGET_TYPES } from './widgets/registry.js';
+
+// Single source of truth for the reported version — a hardcoded string here
+// silently drifts from package.json on every release.
+const { version: PKG_VERSION } = createRequire(import.meta.url)(
+  '../package.json',
+) as { version: string };
 
 async function refreshPricing(): Promise<void> {
   const table = await fetchLiteLLMTable();
@@ -90,7 +99,7 @@ export function buildProgram(): Command {
     .description(
       'A precise-cost, powerline-capable statusline for Claude Code.',
     )
-    .version('0.1.0');
+    .version(PKG_VERSION);
 
   program
     .command('init')
@@ -151,7 +160,21 @@ export function buildProgram(): Command {
 }
 
 export async function main(argv = process.argv): Promise<void> {
-  await buildProgram().parseAsync(argv);
+  const rest = argv.slice(2);
+  // No subcommand + a piped (non-TTY) stdin is how Claude Code invokes us for
+  // the statusline: read the status JSON, render, exit — never touch commander.
+  if (rest.length === 0 && !process.stdin.isTTY) {
+    await renderStatusline();
+    return;
+  }
+  const program = buildProgram();
+  // Bare interactive `cc-powerline` (a human, no args): show help rather than
+  // block forever waiting on stdin.
+  if (rest.length === 0) {
+    program.outputHelp();
+    return;
+  }
+  await program.parseAsync(argv);
 }
 
 if (isMainEntry(process.argv[1], import.meta.url)) {
