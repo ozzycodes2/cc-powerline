@@ -1,0 +1,31 @@
+name: Release
+
+# Publishes to npm when a GitHub Release is published. Cut a release for a
+# `vX.Y.Z` tag that matches the version in package.json to trigger it.
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      # Required for npm provenance (--provenance signs the package via OIDC).
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run coverage
+      - run: npm run build
+      # prepublishOnly rebuilds, so dist/ is always fresh at publish time.
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

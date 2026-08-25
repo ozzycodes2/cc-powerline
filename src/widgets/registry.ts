@@ -5,7 +5,7 @@
  */
 import { z } from 'zod';
 import { defineWidget, type WidgetContext, type WidgetDef } from './Widget.js';
-import { prefixIcon, prefixLabel, prefixed, type Core } from './compose.js';
+import { prefixIcon, prefixLabel, prefixed } from './compose.js';
 import {
   basename,
   compressPath,

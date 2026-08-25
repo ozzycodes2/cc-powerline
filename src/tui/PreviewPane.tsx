@@ -38,7 +38,6 @@ export function PreviewPane({ settings, width }: PreviewPaneProps) {
       <Text dimColor>live preview (sample data)</Text>
       {lines.map((line, i) => (
         // Preview lines have no stable key of their own; index is fine and stable.
-        // eslint-disable-next-line react/no-array-index-key
         <Text key={i}>{line.length > 0 ? line : ' '}</Text>
       ))}
     </Box>

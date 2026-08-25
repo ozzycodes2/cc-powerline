@@ -10,7 +10,9 @@ export default defineConfig({
   clean: true,
   splitting: false,
   sourcemap: false,
-  dts: false,
+  // Emit type declarations for the library entry only. The CLI is an
+  // executable, not an import target, so it needs no `.d.ts`.
+  dts: { entry: { index: 'src/index.ts' } },
   // React and Ink (and Ink's yoga/wasm layout deps) ship as ESM and are
   // fragile to bundle into a shebang'd single file, so keep them as runtime
   // dependencies and let Node resolve them from node_modules. The CLI only

@@ -3,7 +3,7 @@
  * reducer transitions themselves are covered in reducer.test.ts; here we prove
  * the keystrokes reach the right actions and move mode gates ↑↓ into reorders.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render } from 'ink-testing-library';
 import { createElement } from 'react';
 import { LineList } from '../../src/tui/LineList.js';

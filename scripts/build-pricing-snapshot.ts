@@ -55,12 +55,10 @@ import type { PricingTable } from '../types/Pricing.js';
 export const EMBEDDED_PRICING: PricingTable = ${JSON.stringify(table, null, 2)};
 `;
   await writeFile(out, body, 'utf8');
-  // eslint-disable-next-line no-console
   console.log(`Wrote ${count} Anthropic models to ${out}`);
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error(err);
   process.exit(1);
 });

@@ -1,12 +1,29 @@
 {
-  "name": "cc-powerline",
+  "name": "@ozzycodes2/cc-powerline",
   "version": "0.1.0",
   "description": "A precise-cost, powerline-capable statusline for Claude Code.",
   "type": "module",
+  "author": "Osniel Quintana",
+  "license": "MIT",
+  "homepage": "https://github.com/ozzycodes2/cc-powerline#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ozzycodes2/cc-powerline.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ozzycodes2/cc-powerline/issues"
+  },
   "bin": {
     "cc-powerline": "dist/cli.js"
   },
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "sideEffects": false,
   "files": [
     "dist"
@@ -20,10 +37,14 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "pricing:snapshot": "tsx scripts/build-pricing-snapshot.ts",
+    "prepack": "npm run build",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -32,7 +53,6 @@
     "powerline",
     "cost"
   ],
-  "license": "MIT",
   "dependencies": {
     "commander": "^12.1.0",
     "ink": "^5.2.1",
@@ -40,13 +60,21 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@eslint/js": "^9.13.0",
     "@types/node": "^22.7.0",
     "@types/react": "^18.3.31",
     "@vitest/coverage-v8": "^2.1.9",
+    "eslint": "^9.13.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "globals": "^15.11.0",
     "ink-testing-library": "^4.0.0",
+    "prettier": "^3.3.0",
     "tsup": "^8.3.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
+    "typescript-eslint": "^8.11.0",
     "vitest": "^2.1.0"
   }
 }

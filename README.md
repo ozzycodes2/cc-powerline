@@ -18,14 +18,16 @@ Two things set it apart from a generic statusline:
 ## Install
 
 ```bash
-npm install -g cc-powerline   # scope TBD before first publish — see "Publishing"
+npm install -g @ozzycodes2/cc-powerline
 ```
 
 Or run without installing:
 
 ```bash
-npx cc-powerline init
+npx @ozzycodes2/cc-powerline init
 ```
+
+The global install exposes the `cc-powerline` binary regardless of the scope.
 
 ## Wire it into Claude Code
 
@@ -176,9 +178,19 @@ with `npx vitest -u` after an intentional rendering change.
 
 ## Publishing
 
-The package name is currently the placeholder `@cc-powerline/cc-powerline`.
-Finalize the real npm scope in `package.json` before the first
-`npm publish`. `prepublishOnly` runs the build so `dist/` is always fresh.
+Releases are published to npm as `@ozzycodes2/cc-powerline` by GitHub Actions,
+not by hand. To cut a release:
+
+1. Bump `version` in `package.json` and add a matching `CHANGELOG.md` entry.
+2. Tag and push: `git tag vX.Y.Z && git push --tags`.
+3. Publish a GitHub Release for that tag.
+
+The `release.yml` workflow then runs the full check gate (lint, typecheck,
+coverage, build) and `npm publish --provenance --access public`, authenticating
+with the `NPM_TOKEN` repository secret (a granular npm automation token).
+Provenance requires the workflow's OIDC `id-token` permission, which is why the
+publish runs in CI rather than locally. `prepublishOnly` rebuilds `dist/` as a
+safety net.
 
 ## License
 

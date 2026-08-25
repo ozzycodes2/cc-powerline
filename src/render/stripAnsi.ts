@@ -5,7 +5,6 @@
  */
 
 // CSI sequences (colors/cursor). Broad enough for the SGR codes we emit.
-// eslint-disable-next-line no-control-regex
 const ANSI_PATTERN = /\x1b\[[0-9;]*[A-Za-z]/g;
 
 /** Remove ANSI escape sequences from a string. */

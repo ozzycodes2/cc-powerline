@@ -15,8 +15,6 @@ import { DEFAULT_PRESET_KEY } from './cli/presets.js';
 import { detectTerminalWidth } from './render/terminalWidth.js';
 import { WIDGET_TYPES } from './widgets/registry.js';
 
-/* eslint-disable no-console */
-
 async function refreshPricing(): Promise<void> {
   const table = await fetchLiteLLMTable();
   if (!table) {

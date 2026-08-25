@@ -102,7 +102,6 @@ export function renderPreview(settings: Settings, width: number): string {
 export async function runInit(deps: InitDeps = {}): Promise<Settings> {
   const io = deps.io ?? readlineIO();
   const writeConfig = deps.writeConfig ?? ((s: Settings) => saveConfig(s));
-  // eslint-disable-next-line no-console
   const log = deps.log ?? ((m: string) => console.log(m));
 
   try {
@@ -115,7 +114,6 @@ export async function runInit(deps: InitDeps = {}): Promise<Settings> {
     const lines: LineAnswer[] = [];
     for (let i = 0; i < count; i += 1) {
       // Prompts are inherently sequential — each waits on the user's answer.
-      // eslint-disable-next-line no-await-in-loop
       lines.push(await promptLine(io, style, i + 1));
     }
 
