@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-25
+
+### Added
+
+- `cc-powerline init` now wires itself into Claude Code. After saving your
+  config it offers (default yes; auto-yes when non-interactive) to add the
+  `statusLine` hook to `${CLAUDE_CONFIG_DIR:-~/.claude}/settings.json`,
+  preserving every other setting and replacing any existing statusLine. A
+  settings file it can't parse is reported with the manual snippet, never
+  overwritten. This removes the manual JSON-editing step the README required.
+
 ## [0.1.2] - 2026-08-25
 
 ### Fixed
@@ -55,7 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context-length, session-cost, cache-hit-rate, cache-window, compactions,
   rate-limit, and separator.
 
-[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ozzycodes2/cc-powerline/releases/tag/v0.1.0

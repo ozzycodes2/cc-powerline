@@ -65,6 +65,27 @@ export async function promptNumber(
   return Number.isInteger(n) && n >= opts.min && n <= opts.max ? n : opts.def;
 }
 
+/**
+ * Ask a yes/no question. Empty input takes `def`; a leading `y`/`n` (any case)
+ * decides; anything else also falls back to `def`, so a stray keystroke never
+ * stalls the wizard.
+ */
+export async function confirm(
+  io: PromptIO,
+  message: string,
+  def = true,
+): Promise<boolean> {
+  const hint = def ? 'Y/n' : 'y/N';
+  const raw = (await io.ask(`${message} [${hint}]: `)).toLowerCase();
+  if (raw.startsWith('y')) {
+    return true;
+  }
+  if (raw.startsWith('n')) {
+    return false;
+  }
+  return def;
+}
+
 /** Pick exactly one choice. Empty or invalid input selects `defaultIndex`. */
 export async function select<T>(
   io: PromptIO,

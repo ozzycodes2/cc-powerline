@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Readable } from 'node:stream';
 import { readFileSync } from 'node:fs';
-import { buildProgram, main } from '../src/cli.js';
+import { buildProgram, main, wireIntoClaudeCode } from '../src/cli.js';
 import { settingsPath } from '../src/config/loadSettings.js';
 import { stripAnsi } from '../src/render/stripAnsi.js';
+import type { PromptIO } from '../src/cli/prompts.js';
+import type { WireResult } from '../src/config/claudeSettings.js';
 
 const pkgVersion = (
   JSON.parse(
@@ -142,5 +144,78 @@ describe('main dispatch', () => {
     });
     await main(['node', 'cc-powerline', 'preview', '--width', '200']);
     expect(stripAnsi(out)).toContain('Opus 4.8');
+  });
+});
+
+describe('wireIntoClaudeCode', () => {
+  const scriptedIO = (answer: string): PromptIO => ({
+    ask: async () => answer,
+    write: () => {},
+    close: () => {},
+  });
+  const collectLog = (): { log: (m: string) => void; text: () => string } => {
+    const lines: string[] = [];
+    return { log: (m) => lines.push(m), text: () => lines.join('\n') };
+  };
+  const ok = (r: Partial<WireResult> = {}): (() => Promise<WireResult>) =>
+    async () => ({ path: '/x/settings.json', outcome: 'created', ...r });
+
+  it('wires up after a yes and reports the path', async () => {
+    const { log, text } = collectLog();
+    const wire = vi.fn(ok());
+    await wireIntoClaudeCode({ interactive: true, io: scriptedIO('y'), wire, log });
+    expect(wire).toHaveBeenCalledOnce();
+    expect(text()).toContain('Wired cc-powerline into Claude Code');
+  });
+
+  it('skips the write on a no and prints the manual snippet', async () => {
+    const { log, text } = collectLog();
+    const wire = vi.fn(ok());
+    await wireIntoClaudeCode({ interactive: true, io: scriptedIO('n'), wire, log });
+    expect(wire).not.toHaveBeenCalled();
+    expect(text()).toContain('Add this to');
+    expect(text()).toContain('"command": "cc-powerline"');
+  });
+
+  it('auto-confirms (no prompt) when non-interactive', async () => {
+    const { log, text } = collectLog();
+    const wire = vi.fn(ok({ outcome: 'updated' }));
+    await wireIntoClaudeCode({ interactive: false, wire, log });
+    expect(wire).toHaveBeenCalledOnce();
+    expect(text()).toContain('Wired cc-powerline into Claude Code');
+  });
+
+  it('reports the replaced command when overwriting', async () => {
+    const { log, text } = collectLog();
+    await wireIntoClaudeCode({
+      interactive: false,
+      wire: ok({ outcome: 'updated', previousCommand: 'old-line' }),
+      log,
+    });
+    expect(text()).toContain('replaced statusLine command "old-line"');
+  });
+
+  it('notes an already-wired config', async () => {
+    const { log, text } = collectLog();
+    await wireIntoClaudeCode({
+      interactive: false,
+      wire: ok({ outcome: 'unchanged' }),
+      log,
+    });
+    expect(text()).toContain('already renders cc-powerline');
+  });
+
+  it('reports a failure with the manual snippet instead of throwing', async () => {
+    const { log, text } = collectLog();
+    await wireIntoClaudeCode({
+      interactive: false,
+      wire: async () => {
+        throw new Error('not a JSON object');
+      },
+      log,
+    });
+    expect(text()).toContain('Could not update Claude Code settings');
+    expect(text()).toContain('not a JSON object');
+    expect(text()).toContain('Add this to');
   });
 });

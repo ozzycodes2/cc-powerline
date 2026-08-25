@@ -31,7 +31,12 @@ The global install exposes the `cc-powerline` binary regardless of the scope.
 
 ## Wire it into Claude Code
 
-Add a `statusLine` hook to `~/.claude/settings.json` pointing at the binary:
+`cc-powerline init` does this for you: after saving your config it offers to
+add the `statusLine` hook to Claude Code's `settings.json`, preserving every
+other setting in that file. Answer yes and you're done — no hand-editing.
+
+If you'd rather wire it manually (or the wizard couldn't write the file), add
+this to `${CLAUDE_CONFIG_DIR:-~/.claude}/settings.json`:
 
 ```json
 {
@@ -56,7 +61,8 @@ cc-powerline init
 ```
 
 It walks through render style → left widgets → right widgets (skipped for the
-builtin style) → color preset, then writes the result to:
+builtin style) → color preset, offers to wire itself into Claude Code, then
+writes the config to:
 
 ```
 ${XDG_CONFIG_HOME:-~/.config}/cc-powerline/settings.json
@@ -191,6 +197,12 @@ with the `NPM_TOKEN` repository secret (a granular npm automation token).
 Provenance requires the workflow's OIDC `id-token` permission, which is why the
 publish runs in CI rather than locally. `prepublishOnly` rebuilds `dist/` as a
 safety net.
+
+## Credits
+
+cc-powerline is inspired by
+[ccstatusline](https://github.com/sirmalloc/ccstatusline) and
+[cc-statusline-rs](https://github.com/ceejbot/cc-statusline-rs).
 
 ## License
 

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  confirm,
   select,
   multiSelect,
   promptNumber,
@@ -113,5 +114,24 @@ describe('multiSelect', () => {
   it('can select nothing when only invalid tokens are given', async () => {
     const { io } = scriptedIO(['0']);
     expect(await multiSelect(io, 'pick', choices)).toEqual([]);
+  });
+});
+
+describe('confirm', () => {
+  it('returns the default on empty input', async () => {
+    expect(await confirm(scriptedIO(['']).io, 'ok?', true)).toBe(true);
+    expect(await confirm(scriptedIO(['']).io, 'ok?', false)).toBe(false);
+  });
+
+  it('accepts y/yes and n/no case-insensitively', async () => {
+    expect(await confirm(scriptedIO(['y']).io, 'ok?')).toBe(true);
+    expect(await confirm(scriptedIO(['Yes']).io, 'ok?')).toBe(true);
+    expect(await confirm(scriptedIO(['n']).io, 'ok?')).toBe(false);
+    expect(await confirm(scriptedIO(['NO']).io, 'ok?')).toBe(false);
+  });
+
+  it('falls back to the default on unrecognized input', async () => {
+    expect(await confirm(scriptedIO(['maybe']).io, 'ok?', true)).toBe(true);
+    expect(await confirm(scriptedIO(['maybe']).io, 'ok?', false)).toBe(false);
   });
 });
