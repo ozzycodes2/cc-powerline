@@ -20,7 +20,10 @@ function visibleSegments(segments: Segment[]): Segment[] {
   return segments.filter((s) => !s.hidden && s.text.length > 0);
 }
 
-export function renderBuiltin(groups: LineGroups, opts: BuiltinOptions = {}): string {
+export function renderBuiltin(
+  groups: LineGroups,
+  opts: BuiltinOptions = {},
+): string {
   const separator = opts.separator ?? DEFAULT_BUILTIN_SEPARATOR;
   return visibleSegments(groups.left)
     .map((s) => (s.fg ? colorize(s.text, { fg: s.fg }) : s.text))

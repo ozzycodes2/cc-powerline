@@ -43,7 +43,10 @@ function cacheCreationSplit(usage: TokenUsage): [number, number] {
 }
 
 /** Cost of a single usage entry against one model's resolved pricing. */
-export function calculateCostFromPricing(usage: TokenUsage, pricing: ModelPricing): number {
+export function calculateCostFromPricing(
+  usage: TokenUsage,
+  pricing: ModelPricing,
+): number {
   const [cacheCreate5m, cacheCreate1h] = cacheCreationSplit(usage);
 
   // The 1h cache-creation rate is derived from the input rate, not configured.
@@ -70,18 +73,44 @@ export function calculateCostFromPricing(usage: TokenUsage, pricing: ModelPricin
       usage.outputTokens * rate(pricing.output, pricing.outputAbove200k) +
       cacheCreate5m * rate(pricing.cacheCreate, pricing.cacheCreateAbove200k) +
       cacheCreate1h * rate(cacheCreate1hCost, cacheCreate1hCostAbove200k) +
-      usage.cacheReadInputTokens * rate(pricing.cacheRead, pricing.cacheReadAbove200k)
+      usage.cacheReadInputTokens *
+        rate(pricing.cacheRead, pricing.cacheReadAbove200k)
     );
   }
 
   // Default path: each bucket tiers independently at the 200k boundary.
   const threshold = DEFAULT_LONG_CONTEXT_THRESHOLD_TOKENS;
   return (
-    tieredCost(usage.inputTokens, pricing.input, pricing.inputAbove200k, threshold) +
-    tieredCost(usage.outputTokens, pricing.output, pricing.outputAbove200k, threshold) +
-    tieredCost(cacheCreate5m, pricing.cacheCreate, pricing.cacheCreateAbove200k, threshold) +
-    tieredCost(cacheCreate1h, cacheCreate1hCost, cacheCreate1hCostAbove200k, threshold) +
-    tieredCost(usage.cacheReadInputTokens, pricing.cacheRead, pricing.cacheReadAbove200k, threshold)
+    tieredCost(
+      usage.inputTokens,
+      pricing.input,
+      pricing.inputAbove200k,
+      threshold,
+    ) +
+    tieredCost(
+      usage.outputTokens,
+      pricing.output,
+      pricing.outputAbove200k,
+      threshold,
+    ) +
+    tieredCost(
+      cacheCreate5m,
+      pricing.cacheCreate,
+      pricing.cacheCreateAbove200k,
+      threshold,
+    ) +
+    tieredCost(
+      cacheCreate1h,
+      cacheCreate1hCost,
+      cacheCreate1hCostAbove200k,
+      threshold,
+    ) +
+    tieredCost(
+      usage.cacheReadInputTokens,
+      pricing.cacheRead,
+      pricing.cacheReadAbove200k,
+      threshold,
+    )
   );
 }
 

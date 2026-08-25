@@ -37,7 +37,12 @@ describe('preview command', () => {
     vi.spyOn(console, 'log').mockImplementation((m?: unknown) => {
       out += String(m);
     });
-    await buildProgram().parseAsync(['node', 'cc-powerline', 'preview', ...args]);
+    await buildProgram().parseAsync([
+      'node',
+      'cc-powerline',
+      'preview',
+      ...args,
+    ]);
     return stripAnsi(out);
   };
 

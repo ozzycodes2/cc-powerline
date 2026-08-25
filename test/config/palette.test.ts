@@ -18,7 +18,11 @@ describe('applyPalette', () => {
       parse({
         lines: [
           {
-            left: [{ type: 'model' }, { type: 'directory' }, { type: 'git-branch' }],
+            left: [
+              { type: 'model' },
+              { type: 'directory' },
+              { type: 'git-branch' },
+            ],
             right: [{ type: 'session-cost' }],
           },
         ],
@@ -40,7 +44,9 @@ describe('applyPalette', () => {
 
   it('overwrites colors an item already carried', () => {
     const r = applyPalette(
-      parse({ lines: [{ left: [{ type: 'model', fg: 'black', bg: 'yellow' }] }] }),
+      parse({
+        lines: [{ left: [{ type: 'model', fg: 'black', bg: 'yellow' }] }],
+      }),
       { fg: 'white', bgs: ['cyan'] },
     );
     expect(r.lines[0]!.left[0]).toMatchObject({ fg: 'white', bg: 'cyan' });

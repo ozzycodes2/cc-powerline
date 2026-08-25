@@ -54,7 +54,11 @@ function positiveInt(value: string | undefined): number | null {
   return Number.isInteger(n) && n > 0 ? n : null;
 }
 
-function widthFromDevice(device: string, platform: NodeJS.Platform, exec: WidthDeps['exec']): number | null {
+function widthFromDevice(
+  device: string,
+  platform: NodeJS.Platform,
+  exec: WidthDeps['exec'],
+): number | null {
   // stty flag for "operate on this device" differs by platform.
   const flag = platform === 'linux' ? '-F' : '-f';
   return (
@@ -68,7 +72,9 @@ function widthFromDevice(device: string, platform: NodeJS.Platform, exec: WidthD
  * ancestor-process TTY probe → `tput cols` → `DEFAULT_WIDTH`. Windows skips
  * the POSIX probing.
  */
-export function detectTerminalWidth(overrides: Partial<WidthDeps> = {}): number {
+export function detectTerminalWidth(
+  overrides: Partial<WidthDeps> = {},
+): number {
   const deps: WidthDeps = {
     env: process.env,
     stdoutColumns: process.stdout.columns,
@@ -115,7 +121,7 @@ export function detectTerminalWidth(overrides: Partial<WidthDeps> = {}): number 
     pid = ppid;
   }
 
-  const tput = positiveInt((deps.exec('tput cols') ?? undefined) ?? undefined);
+  const tput = positiveInt(deps.exec('tput cols') ?? undefined);
   if (tput) {
     return tput;
   }

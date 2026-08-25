@@ -75,7 +75,10 @@ export async function loadTranscriptTotals(
 
   const store = await deps.readStore();
   const entry = store[path];
-  const canAppend = entry !== undefined && info.size >= entry.size && entry.byteOffset <= info.size;
+  const canAppend =
+    entry !== undefined &&
+    info.size >= entry.size &&
+    entry.byteOffset <= info.size;
 
   let base: TranscriptTotals;
   let start: number;
@@ -108,7 +111,9 @@ export function transcriptCachePath(): string {
   return join(base, 'cc-powerline', 'transcript-cache.json');
 }
 
-export function defaultTranscriptDeps(cachePath = transcriptCachePath()): TranscriptDeps {
+export function defaultTranscriptDeps(
+  cachePath = transcriptCachePath(),
+): TranscriptDeps {
   return {
     stat: async (path) => {
       try {

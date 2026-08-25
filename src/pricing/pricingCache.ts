@@ -21,7 +21,9 @@ export function pricingCachePath(): string {
 }
 
 /** Read the cache. Returns `null` on any error or malformed content. */
-export async function readPricingCache(path = pricingCachePath()): Promise<CachedPricing | null> {
+export async function readPricingCache(
+  path = pricingCachePath(),
+): Promise<CachedPricing | null> {
   try {
     const text = await readFile(path, 'utf8');
     const parsed = JSON.parse(text) as CachedPricing;

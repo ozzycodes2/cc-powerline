@@ -18,7 +18,10 @@ const KEY = { down: '\x1b[B', enter: '\r', esc: '\x1b' };
 const delay = (ms = 20) => new Promise((r) => setTimeout(r, ms));
 
 // A minimal, non-default starting config so "reset" is an observable change.
-const START: Settings = { style: 'builtin', lines: [{ left: [{ type: 'model' }], right: [] }] };
+const START: Settings = {
+  style: 'builtin',
+  lines: [{ left: [{ type: 'model' }], right: [] }],
+};
 
 const mount = (loadFrom: (p: string) => Promise<Settings>) => {
   let state!: TuiState;
@@ -28,10 +31,16 @@ const mount = (loadFrom: (p: string) => Promise<Settings>) => {
       onState: (s: TuiState) => {
         state = s;
       },
-      children: (s, dispatch) => createElement(ImportExport, { state: s, dispatch, loadFrom }),
+      children: (s, dispatch) =>
+        createElement(ImportExport, { state: s, dispatch, loadFrom }),
     }),
   );
-  return { ...app, get state() { return state; } };
+  return {
+    ...app,
+    get state() {
+      return state;
+    },
+  };
 };
 
 describe('ImportExport', () => {
@@ -46,7 +55,10 @@ describe('ImportExport', () => {
   });
 
   it('loads a config from a typed path', async () => {
-    const loaded: Settings = { style: 'powerline', lines: [{ left: [{ type: 'directory' }], right: [] }] };
+    const loaded: Settings = {
+      style: 'powerline',
+      lines: [{ left: [{ type: 'directory' }], right: [] }],
+    };
     const loadFrom = vi.fn().mockResolvedValue(loaded);
     const h = mount(loadFrom);
     await delay();

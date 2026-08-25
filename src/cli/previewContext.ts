@@ -10,7 +10,11 @@
  */
 import { ZERO_TOTALS } from '../transcript/parseTranscript.js';
 import { WIDGET_DEFS } from '../widgets/registry.js';
-import type { PartialContext, WidgetContext, WidgetDef } from '../widgets/Widget.js';
+import type {
+  PartialContext,
+  WidgetContext,
+  WidgetDef,
+} from '../widgets/Widget.js';
 
 type Obj = Record<string, unknown>;
 
@@ -21,11 +25,12 @@ function isPlainObject(v: unknown): v is Obj {
 /** Recursively merge `patch` onto `base`; objects merge, everything else overwrites. */
 export function deepMerge<T>(base: T, patch: unknown): T {
   if (!isPlainObject(base) || !isPlainObject(patch)) {
-    return (patch === undefined ? base : (patch as T));
+    return patch === undefined ? base : (patch as T);
   }
   const out: Obj = { ...base };
   for (const [k, v] of Object.entries(patch)) {
-    out[k] = isPlainObject(v) && isPlainObject(out[k]) ? deepMerge(out[k], v) : v;
+    out[k] =
+      isPlainObject(v) && isPlainObject(out[k]) ? deepMerge(out[k], v) : v;
   }
   return out as T;
 }

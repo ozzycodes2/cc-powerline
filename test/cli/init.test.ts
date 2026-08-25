@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { buildSettingsFromAnswers, renderPreview, runInit } from '../../src/cli/init.js';
+import {
+  buildSettingsFromAnswers,
+  renderPreview,
+  runInit,
+} from '../../src/cli/init.js';
 import { presetByKey } from '../../src/cli/presets.js';
 import { stripAnsi } from '../../src/render/stripAnsi.js';
 import type { PromptIO } from '../../src/cli/prompts.js';
@@ -55,7 +59,16 @@ describe('buildSettingsFromAnswers', () => {
     const s = buildSettingsFromAnswers({
       style: 'powerline',
       lines: [
-        { left: ['model', 'git-branch', 'directory', 'context-length', 'session-cost'], right: [] },
+        {
+          left: [
+            'model',
+            'git-branch',
+            'directory',
+            'context-length',
+            'session-cost',
+          ],
+          right: [],
+        },
       ],
       preset: 'mono',
     });
@@ -136,10 +149,17 @@ describe('runInit', () => {
 
     expect(settings.style).toBe('powerline');
     expect(settings.lines).toHaveLength(2);
-    expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model', 'git-branch', 'directory']);
+    expect(settings.lines[0]!.left.map((w) => w.type)).toEqual([
+      'model',
+      'git-branch',
+      'directory',
+    ]);
     expect(settings.lines[0]!.right).toEqual([]);
     expect(settings.lines[1]!.left).toEqual([]);
-    expect(settings.lines[1]!.right.map((w) => w.type)).toEqual(['context-length', 'session-cost']);
+    expect(settings.lines[1]!.right.map((w) => w.type)).toEqual([
+      'context-length',
+      'session-cost',
+    ]);
     // Every line's populated side restarts the color ring.
     expect(settings.lines[0]!.left[0]!.bg).toBe(presetByKey('ocean').bgs[0]);
     expect(settings.lines[1]!.right[0]!.bg).toBe(presetByKey('ocean').bgs[0]);
@@ -157,7 +177,9 @@ describe('runInit', () => {
       log: () => {},
     });
     expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model']);
-    expect(settings.lines[0]!.right.map((w) => w.type)).toEqual(['session-cost']);
+    expect(settings.lines[0]!.right.map((w) => w.type)).toEqual([
+      'session-cost',
+    ]);
   });
 
   it('re-asks a powerline line left entirely empty', async () => {
@@ -195,7 +217,12 @@ describe('runInit', () => {
       write: (t) => prompts.push(t),
       close: () => {},
     };
-    const settings = await runInit({ io, previewWidth: 80, writeConfig: async () => '/x', log: () => {} });
+    const settings = await runInit({
+      io,
+      previewWidth: 80,
+      writeConfig: async () => '/x',
+      log: () => {},
+    });
     expect(settings.style).toBe('builtin');
     expect(settings.lines).toHaveLength(1);
     expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model']);
@@ -224,7 +251,9 @@ describe('runInit', () => {
       log: () => {},
     });
     expect(settings.lines[0]!.left.map((w) => w.type)).toEqual(['model']);
-    expect(notes.some((n) => /at least one widget for this line/i.test(n))).toBe(true);
+    expect(
+      notes.some((n) => /at least one widget for this line/i.test(n)),
+    ).toBe(true);
   });
 
   it('closes the IO even if writing throws', async () => {

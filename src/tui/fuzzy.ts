@@ -47,10 +47,20 @@ export interface Scored<T> {
  * Ties preserve the input order (stable), so an empty query returns everything
  * untouched.
  */
-export function fuzzyFilter<T>(query: string, items: T[], toText: (item: T) => string): T[] {
+export function fuzzyFilter<T>(
+  query: string,
+  items: T[],
+  toText: (item: T) => string,
+): T[] {
   return items
-    .map((item, index) => ({ item, index, score: fuzzyScore(query, toText(item)) }))
-    .filter((r): r is { item: T; index: number; score: number } => r.score !== null)
+    .map((item, index) => ({
+      item,
+      index,
+      score: fuzzyScore(query, toText(item)),
+    }))
+    .filter(
+      (r): r is { item: T; index: number; score: number } => r.score !== null,
+    )
     .sort((a, b) => b.score - a.score || a.index - b.index)
     .map((r) => r.item);
 }

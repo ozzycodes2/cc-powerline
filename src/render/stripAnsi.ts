@@ -34,7 +34,7 @@ export function truncateToWidth(text: string, maxWidth: number): string {
   let out = '';
   let width = 0;
   let hadEscape = false;
-  for (let i = 0; i < text.length; ) {
+  for (let i = 0; i < text.length;) {
     if (text[i] === '\x1b') {
       const match = text.slice(i).match(/^\x1b\[[0-9;]*[A-Za-z]/);
       if (match) {

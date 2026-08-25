@@ -13,12 +13,20 @@ import { NAMED_COLORS } from '../../src/render/colors.js';
 import type { TuiState } from '../../src/tui/reducer.js';
 import type { Settings } from '../../src/types/Settings.js';
 
-const KEY = { down: '\x1b[B', right: '\x1b[C', enter: '\r', esc: '\x1b', tab: '\t' };
+const KEY = {
+  down: '\x1b[B',
+  right: '\x1b[C',
+  enter: '\r',
+  esc: '\x1b',
+  tab: '\t',
+};
 const delay = (ms = 20) => new Promise((r) => setTimeout(r, ms));
 
 const ONE: Settings = {
   style: 'powerline',
-  lines: [{ left: [{ type: 'model', fg: 'brightWhite', bg: '#2d3142' }], right: [] }],
+  lines: [
+    { left: [{ type: 'model', fg: 'brightWhite', bg: '#2d3142' }], right: [] },
+  ],
 };
 
 const mount = (settings: Settings) => {
@@ -29,10 +37,16 @@ const mount = (settings: Settings) => {
       onState: (s: TuiState) => {
         state = s;
       },
-      children: (s, dispatch) => createElement(ColorPicker, { state: s, dispatch }),
+      children: (s, dispatch) =>
+        createElement(ColorPicker, { state: s, dispatch }),
     }),
   );
-  return { ...app, get state() { return state; } };
+  return {
+    ...app,
+    get state() {
+      return state;
+    },
+  };
 };
 
 const item = (s: TuiState) => s.settings.lines[0]!.left[0]!;
@@ -116,7 +130,10 @@ describe('ColorPicker', () => {
   });
 
   it('shows a guard message when the focused group is empty', async () => {
-    const empty: Settings = { style: 'powerline', lines: [{ left: [], right: [] }] };
+    const empty: Settings = {
+      style: 'powerline',
+      lines: [{ left: [], right: [] }],
+    };
     const h = mount(empty);
     await delay();
     expect(stripAnsi(h.lastFrame() ?? '')).toContain('No widget selected');

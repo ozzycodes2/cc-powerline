@@ -37,8 +37,10 @@ export interface TranscriptTotals {
   cacheTtlMs: number | null;
 }
 
-export interface ParseResult
-  extends Omit<TranscriptTotals, 'contextTokens' | 'cacheExpiresAt' | 'cacheTtlMs'> {
+export interface ParseResult extends Omit<
+  TranscriptTotals,
+  'contextTokens' | 'cacheExpiresAt' | 'cacheTtlMs'
+> {
   /** Context size of the last assistant message in this chunk, or null. */
   lastContextTokens: number | null;
   /** Cache expiry from the last cache-creating message in this chunk, or null. */
@@ -71,8 +73,12 @@ function isCompaction(entry: Record<string, unknown>): boolean {
   );
 }
 
-function extractUsage(usage: Record<string, unknown>): { usage: TokenUsage; cacheCreationTotal: number } {
-  const breakdownRaw = usage.cache_creation as Record<string, unknown> | undefined;
+function extractUsage(usage: Record<string, unknown>): {
+  usage: TokenUsage;
+  cacheCreationTotal: number;
+} {
+  const breakdownRaw = usage.cache_creation as
+    Record<string, unknown> | undefined;
   const breakdown = breakdownRaw
     ? {
         ephemeral5mInputTokens: num(breakdownRaw.ephemeral_5m_input_tokens),
@@ -94,7 +100,10 @@ function extractUsage(usage: Record<string, unknown>): { usage: TokenUsage; cach
 }
 
 /** Parse a whole (or complete-line prefix) transcript text into a delta. */
-export function parseTranscript(text: string, pricing: PricingTable): ParseResult {
+export function parseTranscript(
+  text: string,
+  pricing: PricingTable,
+): ParseResult {
   const result: ParseResult = {
     costUsd: 0,
     inputTokens: 0,
@@ -150,7 +159,8 @@ export function parseTranscript(text: string, pricing: PricingTable): ParseResul
           ? CACHE_TTL_1H_MS
           : CACHE_TTL_5M_MS;
       result.lastCacheTtlMs = ttl;
-      const ts = typeof entry.timestamp === 'string' ? Date.parse(entry.timestamp) : NaN;
+      const ts =
+        typeof entry.timestamp === 'string' ? Date.parse(entry.timestamp) : NaN;
       if (Number.isFinite(ts)) {
         result.lastCacheExpiresAt = ts + ttl;
       }
@@ -161,7 +171,10 @@ export function parseTranscript(text: string, pricing: PricingTable): ParseResul
 }
 
 /** Fold a parse delta into running totals. */
-export function mergeTotals(prev: TranscriptTotals, delta: ParseResult): TranscriptTotals {
+export function mergeTotals(
+  prev: TranscriptTotals,
+  delta: ParseResult,
+): TranscriptTotals {
   return {
     costUsd: prev.costUsd + delta.costUsd,
     inputTokens: prev.inputTokens + delta.inputTokens,

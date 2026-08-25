@@ -7,7 +7,13 @@
 import { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { SelectList } from './components/SelectList.js';
-import { navDirection, moveCursor, isEnter, isBack, isRemove } from './keymap.js';
+import {
+  navDirection,
+  moveCursor,
+  isEnter,
+  isBack,
+  isRemove,
+} from './keymap.js';
 import type { Action, TuiState } from './reducer.js';
 import type { LineConfig } from '../types/Settings.js';
 
@@ -30,15 +36,24 @@ export function LineList({ state, dispatch }: LineListProps) {
   useInput((input, key) => {
     const dir = navDirection(input, key);
     if (moveMode) {
-      if (dir === 'up') dispatch({ type: 'MOVE_LINE', lineIndex: cursor, dir: -1 });
-      else if (dir === 'down') dispatch({ type: 'MOVE_LINE', lineIndex: cursor, dir: 1 });
+      if (dir === 'up')
+        dispatch({ type: 'MOVE_LINE', lineIndex: cursor, dir: -1 });
+      else if (dir === 'down')
+        dispatch({ type: 'MOVE_LINE', lineIndex: cursor, dir: 1 });
       else if (isEnter(key) || isBack(key)) setMoveMode(false);
       return;
     }
     if (dir === 'up' || dir === 'down') {
-      dispatch({ type: 'NAVIGATE', focus: { lineIndex: moveCursor(cursor, dir, lines.length) } });
+      dispatch({
+        type: 'NAVIGATE',
+        focus: { lineIndex: moveCursor(cursor, dir, lines.length) },
+      });
     } else if (isEnter(key)) {
-      dispatch({ type: 'NAVIGATE', screen: 'widgets', focus: { side: 'left', itemIndex: 0 } });
+      dispatch({
+        type: 'NAVIGATE',
+        screen: 'widgets',
+        focus: { side: 'left', itemIndex: 0 },
+      });
     } else if (input === 'a') {
       dispatch({ type: 'ADD_LINE' });
     } else if (isRemove(input, key)) {
@@ -53,10 +68,16 @@ export function LineList({ state, dispatch }: LineListProps) {
   return (
     <Box flexDirection="column">
       <Text bold>
-        Lines {moveMode ? <Text color="yellow">[MOVE — ↑↓ to reorder, ⏎ done]</Text> : null}
+        Lines{' '}
+        {moveMode ? (
+          <Text color="yellow">[MOVE — ↑↓ to reorder, ⏎ done]</Text>
+        ) : null}
       </Text>
       <SelectList
-        items={lines.map((line, i) => ({ label: `Line ${i + 1}`, hint: summarize(line) }))}
+        items={lines.map((line, i) => ({
+          label: `Line ${i + 1}`,
+          hint: summarize(line),
+        }))}
         cursor={cursor}
       />
     </Box>

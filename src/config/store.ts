@@ -17,7 +17,10 @@ export { loadSettings, settingsPath };
 export type { LoadResult };
 
 /** Persist a config, creating parent dirs. Returns the path written. */
-export async function saveConfig(settings: Settings, path = settingsPath()): Promise<string> {
+export async function saveConfig(
+  settings: Settings,
+  path = settingsPath(),
+): Promise<string> {
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, `${JSON.stringify(settings, null, 2)}\n`, 'utf8');
   return path;

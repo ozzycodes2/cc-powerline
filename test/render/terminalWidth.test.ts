@@ -46,7 +46,9 @@ describe('ttyToDevice', () => {
 
 describe('detectTerminalWidth', () => {
   it('honors the CC_POWERLINE_WIDTH override first', () => {
-    expect(detectTerminalWidth(baseDeps({ env: { CC_POWERLINE_WIDTH: '133' } }))).toBe(133);
+    expect(
+      detectTerminalWidth(baseDeps({ env: { CC_POWERLINE_WIDTH: '133' } })),
+    ).toBe(133);
   });
 
   it('uses a real stdout TTY width when present', () => {
@@ -54,7 +56,9 @@ describe('detectTerminalWidth', () => {
   });
 
   it('returns the default on Windows without probing', () => {
-    expect(detectTerminalWidth(baseDeps({ platform: 'win32' }))).toBe(DEFAULT_WIDTH);
+    expect(detectTerminalWidth(baseDeps({ platform: 'win32' }))).toBe(
+      DEFAULT_WIDTH,
+    );
   });
 
   it('walks ancestors and reads width from the first TTY-owning process', () => {
@@ -65,7 +69,9 @@ describe('detectTerminalWidth', () => {
       if (cmd === 'stty -f /dev/ttys004 size') return '50 200';
       return null;
     };
-    expect(detectTerminalWidth(baseDeps({ platform: 'darwin', exec }))).toBe(200);
+    expect(detectTerminalWidth(baseDeps({ platform: 'darwin', exec }))).toBe(
+      200,
+    );
   });
 
   it('uses the linux -F stty flag', () => {
@@ -74,7 +80,9 @@ describe('detectTerminalWidth', () => {
       if (cmd === 'stty -F /dev/pts/1 size') return '40 160';
       return null;
     };
-    expect(detectTerminalWidth(baseDeps({ platform: 'linux', exec }))).toBe(160);
+    expect(detectTerminalWidth(baseDeps({ platform: 'linux', exec }))).toBe(
+      160,
+    );
   });
 
   it('falls back to tput cols when no ancestor TTY is found', () => {
@@ -86,6 +94,8 @@ describe('detectTerminalWidth', () => {
   });
 
   it('falls back to the fixed default when everything fails', () => {
-    expect(detectTerminalWidth(baseDeps({ exec: () => null }))).toBe(DEFAULT_WIDTH);
+    expect(detectTerminalWidth(baseDeps({ exec: () => null }))).toBe(
+      DEFAULT_WIDTH,
+    );
   });
 });

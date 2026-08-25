@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { PRESETS, DEFAULT_PRESET_KEY, presetByKey } from '../../src/cli/presets.js';
+import {
+  PRESETS,
+  DEFAULT_PRESET_KEY,
+  presetByKey,
+} from '../../src/cli/presets.js';
 
 describe('presetByKey', () => {
   it('returns the matching preset', () => {

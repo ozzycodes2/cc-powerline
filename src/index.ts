@@ -11,7 +11,10 @@ import {
   defaultTranscriptDeps,
   loadTranscriptTotals,
 } from './transcript/transcriptCache.js';
-import { ZERO_TOTALS, type TranscriptTotals } from './transcript/parseTranscript.js';
+import {
+  ZERO_TOTALS,
+  type TranscriptTotals,
+} from './transcript/parseTranscript.js';
 import { resolveGitBranch, resolveGitChanges, type GitChanges } from './git.js';
 import { homedir } from 'node:os';
 import { detectTerminalWidth } from './render/terminalWidth.js';
@@ -22,7 +25,10 @@ import type { Settings } from './types/Settings.js';
 export interface StatuslineDeps {
   resolvePricing: () => Promise<PricingTable>;
   loadSettings: () => Promise<{ settings: Settings; warnings: string[] }>;
-  loadTotals: (path: string | undefined, table: PricingTable) => Promise<TranscriptTotals>;
+  loadTotals: (
+    path: string | undefined,
+    table: PricingTable,
+  ) => Promise<TranscriptTotals>;
   resolveBranch: (status: StatusJSON) => string | null;
   resolveChanges: (status: StatusJSON) => GitChanges | null;
   now: () => number;
@@ -35,7 +41,8 @@ function defaultDeps(): StatuslineDeps {
   return {
     resolvePricing: async () => (await resolvePricing()).table,
     loadSettings: async () => loadSettings(),
-    loadTotals: (path, table) => loadTranscriptTotals(path, table, defaultTranscriptDeps()),
+    loadTotals: (path, table) =>
+      loadTranscriptTotals(path, table, defaultTranscriptDeps()),
     resolveBranch: (status) => resolveGitBranch(status),
     resolveChanges: (status) => resolveGitChanges(status),
     now: () => Date.now(),
@@ -46,10 +53,16 @@ function defaultDeps(): StatuslineDeps {
 }
 
 /** Render a status line from raw stdin JSON. Never throws. */
-export async function renderStatusline(input: string, deps: StatuslineDeps): Promise<string> {
+export async function renderStatusline(
+  input: string,
+  deps: StatuslineDeps,
+): Promise<string> {
   try {
     const status = parseStatusJSON(input);
-    const [table, loaded] = await Promise.all([deps.resolvePricing(), deps.loadSettings()]);
+    const [table, loaded] = await Promise.all([
+      deps.resolvePricing(),
+      deps.loadSettings(),
+    ]);
     for (const w of loaded.warnings) {
       deps.warn(w);
     }
@@ -64,7 +77,10 @@ export async function renderStatusline(input: string, deps: StatuslineDeps): Pro
     const ctx = {
       status,
       totals,
-      git: { branch: deps.resolveBranch(status), changes: deps.resolveChanges(status) },
+      git: {
+        branch: deps.resolveBranch(status),
+        changes: deps.resolveChanges(status),
+      },
       now: deps.now(),
       home: deps.home(),
     };

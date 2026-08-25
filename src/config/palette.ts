@@ -31,7 +31,10 @@ export function applyPalette(settings: Settings, palette: Palette): Settings {
     group.map((item, i) => ({
       ...item,
       fg: palette.fg,
-      bg: palette.bgs.length === 0 ? item.bg : palette.bgs[i % palette.bgs.length],
+      bg:
+        palette.bgs.length === 0
+          ? item.bg
+          : palette.bgs[i % palette.bgs.length],
     }));
   return {
     ...settings,

@@ -9,7 +9,11 @@ import { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { SelectList } from './components/SelectList.js';
 import { isEnter, isBack } from './keymap.js';
-import { WIDGET_CATALOG, choiceSearchText, type WidgetChoice } from './catalog.js';
+import {
+  WIDGET_CATALOG,
+  choiceSearchText,
+  type WidgetChoice,
+} from './catalog.js';
 import { fuzzyFilter } from './fuzzy.js';
 import type { Action, TuiState } from './reducer.js';
 
@@ -23,9 +27,14 @@ export function WidgetPicker({ state, dispatch }: WidgetPickerProps) {
   const [cursor, setCursor] = useState(0);
   const { lineIndex, side } = state.focus;
 
-  const results: WidgetChoice[] = fuzzyFilter(query, WIDGET_CATALOG, choiceSearchText);
+  const results: WidgetChoice[] = fuzzyFilter(
+    query,
+    WIDGET_CATALOG,
+    choiceSearchText,
+  );
   // Clamp the cursor as the result set shrinks under a longer query.
-  const clamped = results.length === 0 ? 0 : Math.min(cursor, results.length - 1);
+  const clamped =
+    results.length === 0 ? 0 : Math.min(cursor, results.length - 1);
 
   useInput((input, key) => {
     if (key.upArrow) {
@@ -35,7 +44,12 @@ export function WidgetPicker({ state, dispatch }: WidgetPickerProps) {
     } else if (isEnter(key)) {
       const choice = results[clamped];
       if (choice) {
-        dispatch({ type: 'ADD_WIDGET', lineIndex, side, widgetType: choice.type });
+        dispatch({
+          type: 'ADD_WIDGET',
+          lineIndex,
+          side,
+          widgetType: choice.type,
+        });
         dispatch({ type: 'NAVIGATE', screen: 'widgets' });
       }
     } else if (isBack(key)) {

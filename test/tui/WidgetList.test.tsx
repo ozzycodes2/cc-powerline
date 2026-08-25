@@ -13,7 +13,14 @@ import { DEFAULT_SETTINGS } from '../../src/config/defaultSettings.js';
 import type { TuiState } from '../../src/tui/reducer.js';
 import type { Settings } from '../../src/types/Settings.js';
 
-const KEY = { down: '\x1b[B', up: '\x1b[A', right: '\x1b[C', enter: '\r', esc: '\x1b', tab: '\t' };
+const KEY = {
+  down: '\x1b[B',
+  up: '\x1b[A',
+  right: '\x1b[C',
+  enter: '\r',
+  esc: '\x1b',
+  tab: '\t',
+};
 const delay = (ms = 20) => new Promise((r) => setTimeout(r, ms));
 
 const mount = (settings: Settings) => {
@@ -24,10 +31,16 @@ const mount = (settings: Settings) => {
       onState: (s: TuiState) => {
         state = s;
       },
-      children: (s, dispatch) => createElement(WidgetList, { state: s, dispatch }),
+      children: (s, dispatch) =>
+        createElement(WidgetList, { state: s, dispatch }),
     }),
   );
-  return { ...app, get state() { return state; } };
+  return {
+    ...app,
+    get state() {
+      return state;
+    },
+  };
 };
 
 describe('WidgetList', () => {
@@ -111,7 +124,10 @@ describe('WidgetList', () => {
   });
 
   it('does not enter move mode or remove when the group is empty', async () => {
-    const empty: Settings = { style: 'powerline', lines: [{ left: [], right: [] }] };
+    const empty: Settings = {
+      style: 'powerline',
+      lines: [{ left: [], right: [] }],
+    };
     const h = mount(empty);
     await delay();
     h.stdin.write('m');

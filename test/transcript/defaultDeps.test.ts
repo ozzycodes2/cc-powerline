@@ -13,11 +13,16 @@ const PRICING: PricingTable = {
   m: { input: 1e-6, output: 2e-6, cacheCreate: 1e-6, cacheRead: 1e-7 },
 };
 const line = (input: number) =>
-  JSON.stringify({ type: 'assistant', message: { model: 'm', usage: { input_tokens: input } } });
+  JSON.stringify({
+    type: 'assistant',
+    message: { model: 'm', usage: { input_tokens: input } },
+  });
 
 const created: string[] = [];
 afterEach(async () => {
-  await Promise.all(created.splice(0).map((d) => rm(d, { recursive: true, force: true })));
+  await Promise.all(
+    created.splice(0).map((d) => rm(d, { recursive: true, force: true })),
+  );
 });
 async function tmp(): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'ccpl-tr-'));
@@ -30,7 +35,9 @@ describe('transcriptCachePath', () => {
     const prev = process.env.XDG_CACHE_HOME;
     process.env.XDG_CACHE_HOME = '/tmp/xdg';
     try {
-      expect(transcriptCachePath()).toBe('/tmp/xdg/cc-powerline/transcript-cache.json');
+      expect(transcriptCachePath()).toBe(
+        '/tmp/xdg/cc-powerline/transcript-cache.json',
+      );
     } finally {
       if (prev === undefined) delete process.env.XDG_CACHE_HOME;
       else process.env.XDG_CACHE_HOME = prev;

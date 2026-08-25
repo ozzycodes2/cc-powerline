@@ -33,8 +33,9 @@ export function prefixed<O extends Record<string, unknown>>(
   };
 }
 
-export const prefixIcon = <O extends Record<string, unknown>>(core: Core<O>): Core<O> =>
-  prefixed<O>('icon', ' ', 'skip-empty', core);
+export const prefixIcon = <O extends Record<string, unknown>>(
+  core: Core<O>,
+): Core<O> => prefixed<O>('icon', ' ', 'skip-empty', core);
 
 export const prefixLabel = <O extends Record<string, unknown>>(
   core: Core<O>,

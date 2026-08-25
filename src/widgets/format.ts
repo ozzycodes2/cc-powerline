@@ -45,7 +45,13 @@ export function compressPath(path: string, home?: string): string {
   const isAbs = path.startsWith('/') || path.startsWith('\\');
   let rest = path;
   let prefix = '';
-  if (home && home.length > 0 && (path === home || path.startsWith(`${home}/`) || path.startsWith(`${home}\\`))) {
+  if (
+    home &&
+    home.length > 0 &&
+    (path === home ||
+      path.startsWith(`${home}/`) ||
+      path.startsWith(`${home}\\`))
+  ) {
     rest = path.slice(home.length);
     prefix = '~';
   }

@@ -8,7 +8,9 @@ import { DEFAULT_SETTINGS } from '../../src/config/defaultSettings.js';
 const created: string[] = [];
 
 afterEach(async () => {
-  await Promise.all(created.splice(0).map((d) => rm(d, { recursive: true, force: true })));
+  await Promise.all(
+    created.splice(0).map((d) => rm(d, { recursive: true, force: true })),
+  );
 });
 
 async function tmp(): Promise<string> {
@@ -40,7 +42,9 @@ describe('loadConfigStrict', () => {
   it('throws on a schema-invalid file', async () => {
     const path = join(await tmp(), 'bad.json');
     await writeFile(path, JSON.stringify({ style: 'nonsense' }), 'utf8');
-    await expect(loadConfigStrict(path)).rejects.toThrow('not a valid settings file');
+    await expect(loadConfigStrict(path)).rejects.toThrow(
+      'not a valid settings file',
+    );
   });
 
   it('rejects when the file does not exist', async () => {

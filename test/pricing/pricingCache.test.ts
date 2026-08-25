@@ -11,7 +11,9 @@ import type { PricingTable } from '../../src/types/Pricing.js';
 
 const created: string[] = [];
 afterEach(async () => {
-  await Promise.all(created.splice(0).map((d) => rm(d, { recursive: true, force: true })));
+  await Promise.all(
+    created.splice(0).map((d) => rm(d, { recursive: true, force: true })),
+  );
 });
 
 async function tmp(): Promise<string> {
@@ -20,14 +22,18 @@ async function tmp(): Promise<string> {
   return dir;
 }
 
-const TABLE: PricingTable = { m: { input: 1e-6, output: 2e-6, cacheCreate: 1e-6, cacheRead: 1e-7 } };
+const TABLE: PricingTable = {
+  m: { input: 1e-6, output: 2e-6, cacheCreate: 1e-6, cacheRead: 1e-7 },
+};
 
 describe('pricingCachePath', () => {
   it('honors XDG_CACHE_HOME when set', () => {
     const prev = process.env.XDG_CACHE_HOME;
     process.env.XDG_CACHE_HOME = '/tmp/xdg';
     try {
-      expect(pricingCachePath()).toBe('/tmp/xdg/cc-powerline/litellm-pricing.json');
+      expect(pricingCachePath()).toBe(
+        '/tmp/xdg/cc-powerline/litellm-pricing.json',
+      );
     } finally {
       if (prev === undefined) delete process.env.XDG_CACHE_HOME;
       else process.env.XDG_CACHE_HOME = prev;
@@ -54,7 +60,11 @@ describe('pricing cache round-trip', () => {
     expect(await readPricingCache(bad)).toBeNull();
 
     const wrong = join(dir, 'wrong.json');
-    await writeFile(wrong, JSON.stringify({ fetchedAt: 'x', table: {} }), 'utf8');
+    await writeFile(
+      wrong,
+      JSON.stringify({ fetchedAt: 'x', table: {} }),
+      'utf8',
+    );
     expect(await readPricingCache(wrong)).toBeNull();
   });
 
@@ -63,6 +73,8 @@ describe('pricing cache round-trip', () => {
     const dir = await tmp();
     const file = join(dir, 'afile');
     await writeFile(file, 'x', 'utf8');
-    expect(await writePricingCache(TABLE, 1, join(file, 'child.json'))).toBe(false);
+    expect(await writePricingCache(TABLE, 1, join(file, 'child.json'))).toBe(
+      false,
+    );
   });
 });

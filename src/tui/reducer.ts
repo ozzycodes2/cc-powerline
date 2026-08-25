@@ -30,7 +30,8 @@ import {
 export type { Side };
 
 /** Which editor screen is showing. Unimplemented screens render a placeholder. */
-export type Screen = 'menu' | 'lines' | 'widgets' | 'picker' | 'color' | 'style' | 'theme' | 'io';
+export type Screen =
+  'menu' | 'lines' | 'widgets' | 'picker' | 'color' | 'style' | 'theme' | 'io';
 
 export interface Focus {
   lineIndex: number;
@@ -51,7 +52,8 @@ export interface TuiState {
   message: string | null;
 }
 
-export type ThemeKey = 'separator' | 'rightSeparator' | 'defaultFg' | 'defaultBg';
+export type ThemeKey =
+  'separator' | 'rightSeparator' | 'defaultFg' | 'defaultBg';
 
 export type Action =
   | { type: 'LOAD'; settings: Settings; sourcePath: string }
@@ -61,10 +63,27 @@ export type Action =
   | { type: 'SET_STYLE'; style: Settings['style'] }
   | { type: 'SET_SEPARATOR'; value: string | undefined }
   | { type: 'SET_THEME'; key: ThemeKey; value: string | undefined }
-  | { type: 'ADD_WIDGET'; lineIndex: number; side: Side; widgetType: string; at?: number }
+  | {
+      type: 'ADD_WIDGET';
+      lineIndex: number;
+      side: Side;
+      widgetType: string;
+      at?: number;
+    }
   | { type: 'REMOVE_WIDGET'; lineIndex: number; side: Side; itemIndex: number }
-  | { type: 'MOVE_WIDGET'; lineIndex: number; side: Side; itemIndex: number; dir: -1 | 1 }
-  | { type: 'MOVE_WIDGET_ACROSS'; lineIndex: number; side: Side; itemIndex: number }
+  | {
+      type: 'MOVE_WIDGET';
+      lineIndex: number;
+      side: Side;
+      itemIndex: number;
+      dir: -1 | 1;
+    }
+  | {
+      type: 'MOVE_WIDGET_ACROSS';
+      lineIndex: number;
+      side: Side;
+      itemIndex: number;
+    }
   | {
       type: 'SET_WIDGET_COLOR';
       lineIndex: number;
@@ -111,7 +130,8 @@ export function clampFocus(settings: Settings, focus: Focus): Focus {
   }
   const lineIndex = clamp(focus.lineIndex, 0, lineCount - 1);
   const group = settings.lines[lineIndex]![focus.side];
-  const itemIndex = group.length === 0 ? 0 : clamp(focus.itemIndex, 0, group.length - 1);
+  const itemIndex =
+    group.length === 0 ? 0 : clamp(focus.itemIndex, 0, group.length - 1);
   return { lineIndex, side: focus.side, itemIndex };
 }
 
@@ -153,20 +173,34 @@ export function reducer(state: TuiState, action: Action): TuiState {
       return commit(state, { ...state.settings, separator: action.value });
 
     case 'SET_THEME': {
-      const theme = { ...(state.settings.theme ?? {}), [action.key]: action.value };
+      const theme = {
+        ...(state.settings.theme ?? {}),
+        [action.key]: action.value,
+      };
       return commit(state, { ...state.settings, theme });
     }
 
     case 'ADD_WIDGET':
       return commit(
         state,
-        addWidget(state.settings, action.lineIndex, action.side, action.widgetType, action.at),
+        addWidget(
+          state.settings,
+          action.lineIndex,
+          action.side,
+          action.widgetType,
+          action.at,
+        ),
       );
 
     case 'REMOVE_WIDGET':
       return commit(
         state,
-        removeWidget(state.settings, action.lineIndex, action.side, action.itemIndex),
+        removeWidget(
+          state.settings,
+          action.lineIndex,
+          action.side,
+          action.itemIndex,
+        ),
       );
 
     case 'MOVE_WIDGET': {
@@ -181,7 +215,10 @@ export function reducer(state: TuiState, action: Action): TuiState {
       const line = state.settings.lines[action.lineIndex];
       const to = action.itemIndex + action.dir;
       const moved =
-        line && line[action.side][action.itemIndex] && to >= 0 && to < line[action.side].length;
+        line &&
+        line[action.side][action.itemIndex] &&
+        to >= 0 &&
+        to < line[action.side].length;
       return commit(
         moved ? { ...state, focus: { ...state.focus, itemIndex: to } } : state,
         settings,
@@ -190,9 +227,17 @@ export function reducer(state: TuiState, action: Action): TuiState {
 
     case 'MOVE_WIDGET_ACROSS': {
       const other: Side = action.side === 'left' ? 'right' : 'left';
-      const settings = moveWidgetAcross(state.settings, action.lineIndex, action.side, action.itemIndex);
+      const settings = moveWidgetAcross(
+        state.settings,
+        action.lineIndex,
+        action.side,
+        action.itemIndex,
+      );
       const dest = state.settings.lines[action.lineIndex]?.[other].length ?? 0;
-      return commit({ ...state, focus: { ...state.focus, side: other, itemIndex: dest } }, settings);
+      return commit(
+        { ...state, focus: { ...state.focus, side: other, itemIndex: dest } },
+        settings,
+      );
     }
 
     case 'SET_WIDGET_COLOR':
@@ -224,7 +269,14 @@ export function reducer(state: TuiState, action: Action): TuiState {
     case 'ADD_LINE': {
       const settings = addLine(state.settings);
       return commit(
-        { ...state, focus: { ...state.focus, lineIndex: settings.lines.length - 1, itemIndex: 0 } },
+        {
+          ...state,
+          focus: {
+            ...state.focus,
+            lineIndex: settings.lines.length - 1,
+            itemIndex: 0,
+          },
+        },
         settings,
       );
     }
@@ -243,10 +295,16 @@ export function reducer(state: TuiState, action: Action): TuiState {
     }
 
     case 'APPLY_PRESET':
-      return commit(state, applyPalette(state.settings, { fg: action.fg, bgs: action.bgs }));
+      return commit(
+        state,
+        applyPalette(state.settings, { fg: action.fg, bgs: action.bgs }),
+      );
 
     case 'REPLACE_SETTINGS':
-      return { ...commit(state, action.settings), message: action.message ?? null };
+      return {
+        ...commit(state, action.settings),
+        message: action.message ?? null,
+      };
 
     default:
       return state;

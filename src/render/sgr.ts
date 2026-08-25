@@ -34,7 +34,7 @@ export function expandSgr(input: string): string {
     if (body === '' || body === '0') return `\x1b[${body}m`;
     const params = body.split(';');
     let out = '';
-    for (let i = 0; i < params.length; ) {
+    for (let i = 0; i < params.length;) {
       const [attr, next] = takeAttr(params, i);
       out += `\x1b[${attr}m`;
       i = next;

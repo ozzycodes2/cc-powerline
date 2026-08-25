@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { stripAnsi, visibleWidth, truncateToWidth } from '../../src/render/stripAnsi.js';
+import {
+  stripAnsi,
+  visibleWidth,
+  truncateToWidth,
+} from '../../src/render/stripAnsi.js';
 
 const RED = '\x1b[31m';
 const RESET = '\x1b[0m';

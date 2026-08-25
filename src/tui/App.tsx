@@ -84,7 +84,10 @@ export function App({
   const doQuit = () => {
     if (dirty && !confirmQuit) {
       setConfirmQuit(true);
-      dispatch({ type: 'SET_MESSAGE', text: 'Unsaved changes — q again to discard, ^S to save' });
+      dispatch({
+        type: 'SET_MESSAGE',
+        text: 'Unsaved changes — q again to discard, ^S to save',
+      });
       return;
     }
     exit();
@@ -115,9 +118,18 @@ export function App({
     <Box flexDirection="column">
       <PreviewPane settings={state.settings} width={cols} />
       <Box marginTop={1}>
-        {helpVisible ? <HelpOverlay /> : renderScreen(state, dispatch, doSave, doQuit, loadFrom, themes)}
+        {helpVisible ? (
+          <HelpOverlay />
+        ) : (
+          renderScreen(state, dispatch, doSave, doQuit, loadFrom, themes)
+        )}
       </Box>
-      <StatusBar screen={state.screen} dirty={dirty} message={state.message} sourcePath={sourcePath} />
+      <StatusBar
+        screen={state.screen}
+        dirty={dirty}
+        message={state.message}
+        sourcePath={sourcePath}
+      />
     </Box>
   );
 }
@@ -146,6 +158,8 @@ function renderScreen(
     case 'theme':
       return <ThemePanel state={state} dispatch={dispatch} themes={themes} />;
     case 'io':
-      return <ImportExport state={state} dispatch={dispatch} loadFrom={loadFrom} />;
+      return (
+        <ImportExport state={state} dispatch={dispatch} loadFrom={loadFrom} />
+      );
   }
 }

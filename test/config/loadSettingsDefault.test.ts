@@ -7,7 +7,9 @@ import { DEFAULT_SETTINGS } from '../../src/config/defaultSettings.js';
 
 const created: string[] = [];
 afterEach(async () => {
-  await Promise.all(created.splice(0).map((d) => rm(d, { recursive: true, force: true })));
+  await Promise.all(
+    created.splice(0).map((d) => rm(d, { recursive: true, force: true })),
+  );
 });
 
 describe('settingsPath', () => {
@@ -28,7 +30,14 @@ describe('loadSettings with the default (real) reader', () => {
     const dir = await mkdtemp(join(tmpdir(), 'ccpl-cfg-'));
     created.push(dir);
     const path = join(dir, 'settings.json');
-    await writeFile(path, JSON.stringify({ style: 'powerline', lines: [{ left: [{ type: 'model' }], right: [] }] }), 'utf8');
+    await writeFile(
+      path,
+      JSON.stringify({
+        style: 'powerline',
+        lines: [{ left: [{ type: 'model' }], right: [] }],
+      }),
+      'utf8',
+    );
 
     const res = await loadSettings({ path });
     expect(res.source).toBe('file');
@@ -36,7 +45,9 @@ describe('loadSettings with the default (real) reader', () => {
   });
 
   it('falls back to defaults when the real file is absent', async () => {
-    const res = await loadSettings({ path: join(tmpdir(), 'ccpl-nope-xyz', 'settings.json') });
+    const res = await loadSettings({
+      path: join(tmpdir(), 'ccpl-nope-xyz', 'settings.json'),
+    });
     expect(res.source).toBe('default');
     expect(res.settings).toEqual(DEFAULT_SETTINGS);
   });

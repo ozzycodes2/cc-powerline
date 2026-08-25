@@ -30,8 +30,11 @@ const model = defineWidget({
   label: 'Model',
   description: 'Active model display name',
   options: NO_OPTS,
-  render: (ctx) => ctx.status.model?.display_name ?? ctx.status.model?.id ?? null,
-  sample: () => ({ status: { model: { id: 'claude-opus-4-8', display_name: 'Opus 4.8' } } }),
+  render: (ctx) =>
+    ctx.status.model?.display_name ?? ctx.status.model?.id ?? null,
+  sample: () => ({
+    status: { model: { id: 'claude-opus-4-8', display_name: 'Opus 4.8' } },
+  }),
 });
 
 const modelEffort = defineWidget({
@@ -74,7 +77,9 @@ const directory = defineWidget({
   type: 'directory',
   label: 'Directory',
   description: 'Working directory path',
-  options: z.object({ mode: z.enum(['compressed', 'basename', 'full']).default('compressed') }),
+  options: z.object({
+    mode: z.enum(['compressed', 'basename', 'full']).default('compressed'),
+  }),
   render: (ctx, opts) => {
     const dir = ctx.status.cwd ?? ctx.status.workspace?.project_dir;
     if (!dir) {
@@ -88,7 +93,9 @@ const directory = defineWidget({
     }
     return compressPath(dir, ctx.home);
   },
-  sample: () => ({ status: { cwd: '/Users/you/Documents/work/voice-connect' } }),
+  sample: () => ({
+    status: { cwd: '/Users/you/Documents/work/voice-connect' },
+  }),
 });
 
 const contextLength = defineWidget({
@@ -101,12 +108,18 @@ const contextLength = defineWidget({
     let pct: number | null = null;
     if (typeof cw?.used_percentage === 'number') {
       pct = cw.used_percentage;
-    } else if (typeof cw?.context_window_size === 'number' && cw.context_window_size > 0) {
+    } else if (
+      typeof cw?.context_window_size === 'number' &&
+      cw.context_window_size > 0
+    ) {
       pct = (ctx.totals.contextTokens / cw.context_window_size) * 100;
     }
     return pct === null ? null : formatPercent(pct);
   }),
-  sample: () => ({ status: { context_window: { used_percentage: 42 } }, totals: { contextTokens: 84_000 } }),
+  sample: () => ({
+    status: { context_window: { used_percentage: 42 } },
+    totals: { contextTokens: 84_000 },
+  }),
 });
 
 const sessionCost = defineWidget({
@@ -115,10 +128,16 @@ const sessionCost = defineWidget({
   description: 'Total USD spent this session',
   options: NO_OPTS,
   render: (ctx) => {
-    const cost = ctx.totals.costUsd > 0 ? ctx.totals.costUsd : ctx.status.cost?.total_cost_usd ?? 0;
+    const cost =
+      ctx.totals.costUsd > 0
+        ? ctx.totals.costUsd
+        : (ctx.status.cost?.total_cost_usd ?? 0);
     return formatCost(cost);
   },
-  sample: () => ({ status: { cost: { total_cost_usd: 1.23 } }, totals: { costUsd: 1.23 } }),
+  sample: () => ({
+    status: { cost: { total_cost_usd: 1.23 } },
+    totals: { costUsd: 1.23 },
+  }),
 });
 
 /**
@@ -150,7 +169,9 @@ const nextCost = defineWidget({
   options: z.object({ icon: z.string().default('') }),
   render: prefixIcon((ctx) => {
     const tokens = ctx.totals.contextTokens;
-    const base = baseInputPrice(ctx.status.model?.display_name ?? ctx.status.model?.id);
+    const base = baseInputPrice(
+      ctx.status.model?.display_name ?? ctx.status.model?.id,
+    );
     if (base === null || tokens <= 0) {
       return null;
     }
@@ -159,7 +180,8 @@ const nextCost = defineWidget({
     // after expiry: 2x for the 1-hour tier, 1.25x for the 5-minute tier. An
     // unknown tier defaults to the cheaper 5-minute rate. Output tokens are
     // unknowable in advance and, like ceejbot, deliberately excluded.
-    const oneHour = ctx.totals.cacheTtlMs !== null && ctx.totals.cacheTtlMs >= 3_600_000;
+    const oneHour =
+      ctx.totals.cacheTtlMs !== null && ctx.totals.cacheTtlMs >= 3_600_000;
     const warm = mtok * base * 0.1;
     const cold = mtok * base * (oneHour ? 2 : 1.25);
     // Once the cache has gone cold the warm price is unreachable, so collapse to
@@ -167,8 +189,11 @@ const nextCost = defineWidget({
     // is only known when a timestamped cache write and a clock are both present;
     // absent either, assume still-warm and show the full projection.
     const exp = ctx.totals.cacheExpiresAt;
-    const expired = exp !== null && typeof ctx.now === 'number' && ctx.now >= exp;
-    return expired ? formatMoney(cold) : `${formatMoney(warm)}→${formatMoney(cold)}`;
+    const expired =
+      exp !== null && typeof ctx.now === 'number' && ctx.now >= exp;
+    return expired
+      ? formatMoney(cold)
+      : `${formatMoney(warm)}→${formatMoney(cold)}`;
   }),
   sample: () => ({
     status: { model: { display_name: 'Opus 4.8' } },
@@ -186,7 +211,9 @@ const cacheHitRate = defineWidget({
     const denom = cacheReadTokens + cacheCreationTokens;
     return denom <= 0 ? null : formatPercent((cacheReadTokens / denom) * 100);
   }),
-  sample: () => ({ totals: { cacheReadTokens: 9000, cacheCreationTokens: 1000 } }),
+  sample: () => ({
+    totals: { cacheReadTokens: 9000, cacheCreationTokens: 1000 },
+  }),
 });
 
 const cacheWindow = defineWidget({
@@ -226,7 +253,9 @@ const rateLimit = defineWidget({
     const pct = ctx.status.rate_limits?.five_hour?.used_percentage;
     return typeof pct === 'number' ? formatPercent(pct) : null;
   }),
-  sample: () => ({ status: { rate_limits: { five_hour: { used_percentage: 18 } } } }),
+  sample: () => ({
+    status: { rate_limits: { five_hour: { used_percentage: 18 } } },
+  }),
 });
 
 const separator = defineWidget({

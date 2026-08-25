@@ -4,7 +4,10 @@
  * (item -> line defaults -> theme -> builtin) and parse each widget's options,
  * so the render layer only draws and never resolves defaults.
  */
-import { DEFAULT_THEME, type PowerlineTheme } from '../render/powerlineRenderer.js';
+import {
+  DEFAULT_THEME,
+  type PowerlineTheme,
+} from '../render/powerlineRenderer.js';
 import type { Color } from '../render/types.js';
 import type { LineConfig, Settings, WidgetItem } from '../types/Settings.js';
 import { parseWidgetOptions } from '../widgets/registry.js';
@@ -31,7 +34,8 @@ export interface ResolvedSettings {
 function resolveTheme(settings: Settings): PowerlineTheme {
   return {
     separator: settings.theme?.separator ?? DEFAULT_THEME.separator,
-    rightSeparator: settings.theme?.rightSeparator ?? DEFAULT_THEME.rightSeparator,
+    rightSeparator:
+      settings.theme?.rightSeparator ?? DEFAULT_THEME.rightSeparator,
     defaultFg: (settings.theme?.defaultFg as Color) ?? DEFAULT_THEME.defaultFg,
     defaultBg: (settings.theme?.defaultBg as Color) ?? DEFAULT_THEME.defaultBg,
   };

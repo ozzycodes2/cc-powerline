@@ -5,9 +5,15 @@ import {
 } from '../../src/pricing/resolvePricing.js';
 import type { PricingTable } from '../../src/types/Pricing.js';
 
-const CACHE_TABLE: PricingTable = { 'from-cache': { input: 1, output: 2, cacheCreate: 1, cacheRead: 1 } };
-const NET_TABLE: PricingTable = { 'from-net': { input: 3, output: 4, cacheCreate: 1, cacheRead: 1 } };
-const EMBEDDED: PricingTable = { 'from-embedded': { input: 5, output: 6, cacheCreate: 1, cacheRead: 1 } };
+const CACHE_TABLE: PricingTable = {
+  'from-cache': { input: 1, output: 2, cacheCreate: 1, cacheRead: 1 },
+};
+const NET_TABLE: PricingTable = {
+  'from-net': { input: 3, output: 4, cacheCreate: 1, cacheRead: 1 },
+};
+const EMBEDDED: PricingTable = {
+  'from-embedded': { input: 5, output: 6, cacheCreate: 1, cacheRead: 1 },
+};
 
 function deps(over: Partial<ResolvePricingDeps>): Partial<ResolvePricingDeps> {
   return {
@@ -38,7 +44,11 @@ describe('resolvePricing', () => {
   it('fetches and writes the cache on a cache miss', async () => {
     const writeCache = vi.fn(async () => true);
     const res = await resolvePricing(
-      deps({ readCache: async () => null, fetchTable: async () => NET_TABLE, writeCache }),
+      deps({
+        readCache: async () => null,
+        fetchTable: async () => NET_TABLE,
+        writeCache,
+      }),
     );
     expect(res.source).toBe('network');
     expect(res.table).toBe(NET_TABLE);

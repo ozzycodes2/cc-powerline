@@ -53,7 +53,9 @@ describe('compressPath', () => {
   });
 
   it('substitutes ~ for the home directory', () => {
-    expect(compressPath('/Users/me/Documents/work/proj', '/Users/me')).toBe('~/D/w/proj');
+    expect(compressPath('/Users/me/Documents/work/proj', '/Users/me')).toBe(
+      '~/D/w/proj',
+    );
     expect(compressPath('/Users/me', '/Users/me')).toBe('~');
   });
 

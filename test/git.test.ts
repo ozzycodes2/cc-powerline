@@ -4,7 +4,10 @@ import type { StatusJSON } from '../src/types/StatusJSON.js';
 
 describe('resolveGitBranch', () => {
   it('prefers the branch Claude Code already reports', () => {
-    const status: StatusJSON = { worktree: { branch: 'feature/x' }, cwd: '/repo' };
+    const status: StatusJSON = {
+      worktree: { branch: 'feature/x' },
+      cwd: '/repo',
+    };
     const exec = () => {
       throw new Error('should not shell out');
     };
@@ -38,18 +41,26 @@ describe('resolveGitChanges', () => {
       seen = cmd;
       return '12\t3\tsrc/a.ts\n0\t5\tsrc/b.ts';
     };
-    expect(resolveGitChanges({ cwd: '/repo' }, { exec })).toEqual({ added: 12, deleted: 8 });
+    expect(resolveGitChanges({ cwd: '/repo' }, { exec })).toEqual({
+      added: 12,
+      deleted: 8,
+    });
     expect(seen).toContain('git -C "/repo" diff --numstat HEAD');
   });
 
   it('skips binary rows (numstat reports "-") without corrupting the sum', () => {
     const exec = () => '-\t-\timg.png\n4\t1\tsrc/a.ts';
-    expect(resolveGitChanges({ cwd: '/repo' }, { exec })).toEqual({ added: 4, deleted: 1 });
+    expect(resolveGitChanges({ cwd: '/repo' }, { exec })).toEqual({
+      added: 4,
+      deleted: 1,
+    });
   });
 
   it('hides on a clean tree, a failed probe, or no cwd', () => {
     expect(resolveGitChanges({ cwd: '/repo' }, { exec: () => '' })).toBeNull();
-    expect(resolveGitChanges({ cwd: '/repo' }, { exec: () => null })).toBeNull();
+    expect(
+      resolveGitChanges({ cwd: '/repo' }, { exec: () => null }),
+    ).toBeNull();
     expect(resolveGitChanges({}, { exec: () => '1\t1\tf' })).toBeNull();
   });
 
@@ -59,7 +70,9 @@ describe('resolveGitChanges', () => {
       seen = cmd;
       return '2\t0\tf';
     };
-    expect(resolveGitChanges({ workspace: { project_dir: '/w' } }, { exec })).toEqual({
+    expect(
+      resolveGitChanges({ workspace: { project_dir: '/w' } }, { exec }),
+    ).toEqual({
       added: 2,
       deleted: 0,
     });

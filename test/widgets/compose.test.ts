@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { prefixed, prefixIcon, prefixLabel } from '../../src/widgets/compose.js';
+import {
+  prefixed,
+  prefixIcon,
+  prefixLabel,
+} from '../../src/widgets/compose.js';
 import type { WidgetContext } from '../../src/widgets/Widget.js';
 
 const ctx = {} as WidgetContext;
@@ -11,7 +15,12 @@ describe('prefixed', () => {
   });
 
   it('skip-empty omits the prefix when the option is empty', () => {
-    const r = prefixed<{ icon?: string }>('icon', ' ', 'skip-empty', () => 'body');
+    const r = prefixed<{ icon?: string }>(
+      'icon',
+      ' ',
+      'skip-empty',
+      () => 'body',
+    );
     expect(r(ctx, {})).toBe('body');
     expect(r(ctx, { icon: '' })).toBe('body');
     expect(r(ctx, { icon: 'X' })).toBe('X body');

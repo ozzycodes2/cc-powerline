@@ -28,7 +28,9 @@ describe('resolveGitBranch with the default (real) exec', () => {
   });
 
   it('returns null for a directory that is not a git repo', () => {
-    expect(resolveGitBranch({ cwd: tmpdir() + '/definitely-not-a-repo-xyz' })).toBeNull();
+    expect(
+      resolveGitBranch({ cwd: tmpdir() + '/definitely-not-a-repo-xyz' }),
+    ).toBeNull();
   });
 });
 

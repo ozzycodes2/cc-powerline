@@ -76,7 +76,9 @@ export const DEFAULT_CACHE_READ_MULTIPLIER = 0.1;
  * missing-rate defaults. Returns `null` when the entry has no input rate — a
  * model we cannot price at all.
  */
-export function normalizePricingEntry(raw: RawLiteLLMEntry): ModelPricing | null {
+export function normalizePricingEntry(
+  raw: RawLiteLLMEntry,
+): ModelPricing | null {
   const input = raw.input_cost_per_token;
   if (typeof input !== 'number') {
     return null;
@@ -85,8 +87,10 @@ export function normalizePricingEntry(raw: RawLiteLLMEntry): ModelPricing | null
     input,
     output: raw.output_cost_per_token ?? 0,
     cacheCreate:
-      raw.cache_creation_input_token_cost ?? input * DEFAULT_CACHE_CREATE_MULTIPLIER,
-    cacheRead: raw.cache_read_input_token_cost ?? input * DEFAULT_CACHE_READ_MULTIPLIER,
+      raw.cache_creation_input_token_cost ??
+      input * DEFAULT_CACHE_CREATE_MULTIPLIER,
+    cacheRead:
+      raw.cache_read_input_token_cost ?? input * DEFAULT_CACHE_READ_MULTIPLIER,
     inputAbove200k: raw.input_cost_per_token_above_200k_tokens,
     outputAbove200k: raw.output_cost_per_token_above_200k_tokens,
     cacheCreateAbove200k: raw.cache_creation_input_token_cost_above_200k_tokens,

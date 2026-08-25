@@ -16,7 +16,11 @@ const assistant = (usage: Record<string, unknown>) =>
 describe('parseTranscript', () => {
   it('sums cost and tokens across assistant messages', () => {
     const jsonl = [
-      assistant({ input_tokens: 1000, output_tokens: 500, cache_read_input_tokens: 2000 }),
+      assistant({
+        input_tokens: 1000,
+        output_tokens: 500,
+        cache_read_input_tokens: 2000,
+      }),
       assistant({ input_tokens: 100, output_tokens: 50 }),
     ].join('\n');
     const r = parseTranscript(jsonl, PRICING);
@@ -32,7 +36,10 @@ describe('parseTranscript', () => {
     const r = parseTranscript(
       assistant({
         input_tokens: 0,
-        cache_creation: { ephemeral_5m_input_tokens: 10, ephemeral_1h_input_tokens: 20 },
+        cache_creation: {
+          ephemeral_5m_input_tokens: 10,
+          ephemeral_1h_input_tokens: 20,
+        },
       }),
       PRICING,
     );
@@ -50,7 +57,9 @@ describe('parseTranscript', () => {
   });
 
   it('tolerates blank and corrupt lines', () => {
-    const jsonl = ['', '{bad json', assistant({ input_tokens: 1000 }), ''].join('\n');
+    const jsonl = ['', '{bad json', assistant({ input_tokens: 1000 }), ''].join(
+      '\n',
+    );
     expect(parseTranscript(jsonl, PRICING).inputTokens).toBe(1000);
   });
 
@@ -62,7 +71,12 @@ describe('parseTranscript', () => {
 
 describe('mergeTotals', () => {
   it('adds deltas and replaces contextTokens from the newest chunk', () => {
-    const prev = { ...ZERO_TOTALS, costUsd: 1, inputTokens: 10, contextTokens: 99 };
+    const prev = {
+      ...ZERO_TOTALS,
+      costUsd: 1,
+      inputTokens: 10,
+      contextTokens: 99,
+    };
     const merged = mergeTotals(prev, {
       costUsd: 0.5,
       inputTokens: 5,
@@ -83,7 +97,12 @@ describe('mergeTotals', () => {
   });
 
   it('keeps the previous contextTokens and cache state when the chunk had no messages', () => {
-    const prev = { ...ZERO_TOTALS, contextTokens: 99, cacheExpiresAt: 500, cacheTtlMs: 3_600_000 };
+    const prev = {
+      ...ZERO_TOTALS,
+      contextTokens: 99,
+      cacheExpiresAt: 500,
+      cacheTtlMs: 3_600_000,
+    };
     const merged = mergeTotals(prev, {
       costUsd: 0,
       inputTokens: 0,
@@ -103,11 +122,18 @@ describe('mergeTotals', () => {
 
 describe('parseTranscript cache expiry', () => {
   const at = (ts: string, usage: Record<string, unknown>) =>
-    JSON.stringify({ type: 'assistant', timestamp: ts, message: { model: 'm', usage } });
+    JSON.stringify({
+      type: 'assistant',
+      timestamp: ts,
+      message: { model: 'm', usage },
+    });
 
   it('sets a 5-minute expiry from a cache-creating message timestamp', () => {
     const r = parseTranscript(
-      at('2026-08-21T00:00:00.000Z', { input_tokens: 1, cache_creation_input_tokens: 100 }),
+      at('2026-08-21T00:00:00.000Z', {
+        input_tokens: 1,
+        cache_creation_input_tokens: 100,
+      }),
       PRICING,
     );
     expect(r.lastCacheExpiresAt).toBe(Date.parse('2026-08-21T00:05:00.000Z'));
@@ -118,7 +144,10 @@ describe('parseTranscript cache expiry', () => {
     const r = parseTranscript(
       at('2026-08-21T00:00:00.000Z', {
         input_tokens: 1,
-        cache_creation: { ephemeral_5m_input_tokens: 0, ephemeral_1h_input_tokens: 50 },
+        cache_creation: {
+          ephemeral_5m_input_tokens: 0,
+          ephemeral_1h_input_tokens: 50,
+        },
       }),
       PRICING,
     );

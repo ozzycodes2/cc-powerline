@@ -31,7 +31,8 @@ async function main(): Promise<void> {
       continue;
     }
     const isAnthropic =
-      entry.litellm_provider === 'anthropic' || name.toLowerCase().includes('claude');
+      entry.litellm_provider === 'anthropic' ||
+      name.toLowerCase().includes('claude');
     if (!isAnthropic) {
       continue;
     }

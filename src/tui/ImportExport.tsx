@@ -21,8 +21,16 @@ export interface ImportExportProps {
 }
 
 const ACTIONS = [
-  { key: 'reset', label: 'Reset to defaults', hint: 'the built-in single-line layout' },
-  { key: 'load', label: 'Load from file…', hint: 'replace with another settings.json' },
+  {
+    key: 'reset',
+    label: 'Reset to defaults',
+    hint: 'the built-in single-line layout',
+  },
+  {
+    key: 'load',
+    label: 'Load from file…',
+    hint: 'replace with another settings.json',
+  },
 ] as const;
 
 export function ImportExport({ state, dispatch, loadFrom }: ImportExportProps) {
@@ -32,9 +40,16 @@ export function ImportExport({ state, dispatch, loadFrom }: ImportExportProps) {
   const runLoad = (p: string) => {
     void loadFrom(p).then(
       (settings) =>
-        dispatch({ type: 'REPLACE_SETTINGS', settings, message: `Loaded ${p} (unsaved)` }),
+        dispatch({
+          type: 'REPLACE_SETTINGS',
+          settings,
+          message: `Loaded ${p} (unsaved)`,
+        }),
       (err: unknown) =>
-        dispatch({ type: 'SET_MESSAGE', text: `Could not load: ${(err as Error).message}` }),
+        dispatch({
+          type: 'SET_MESSAGE',
+          text: `Could not load: ${(err as Error).message}`,
+        }),
     );
   };
 
@@ -86,7 +101,10 @@ export function ImportExport({ state, dispatch, loadFrom }: ImportExportProps) {
         </Box>
       ) : (
         <Box marginTop={1}>
-          <SelectList items={ACTIONS.map((a) => ({ label: a.label, hint: a.hint }))} cursor={cursor} />
+          <SelectList
+            items={ACTIONS.map((a) => ({ label: a.label, hint: a.hint }))}
+            cursor={cursor}
+          />
         </Box>
       )}
     </Box>

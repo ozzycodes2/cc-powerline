@@ -21,7 +21,10 @@ describe('parseStatusJSON', () => {
   });
 
   it('preserves unknown top-level keys (passthrough)', () => {
-    const s = parseStatusJSON(JSON.stringify({ brand_new_field: 7 })) as Record<string, unknown>;
+    const s = parseStatusJSON(JSON.stringify({ brand_new_field: 7 })) as Record<
+      string,
+      unknown
+    >;
     expect(s.brand_new_field).toBe(7);
   });
 

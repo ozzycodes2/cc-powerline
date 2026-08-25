@@ -47,7 +47,9 @@ export function ThemePanel({ dispatch, themes = [] }: ThemePanelProps) {
           const selected = i === cursor;
           return (
             <Box key={p.key}>
-              <Text color={selected ? 'cyan' : undefined}>{selected ? '❯ ' : '  '}</Text>
+              <Text color={selected ? 'cyan' : undefined}>
+                {selected ? '❯ ' : '  '}
+              </Text>
               {p.bgs.map((c, ci) => (
                 <Swatch key={ci} color={c} cells={1} />
               ))}

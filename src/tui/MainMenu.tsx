@@ -24,9 +24,17 @@ export interface MainMenuProps {
 export function MainMenu({ dispatch, onSave, onQuit }: MainMenuProps) {
   const go = (screen: Screen) => () => dispatch({ type: 'NAVIGATE', screen });
   const entries: MenuEntry[] = [
-    { label: 'Lines & widgets', hint: 'add, remove, reorder', run: go('lines') },
+    {
+      label: 'Lines & widgets',
+      hint: 'add, remove, reorder',
+      run: go('lines'),
+    },
     { label: 'Style', hint: 'powerline / builtin', run: go('style') },
-    { label: 'Theme', hint: 'recolor from a preset or a detected prompt theme', run: go('theme') },
+    {
+      label: 'Theme',
+      hint: 'recolor from a preset or a detected prompt theme',
+      run: go('theme'),
+    },
     { label: 'Import / export', hint: 'presets, reset, load', run: go('io') },
     { label: 'Save', hint: 'write settings.json', run: onSave },
     { label: 'Quit', hint: '', run: onQuit },
@@ -43,5 +51,10 @@ export function MainMenu({ dispatch, onSave, onQuit }: MainMenuProps) {
     }
   });
 
-  return <SelectList items={entries.map((e) => ({ label: e.label, hint: e.hint }))} cursor={cursor} />;
+  return (
+    <SelectList
+      items={entries.map((e) => ({ label: e.label, hint: e.hint }))}
+      cursor={cursor}
+    />
+  );
 }

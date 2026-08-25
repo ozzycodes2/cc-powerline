@@ -16,17 +16,27 @@ import { SettingsSchema, type Settings } from '../../src/types/Settings.js';
 const parse = (raw: unknown): Settings => SettingsSchema.parse(raw);
 
 const twoLeft = () =>
-  parse({ lines: [{ left: [{ type: 'model' }, { type: 'directory' }], right: [] }] });
+  parse({
+    lines: [{ left: [{ type: 'model' }, { type: 'directory' }], right: [] }],
+  });
 
 describe('addWidget', () => {
   it('appends by default', () => {
     const r = addWidget(twoLeft(), 0, 'left', 'git-branch');
-    expect(r.lines[0]!.left.map((i) => i.type)).toEqual(['model', 'directory', 'git-branch']);
+    expect(r.lines[0]!.left.map((i) => i.type)).toEqual([
+      'model',
+      'directory',
+      'git-branch',
+    ]);
   });
 
   it('inserts at a clamped index', () => {
     const r = addWidget(twoLeft(), 0, 'left', 'git-branch', 1);
-    expect(r.lines[0]!.left.map((i) => i.type)).toEqual(['model', 'git-branch', 'directory']);
+    expect(r.lines[0]!.left.map((i) => i.type)).toEqual([
+      'model',
+      'git-branch',
+      'directory',
+    ]);
     const clamped = addWidget(twoLeft(), 0, 'left', 'git-branch', 99);
     expect(clamped.lines[0]!.left.at(-1)!.type).toBe('git-branch');
   });
@@ -70,7 +80,9 @@ describe('moveWidgetAcross', () => {
   });
 
   it('moves from the right group back to the left', () => {
-    const s = parse({ lines: [{ left: [{ type: 'model' }], right: [{ type: 'directory' }] }] });
+    const s = parse({
+      lines: [{ left: [{ type: 'model' }], right: [{ type: 'directory' }] }],
+    });
     const r = moveWidgetAcross(s, 0, 'right', 0);
     expect(r.lines[0]!.left.map((i) => i.type)).toEqual(['model', 'directory']);
     expect(r.lines[0]!.right).toEqual([]);
@@ -100,7 +112,10 @@ describe('setWidgetOption', () => {
   it('merges an option key without dropping the others', () => {
     const withIcon = setWidgetOption(twoLeft(), 0, 'left', 0, 'icon', 'X');
     const withMode = setWidgetOption(withIcon, 0, 'left', 0, 'mode', 'full');
-    expect(withMode.lines[0]!.left[0]!.options).toEqual({ icon: 'X', mode: 'full' });
+    expect(withMode.lines[0]!.left[0]!.options).toEqual({
+      icon: 'X',
+      mode: 'full',
+    });
   });
 });
 
@@ -117,7 +132,9 @@ describe('line ops', () => {
   });
 
   it('moves a line and no-ops off the ends', () => {
-    const two = parse({ lines: [{ left: [{ type: 'model' }] }, { left: [{ type: 'directory' }] }] });
+    const two = parse({
+      lines: [{ left: [{ type: 'model' }] }, { left: [{ type: 'directory' }] }],
+    });
     const moved = moveLine(two, 0, 1);
     expect(moved.lines[0]!.left[0]!.type).toBe('directory');
     expect(moveLine(two, 0, -1)).toBe(two);

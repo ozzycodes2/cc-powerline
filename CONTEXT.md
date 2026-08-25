@@ -12,7 +12,7 @@ the load-bearing seams; use them exactly in code and discussion.
 - **Palette** — a foreground plus a ring of backgrounds, applied round-robin
   across the widgets in a group. The pure, applyable color unit
   (`config/palette.ts`).
-- **Preset** — a *named, selectable* palette: a built-in (slate / mono / ocean)
+- **Preset** — a _named, selectable_ palette: a built-in (slate / mono / ocean)
   or a theme detected from the user's existing prompt config on disk. A palette
   with a `key` and `label`.
 - **Resolved settings** — Settings with every fg/bg cascade applied and every
@@ -25,7 +25,7 @@ the load-bearing seams; use them exactly in code and discussion.
   move / remove a widget, recolor, apply a palette, line ops). One home that
   both frontends drive (`config/edit.ts`).
 - **Frontend** — a way to build or edit Settings: the numbered-prompt `init`
-  wizard (`cli/`) and the Ink TUI editor (`tui/`). Frontends are *adapters* over
+  wizard (`cli/`) and the Ink TUI editor (`tui/`). Frontends are _adapters_ over
   the Settings algebra and the config store.
 - **Config store** — the seam that reads and writes Settings on disk
   (`config/store.ts`).

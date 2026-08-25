@@ -40,7 +40,9 @@ export interface ResolvePricingDeps {
 }
 
 /** Fetch and normalize the full LiteLLM table. Returns `null` on any failure. */
-export async function fetchLiteLLMTable(url = LITELLM_URL): Promise<PricingTable | null> {
+export async function fetchLiteLLMTable(
+  url = LITELLM_URL,
+): Promise<PricingTable | null> {
   try {
     const res = await fetch(url);
     if (!res.ok) {

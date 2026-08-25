@@ -14,10 +14,7 @@ const bool = z.boolean().optional().catch(undefined);
 
 export const StatusJSONSchema = z
   .object({
-    model: z
-      .object({ id: str, display_name: str })
-      .passthrough()
-      .optional(),
+    model: z.object({ id: str, display_name: str }).passthrough().optional(),
     cwd: str,
     workspace: z
       .object({

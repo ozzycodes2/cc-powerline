@@ -9,7 +9,8 @@ import type { Screen } from '../reducer.js';
 const HINTS: Record<Screen, string> = {
   menu: '↑↓ move · ⏎ open · ^S save · ? help · q quit',
   lines: '↑↓ move · ⏎ edit · a add · d del · m move · esc back',
-  widgets: '↑↓ move · ⏎ edit · a add · d del · c color · m move · tab side · esc back',
+  widgets:
+    '↑↓ move · ⏎ edit · a add · d del · c color · m move · tab side · esc back',
   picker: 'type to filter · ↑↓ move · ⏎ pick · esc cancel',
   color: '↑↓←→ swatch · h hex · ⏎ pick · esc cancel',
   style: '↑↓ move · ⏎ toggle · esc back',
@@ -24,7 +25,12 @@ export interface StatusBarProps {
   sourcePath: string;
 }
 
-export function StatusBar({ screen, dirty, message, sourcePath }: StatusBarProps) {
+export function StatusBar({
+  screen,
+  dirty,
+  message,
+  sourcePath,
+}: StatusBarProps) {
   return (
     <Box flexDirection="column" marginTop={1}>
       <Box>

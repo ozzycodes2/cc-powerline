@@ -60,7 +60,10 @@ export function bgParams(color: Color): string | null {
 }
 
 /** Wrap `text` in the given fg/bg colors, resetting afterward. */
-export function colorize(text: string, opts: { fg?: Color; bg?: Color }): string {
+export function colorize(
+  text: string,
+  opts: { fg?: Color; bg?: Color },
+): string {
   const parts: string[] = [];
   if (opts.fg) {
     const p = fgParams(opts.fg);

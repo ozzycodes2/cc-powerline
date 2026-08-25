@@ -5,7 +5,12 @@
  * `App` wires them, minus the preview and global keybindings.
  */
 import { useReducer, type ReactElement } from 'react';
-import { reducer, initialState, type Action, type TuiState } from '../../src/tui/reducer.js';
+import {
+  reducer,
+  initialState,
+  type Action,
+  type TuiState,
+} from '../../src/tui/reducer.js';
 import type { Settings } from '../../src/types/Settings.js';
 
 export interface HarnessProps {
@@ -17,7 +22,10 @@ export interface HarnessProps {
 }
 
 export function Harness({ settings, children, onState }: HarnessProps) {
-  const [state, dispatch] = useReducer(reducer, initialState(settings, '/tmp/s.json'));
+  const [state, dispatch] = useReducer(
+    reducer,
+    initialState(settings, '/tmp/s.json'),
+  );
   onState?.(state);
   return children(state, dispatch);
 }

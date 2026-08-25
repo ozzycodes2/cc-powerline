@@ -7,7 +7,12 @@
 import { createElement } from 'react';
 import { render } from 'ink';
 import { App } from './App.js';
-import { loadSettings, settingsPath, saveConfig, loadConfigStrict } from '../config/store.js';
+import {
+  loadSettings,
+  settingsPath,
+  saveConfig,
+  loadConfigStrict,
+} from '../config/store.js';
 import { scanThemes } from './themeScan.js';
 import type { Settings } from '../types/Settings.js';
 import type { Preset } from '../config/palette.js';
@@ -22,7 +27,10 @@ export interface RunTuiDeps {
   stdout?: NodeJS.WriteStream;
 }
 
-export async function defaultLoad(): Promise<{ settings: Settings; sourcePath: string }> {
+export async function defaultLoad(): Promise<{
+  settings: Settings;
+  sourcePath: string;
+}> {
   const { settings } = await loadSettings();
   return { settings, sourcePath: settingsPath() };
 }
@@ -34,7 +42,8 @@ export async function defaultLoadFrom(path: string): Promise<Settings> {
 
 export async function runTui(deps: RunTuiDeps = {}): Promise<void> {
   const load = deps.load ?? defaultLoad;
-  const save = deps.save ?? ((s: Settings) => saveConfig(s).then(() => undefined));
+  const save =
+    deps.save ?? ((s: Settings) => saveConfig(s).then(() => undefined));
   const loadFrom = deps.loadFrom ?? defaultLoadFrom;
   const themes = deps.themes ?? scanThemes();
 
@@ -46,7 +55,13 @@ export async function runTui(deps: RunTuiDeps = {}): Promise<void> {
   if (deps.stdin) options.stdin = deps.stdin;
   if (deps.stdout) options.stdout = deps.stdout;
   const app = render(
-    createElement(App, { initialSettings: settings, sourcePath, save, loadFrom, themes }),
+    createElement(App, {
+      initialSettings: settings,
+      sourcePath,
+      save,
+      loadFrom,
+      themes,
+    }),
     options,
   );
   await app.waitUntilExit();

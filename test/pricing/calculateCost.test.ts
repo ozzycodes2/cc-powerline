@@ -63,7 +63,10 @@ describe('calculateCost — ccusage golden vectors', () => {
       usage({
         cacheCreationInputTokens: 999, // ignored because a breakdown is present
         cacheReadInputTokens: 30,
-        cacheCreation: { ephemeral5mInputTokens: 10, ephemeral1hInputTokens: 20 },
+        cacheCreation: {
+          ephemeral5mInputTokens: 10,
+          ephemeral1hInputTokens: 20,
+        },
       }),
       TEST_TABLE,
     );
@@ -71,14 +74,22 @@ describe('calculateCost — ccusage golden vectors', () => {
   });
 
   it('falls back to the flat cache-creation rate without a breakdown (→ 12.5)', () => {
-    const cost = calculateCost('test-model', usage({ cacheCreationInputTokens: 10 }), TEST_TABLE);
+    const cost = calculateCost(
+      'test-model',
+      usage({ cacheCreationInputTokens: 10 }),
+      TEST_TABLE,
+    );
     expect(Math.abs(cost - 12.5)).toBeLessThan(Number.EPSILON);
   });
 
   it('prices a two-stage model as a whole request at long-context rates (→ 3.0451)', () => {
     const cost = calculateCost(
       'gpt-5.6-sol',
-      usage({ inputTokens: 300_000, outputTokens: 1_000, cacheReadInputTokens: 100 }),
+      usage({
+        inputTokens: 300_000,
+        outputTokens: 1_000,
+        cacheReadInputTokens: 100,
+      }),
       GPT56_TABLE,
     );
     expect(Math.abs(cost - 3.0451)).toBeLessThan(1e-9);
@@ -87,7 +98,11 @@ describe('calculateCost — ccusage golden vectors', () => {
   it('prices the same two-stage model below threshold at short rates (→ 0.53005)', () => {
     const cost = calculateCost(
       'gpt-5.6-sol',
-      usage({ inputTokens: 100_000, outputTokens: 1_000, cacheReadInputTokens: 100 }),
+      usage({
+        inputTokens: 100_000,
+        outputTokens: 1_000,
+        cacheReadInputTokens: 100,
+      }),
       GPT56_TABLE,
     );
     expect(Math.abs(cost - 0.53005)).toBeLessThan(1e-9);
@@ -96,7 +111,11 @@ describe('calculateCost — ccusage golden vectors', () => {
   it('lets cache reads alone push a request into the long-context tier (→ 0.352)', () => {
     const cost = calculateCost(
       'grok-4.5',
-      usage({ inputTokens: 10_000, outputTokens: 1_000, cacheReadInputTokens: 500_000 }),
+      usage({
+        inputTokens: 10_000,
+        outputTokens: 1_000,
+        cacheReadInputTokens: 500_000,
+      }),
       GROK_TABLE,
     );
     expect(Math.abs(cost - 0.352)).toBeLessThan(1e-9);
@@ -105,7 +124,11 @@ describe('calculateCost — ccusage golden vectors', () => {
   it('keeps the same shape on base rates below the boundary (→ 0.056)', () => {
     const cost = calculateCost(
       'grok-4.5',
-      usage({ inputTokens: 10_000, outputTokens: 1_000, cacheReadInputTokens: 100_000 }),
+      usage({
+        inputTokens: 10_000,
+        outputTokens: 1_000,
+        cacheReadInputTokens: 100_000,
+      }),
       GROK_TABLE,
     );
     expect(Math.abs(cost - 0.056)).toBeLessThan(1e-9);
@@ -114,11 +137,15 @@ describe('calculateCost — ccusage golden vectors', () => {
 
 describe('calculateCost — edge cases', () => {
   it('returns 0 for an unknown model', () => {
-    expect(calculateCost('nope', usage({ inputTokens: 1000 }), TEST_TABLE)).toBe(0);
+    expect(
+      calculateCost('nope', usage({ inputTokens: 1000 }), TEST_TABLE),
+    ).toBe(0);
   });
 
   it('returns 0 for a missing model name', () => {
-    expect(calculateCost(undefined, usage({ inputTokens: 1000 }), TEST_TABLE)).toBe(0);
+    expect(
+      calculateCost(undefined, usage({ inputTokens: 1000 }), TEST_TABLE),
+    ).toBe(0);
   });
 
   it('returns 0 for an all-zero usage entry', () => {
@@ -128,7 +155,10 @@ describe('calculateCost — edge cases', () => {
 
 describe('normalizePricingEntry — missing-rate defaults', () => {
   it('defaults cache_create to input×1.25 and cache_read to input×0.1', () => {
-    const p = normalizePricingEntry({ input_cost_per_token: 4, output_cost_per_token: 20 });
+    const p = normalizePricingEntry({
+      input_cost_per_token: 4,
+      output_cost_per_token: 20,
+    });
     expect(p).not.toBeNull();
     expect(p!.cacheCreate).toBeCloseTo(5.0, 12); // 4 × 1.25
     expect(p!.cacheRead).toBeCloseTo(0.4, 12); // 4 × 0.1

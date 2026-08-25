@@ -6,7 +6,9 @@ const E = '\x1b';
 describe('expandSgr', () => {
   it('splits a compound fg+bg escape into one escape per attribute', () => {
     // brightWhite (97) + truecolor bg.
-    expect(expandSgr(`${E}[97;48;2;79;93;117m x`)).toBe(`${E}[97m${E}[48;2;79;93;117m x`);
+    expect(expandSgr(`${E}[97;48;2;79;93;117m x`)).toBe(
+      `${E}[97m${E}[48;2;79;93;117m x`,
+    );
   });
 
   it('splits two truecolor attributes (the separator escape)', () => {
@@ -16,7 +18,9 @@ describe('expandSgr', () => {
   });
 
   it('handles the 256-color (5;n) form', () => {
-    expect(expandSgr(`${E}[38;5;12;48;5;236m`)).toBe(`${E}[38;5;12m${E}[48;5;236m`);
+    expect(expandSgr(`${E}[38;5;12;48;5;236m`)).toBe(
+      `${E}[38;5;12m${E}[48;5;236m`,
+    );
   });
 
   it('leaves a full reset and a bare reset untouched', () => {

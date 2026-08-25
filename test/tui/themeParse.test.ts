@@ -87,7 +87,12 @@ describe('parsePowerline', () => {
         ref: 'blue', // a group reference, not a color — skipped
       },
     };
-    expect(parsePowerline(scheme)).toEqual(['#121212', '#0087af', '#ff0000', '#ffffff']);
+    expect(parsePowerline(scheme)).toEqual([
+      '#121212',
+      '#0087af',
+      '#ff0000',
+      '#ffffff',
+    ]);
   });
 
   it('returns empty for input without a colors object', () => {
@@ -110,7 +115,9 @@ describe('parseOhMyPosh', () => {
 
   it('skips template and missing backgrounds but keeps valid ones', () => {
     const theme = {
-      blocks: [{ segments: [{ background: '{{ .Foo }}' }, {}, { background: '3' }] }],
+      blocks: [
+        { segments: [{ background: '{{ .Foo }}' }, {}, { background: '3' }] },
+      ],
     };
     expect(parseOhMyPosh(theme)).toEqual(['yellow']);
   });

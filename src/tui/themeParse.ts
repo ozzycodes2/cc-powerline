@@ -88,8 +88,10 @@ export function parsePowerline(json: unknown): Color[] {
   const out: (Color | null)[] = [];
   for (const v of Object.values(colors)) {
     if (typeof v === 'number') out.push(xterm256ToColor(v));
-    else if (Array.isArray(v) && typeof v[1] === 'string') out.push(toColor(v[1]));
-    else if (Array.isArray(v) && typeof v[0] === 'number') out.push(xterm256ToColor(v[0]));
+    else if (Array.isArray(v) && typeof v[1] === 'string')
+      out.push(toColor(v[1]));
+    else if (Array.isArray(v) && typeof v[0] === 'number')
+      out.push(xterm256ToColor(v[0]));
   }
   return ring(out);
 }

@@ -16,7 +16,12 @@ describe('buildStatus', () => {
   it('renders the builtin style as plain fg-colored text with no right group', () => {
     const settings: Settings = {
       style: 'builtin',
-      lines: [{ left: [{ type: 'model' }, { type: 'directory' }], right: [{ type: 'session-cost' }] }],
+      lines: [
+        {
+          left: [{ type: 'model' }, { type: 'directory' }],
+          right: [{ type: 'session-cost' }],
+        },
+      ],
     };
     const out = stripAnsi(buildStatus(settings, ctx, 80));
     expect(out).toContain('Opus');
@@ -28,7 +33,10 @@ describe('buildStatus', () => {
   it('renders one output line per configured line', () => {
     const settings: Settings = {
       style: 'builtin',
-      lines: [{ left: [{ type: 'model' }], right: [] }, { left: [{ type: 'directory' }], right: [] }],
+      lines: [
+        { left: [{ type: 'model' }], right: [] },
+        { left: [{ type: 'directory' }], right: [] },
+      ],
     };
     const out = stripAnsi(buildStatus(settings, ctx, 80));
     expect(out.split('\n')).toHaveLength(2);

@@ -18,24 +18,40 @@ describe('composeLine', () => {
   });
 
   it('returns just the left group (truncated) when there is no right group', () => {
-    expect(composeLine({ left: g('hello world'), right: g(''), width: 20 })).toBe('hello world');
-    expect(composeLine({ left: g('hello world'), right: g(''), width: 5 })).toBe('hello');
+    expect(
+      composeLine({ left: g('hello world'), right: g(''), width: 20 }),
+    ).toBe('hello world');
+    expect(
+      composeLine({ left: g('hello world'), right: g(''), width: 5 }),
+    ).toBe('hello');
   });
 
   it('truncates the left group on overflow, preserving the right group', () => {
-    const line = composeLine({ left: g('a-really-long-left-side'), right: g('RIGHT'), width: 12 });
+    const line = composeLine({
+      left: g('a-really-long-left-side'),
+      right: g('RIGHT'),
+      width: 12,
+    });
     // right (5) kept in full; left gets width - 5 - 1 = 6, plus a separating space.
     expect(line).toBe('a-real RIGHT');
     expect(visibleWidth(line)).toBe(12);
   });
 
   it('drops the left group when even the right group barely fits', () => {
-    const line = composeLine({ left: g('LEFT'), right: g('RIGHTSIDE'), width: 9 });
+    const line = composeLine({
+      left: g('LEFT'),
+      right: g('RIGHTSIDE'),
+      width: 9,
+    });
     expect(line).toBe('RIGHTSIDE');
   });
 
   it('truncates the right group when it alone overflows the width', () => {
-    const line = composeLine({ left: g('LEFT'), right: g('RIGHTSIDE'), width: 5 });
+    const line = composeLine({
+      left: g('LEFT'),
+      right: g('RIGHTSIDE'),
+      width: 5,
+    });
     expect(visibleWidth(line)).toBe(5);
     expect(line).toBe('RIGHT');
   });

@@ -16,7 +16,10 @@ import type { Settings } from '../../src/types/Settings.js';
 const KEY = { down: '\x1b[B', enter: '\r', esc: '\x1b' };
 const delay = (ms = 20) => new Promise((r) => setTimeout(r, ms));
 
-const EMPTY: Settings = { style: 'powerline', lines: [{ left: [], right: [] }] };
+const EMPTY: Settings = {
+  style: 'powerline',
+  lines: [{ left: [], right: [] }],
+};
 
 const mount = (settings: Settings) => {
   let state!: TuiState;
@@ -26,10 +29,16 @@ const mount = (settings: Settings) => {
       onState: (s: TuiState) => {
         state = s;
       },
-      children: (s, dispatch) => createElement(WidgetPicker, { state: s, dispatch }),
+      children: (s, dispatch) =>
+        createElement(WidgetPicker, { state: s, dispatch }),
     }),
   );
-  return { ...app, get state() { return state; } };
+  return {
+    ...app,
+    get state() {
+      return state;
+    },
+  };
 };
 
 describe('WidgetPicker', () => {
@@ -40,7 +49,9 @@ describe('WidgetPicker', () => {
     await delay();
     h.stdin.write(KEY.enter);
     await delay();
-    expect(h.state.settings.lines[0]!.left).toEqual([{ type: WIDGET_TYPES[1] }]);
+    expect(h.state.settings.lines[0]!.left).toEqual([
+      { type: WIDGET_TYPES[1] },
+    ]);
     expect(h.state.screen).toBe('widgets');
   });
 
@@ -61,7 +72,9 @@ describe('WidgetPicker', () => {
       await delay(5);
     }
     // Rows read "Category: one-line explanation".
-    expect(stripAnsi(h.lastFrame() ?? '')).toContain('Git branch: Current branch name');
+    expect(stripAnsi(h.lastFrame() ?? '')).toContain(
+      'Git branch: Current branch name',
+    );
     h.stdin.write(KEY.enter);
     await delay();
     expect(h.state.settings.lines[0]!.left).toEqual([{ type: 'git-branch' }]);

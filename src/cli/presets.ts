@@ -32,5 +32,8 @@ export const DEFAULT_PRESET_KEY = 'slate';
 
 /** Look up a preset by key, falling back to the default. */
 export function presetByKey(key: string): Preset {
-  return PRESETS.find((p) => p.key === key) ?? PRESETS.find((p) => p.key === DEFAULT_PRESET_KEY)!;
+  return (
+    PRESETS.find((p) => p.key === key) ??
+    PRESETS.find((p) => p.key === DEFAULT_PRESET_KEY)!
+  );
 }

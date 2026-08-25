@@ -16,9 +16,12 @@ vi.mock('../../src/pipeline.js', () => ({ buildStatus: buildStatusMock }));
 
 const { PreviewPane } = await import('../../src/tui/PreviewPane.js');
 
-const SETTINGS: Settings = { style: 'powerline', lines: [{ left: [{ type: 'model' }], right: [] }] };
+const SETTINGS: Settings = {
+  style: 'powerline',
+  lines: [{ left: [{ type: 'model' }], right: [] }],
+};
 
-const widthArg = () => (buildStatusMock.mock.calls[0]![2] as number);
+const widthArg = () => buildStatusMock.mock.calls[0]![2] as number;
 
 beforeEach(() => buildStatusMock.mockClear());
 
@@ -34,7 +37,9 @@ describe('PreviewPane', () => {
   });
 
   it('renders the sample-data caption and the built line', () => {
-    const { lastFrame } = render(createElement(PreviewPane, { settings: SETTINGS, width: 80 }));
+    const { lastFrame } = render(
+      createElement(PreviewPane, { settings: SETTINGS, width: 80 }),
+    );
     const frame = stripAnsi(lastFrame() ?? '');
     expect(frame).toContain('live preview');
     expect(frame).toContain('PREVIEW');

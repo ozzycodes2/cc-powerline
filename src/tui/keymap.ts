@@ -34,13 +34,18 @@ export const isEnter = (key: KeyFlags): boolean => Boolean(key.return);
 export const isBack = (key: KeyFlags): boolean => Boolean(key.escape);
 export const isQuit = (input: string, key: KeyFlags): boolean =>
   input === 'q' || (Boolean(key.ctrl) && input === 'c');
-export const isSave = (input: string, key: KeyFlags): boolean => Boolean(key.ctrl) && input === 's';
+export const isSave = (input: string, key: KeyFlags): boolean =>
+  Boolean(key.ctrl) && input === 's';
 export const isHelp = (input: string): boolean => input === '?';
 export const isRemove = (input: string, key: KeyFlags): boolean =>
   input === 'd' || Boolean(key.delete) || Boolean(key.backspace);
 
 /** Move a cursor within `[0, length)`, wrapping at the ends. */
-export function moveCursor(cursor: number, dir: NavDir, length: number): number {
+export function moveCursor(
+  cursor: number,
+  dir: NavDir,
+  length: number,
+): number {
   if (length === 0) return 0;
   if (dir === 'up' || dir === 'left') return (cursor - 1 + length) % length;
   if (dir === 'down' || dir === 'right') return (cursor + 1) % length;
@@ -53,7 +58,12 @@ export function moveCursor(cursor: number, dir: NavDir, length: number): number 
  * than wraps — a swatch grid reads more naturally when the edges are walls —
  * and never lands past the last (possibly short) row.
  */
-export function gridMove(cursor: number, dir: NavDir, length: number, cols: number): number {
+export function gridMove(
+  cursor: number,
+  dir: NavDir,
+  length: number,
+  cols: number,
+): number {
   if (length === 0) return 0;
   if (dir === 'left') return cursor > 0 ? cursor - 1 : cursor;
   if (dir === 'right') return cursor < length - 1 ? cursor + 1 : cursor;

@@ -34,7 +34,12 @@ export function PreviewPane({ settings, width }: PreviewPaneProps) {
     [settings, inner],
   );
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor="gray" paddingX={1}>
+    <Box
+      flexDirection="column"
+      borderStyle="round"
+      borderColor="gray"
+      paddingX={1}
+    >
       <Text dimColor>live preview (sample data)</Text>
       {lines.map((line, i) => (
         // Preview lines have no stable key of their own; index is fine and stable.

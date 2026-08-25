@@ -22,14 +22,22 @@ describe('renderBuiltin', () => {
 
   it('skips hidden and empty segments', () => {
     const groups: LineGroups = {
-      left: [{ text: 'a' }, { text: '', hidden: false }, { text: 'b', hidden: true }, { text: 'c' }],
+      left: [
+        { text: 'a' },
+        { text: '', hidden: false },
+        { text: 'b', hidden: true },
+        { text: 'c' },
+      ],
       right: [],
     };
     expect(renderBuiltin(groups)).toBe('a  c');
   });
 
   it('applies foreground color but no background', () => {
-    const groups: LineGroups = { left: [{ text: 'x', fg: 'red', bg: 'blue' }], right: [] };
+    const groups: LineGroups = {
+      left: [{ text: 'x', fg: 'red', bg: 'blue' }],
+      right: [],
+    };
     const out = renderBuiltin(groups);
     expect(stripAnsi(out)).toBe('x');
     expect(out).toContain('\x1b[31m'); // fg red
@@ -37,7 +45,10 @@ describe('renderBuiltin', () => {
   });
 
   it('honors a custom separator', () => {
-    const groups: LineGroups = { left: [{ text: 'a' }, { text: 'b' }], right: [] };
+    const groups: LineGroups = {
+      left: [{ text: 'a' }, { text: 'b' }],
+      right: [],
+    };
     expect(renderBuiltin(groups, { separator: ' | ' })).toBe('a | b');
   });
 });

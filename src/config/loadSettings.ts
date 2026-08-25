@@ -57,7 +57,9 @@ async function defaultReadText(path: string): Promise<string | null> {
   }
 }
 
-export async function loadSettings(opts: LoadSettingsOptions = {}): Promise<LoadResult> {
+export async function loadSettings(
+  opts: LoadSettingsOptions = {},
+): Promise<LoadResult> {
   const path = opts.path ?? settingsPath();
   const readText = opts.readText ?? defaultReadText;
 
@@ -77,7 +79,9 @@ export async function loadSettings(opts: LoadSettingsOptions = {}): Promise<Load
 
   // A config that names no lines still gets the default widget layout.
   const settings: Settings =
-    parsed.lines.length === 0 ? { ...parsed, lines: DEFAULT_SETTINGS.lines } : parsed;
+    parsed.lines.length === 0
+      ? { ...parsed, lines: DEFAULT_SETTINGS.lines }
+      : parsed;
 
   return { settings, warnings: settingsWarnings(settings), source: 'file' };
 }

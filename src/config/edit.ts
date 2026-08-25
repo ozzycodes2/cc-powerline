@@ -173,7 +173,11 @@ export function removeLine(settings: Settings, lineIndex: number): Settings {
 }
 
 /** Swap a line with its neighbour in `dir`; a move off either end is a no-op. */
-export function moveLine(settings: Settings, lineIndex: number, dir: -1 | 1): Settings {
+export function moveLine(
+  settings: Settings,
+  lineIndex: number,
+  dir: -1 | 1,
+): Settings {
   const to = lineIndex + dir;
   if (!settings.lines[lineIndex] || to < 0 || to >= settings.lines.length) {
     return settings;

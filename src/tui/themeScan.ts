@@ -64,7 +64,12 @@ export function scanThemes(opts: ScanOptions = {}): Preset[] {
   const configHome = env.XDG_CONFIG_HOME || join(home, '.config');
 
   const sources: Source[] = [
-    { key: 'p10k', label: 'Powerlevel10k (detected)', path: join(home, '.p10k.zsh'), extract: parseP10k },
+    {
+      key: 'p10k',
+      label: 'Powerlevel10k (detected)',
+      path: join(home, '.p10k.zsh'),
+      extract: parseP10k,
+    },
     {
       key: 'omp',
       label: 'oh-my-posh (detected)',
@@ -86,7 +91,12 @@ export function scanThemes(opts: ScanOptions = {}): Preset[] {
     if (text === null) continue;
     const bgs = src.extract(text).slice(0, MAX_COLORS);
     if (bgs.length < MIN_COLORS) continue;
-    presets.push({ key: `detected:${src.key}`, label: src.label, fg: 'brightWhite', bgs });
+    presets.push({
+      key: `detected:${src.key}`,
+      label: src.label,
+      fg: 'brightWhite',
+      bgs,
+    });
   }
   return presets;
 }

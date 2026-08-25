@@ -42,7 +42,14 @@ export function ColorPicker({ state, dispatch }: ColorPickerProps) {
   const [hex, setHex] = useState<string | null>(null);
 
   const apply = (color: Color | undefined) =>
-    dispatch({ type: 'SET_WIDGET_COLOR', lineIndex, side, itemIndex, channel, color });
+    dispatch({
+      type: 'SET_WIDGET_COLOR',
+      lineIndex,
+      side,
+      itemIndex,
+      channel,
+      color,
+    });
 
   useInput((input, key) => {
     // Hex-entry mode captures typing until Enter (apply) or Esc (cancel).
@@ -91,9 +98,17 @@ export function ColorPicker({ state, dispatch }: ColorPickerProps) {
     <Box flexDirection="column">
       <Text bold>Color · {item.type}</Text>
       <Box marginTop={1}>
-        <ChannelLabel active={channel === 'fg'} name="fg" color={item.fg as Color | undefined} />
+        <ChannelLabel
+          active={channel === 'fg'}
+          name="fg"
+          color={item.fg as Color | undefined}
+        />
         <Text> </Text>
-        <ChannelLabel active={channel === 'bg'} name="bg" color={item.bg as Color | undefined} />
+        <ChannelLabel
+          active={channel === 'bg'}
+          name="bg"
+          color={item.bg as Color | undefined}
+        />
         <Text dimColor> (tab to switch)</Text>
       </Box>
 
@@ -112,9 +127,14 @@ export function ColorPicker({ state, dispatch }: ColorPickerProps) {
                 const selected = idx === cursor;
                 return (
                   <Box key={e.label} marginRight={2}>
-                    <Text color={selected ? 'cyan' : undefined}>{selected ? '❯' : ' '}</Text>
+                    <Text color={selected ? 'cyan' : undefined}>
+                      {selected ? '❯' : ' '}
+                    </Text>
                     <Swatch color={e.color} />
-                    <Text color={selected ? 'cyan' : undefined}> {e.label}</Text>
+                    <Text color={selected ? 'cyan' : undefined}>
+                      {' '}
+                      {e.label}
+                    </Text>
                   </Box>
                 );
               })}
@@ -126,7 +146,15 @@ export function ColorPicker({ state, dispatch }: ColorPickerProps) {
   );
 }
 
-function ChannelLabel({ active, name, color }: { active: boolean; name: string; color: Color | undefined }) {
+function ChannelLabel({
+  active,
+  name,
+  color,
+}: {
+  active: boolean;
+  name: string;
+  color: Color | undefined;
+}) {
   return (
     <Box>
       <Text bold={active} color={active ? 'cyan' : undefined}>

@@ -40,7 +40,7 @@ scattered across the codebase:
 
 ### Non-goals
 
-- No change to render *output* for any given settings — the existing golden
+- No change to render _output_ for any given settings — the existing golden
   snapshots must stay byte-identical.
 - No per-group (left/right) cascade level. Cascade stops at the line level.
 - No live/full-screen TUI. The wizard stays a numbered-choice prompt.
@@ -118,14 +118,14 @@ A widget's `render` is composed, e.g.
 ```ts
 export interface ResolvedItem {
   type: string;
-  fg: Color;           // resolved via cascade
-  bg: Color;           // resolved via cascade
-  options: unknown;    // parsed + defaulted via the widget's Zod schema
+  fg: Color; // resolved via cascade
+  bg: Color; // resolved via cascade
+  options: unknown; // parsed + defaulted via the widget's Zod schema
 }
 export interface ResolvedSettings {
   style: 'powerline' | 'builtin';
   separator?: string;
-  theme: ResolvedTheme;         // separators + (defaults already folded in)
+  theme: ResolvedTheme; // separators + (defaults already folded in)
   lines: { left: ResolvedItem[]; right: ResolvedItem[] }[];
 }
 export function resolveSettings(settings: Settings): ResolvedSettings;
@@ -156,16 +156,17 @@ export function resolveSettings(settings: Settings): ResolvedSettings;
 
 ```ts
 export function previewContext(defs = ALL): WidgetContext {
-  const base = baseSampleContext();  // now, home, model scaffold (cross-cutting)
+  const base = baseSampleContext(); // now, home, model scaffold (cross-cutting)
   return defs.reduce((ctx, d) => deepMerge(ctx, d.sample?.() ?? {}), base);
 }
 ```
 
-  Cross-cutting fields (`now`, `home`, model display name) live in the base;
-  widget-specific fields come from each `sample()`. cache-window's `sample()`
-  contributes `cacheExpiresAt`; the base supplies `now`. The current constants
-  (`now = 17_000`, `cacheExpiresAt = 300_000`) are preserved so the `4:43`
-  countdown — and its test — stay stable.
+Cross-cutting fields (`now`, `home`, model display name) live in the base;
+widget-specific fields come from each `sample()`. cache-window's `sample()`
+contributes `cacheExpiresAt`; the base supplies `now`. The current constants
+(`now = 17_000`, `cacheExpiresAt = 300_000`) are preserved so the `4:43`
+countdown — and its test — stay stable.
+
 - `src/cli/init.ts` is essentially unchanged: `renderPreview` still calls
   `buildStatus(settings, previewContext(), width)`.
 
@@ -194,18 +195,18 @@ becomes redundant once options are typed; remove it if no callers remain.
 
 ## Files touched
 
-| File | Change |
-| --- | --- |
-| `src/widgets/Widget.ts` | Descriptor → `WidgetDef<O>` with `options` + `sample`; add `PartialContext`, `defineWidget`. |
-| `src/widgets/compose.ts` | NEW — `hideWhenEmpty`, `prefixIcon`, `prefixLabel`. |
-| `src/widgets/registry.ts` | Rewritten as `defineWidget` entries; option defaults in schemas; add `sample()` per widget. |
-| `src/config/resolveSettings.ts` | NEW — cascade + option resolution → `ResolvedSettings`. |
-| `src/types/Settings.ts` | Add optional `LineConfig.defaults`; keep back-compat. |
-| `src/pipeline.ts` | Resolve settings first; segments carry concrete colors + typed options. |
-| `src/render/powerlineRenderer.ts`, `builtinRenderer.ts` | Consume concrete colors; drop default-resolution. |
-| `src/cli/previewContext.ts` | Derive from registry `sample()` slices + base context. |
-| `src/cli/init.ts` | Unchanged apart from any type ripples. |
-| `test/**` | New tests above; update tests coupled to old shapes. |
+| File                                                    | Change                                                                                       |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `src/widgets/Widget.ts`                                 | Descriptor → `WidgetDef<O>` with `options` + `sample`; add `PartialContext`, `defineWidget`. |
+| `src/widgets/compose.ts`                                | NEW — `hideWhenEmpty`, `prefixIcon`, `prefixLabel`.                                          |
+| `src/widgets/registry.ts`                               | Rewritten as `defineWidget` entries; option defaults in schemas; add `sample()` per widget.  |
+| `src/config/resolveSettings.ts`                         | NEW — cascade + option resolution → `ResolvedSettings`.                                      |
+| `src/types/Settings.ts`                                 | Add optional `LineConfig.defaults`; keep back-compat.                                        |
+| `src/pipeline.ts`                                       | Resolve settings first; segments carry concrete colors + typed options.                      |
+| `src/render/powerlineRenderer.ts`, `builtinRenderer.ts` | Consume concrete colors; drop default-resolution.                                            |
+| `src/cli/previewContext.ts`                             | Derive from registry `sample()` slices + base context.                                       |
+| `src/cli/init.ts`                                       | Unchanged apart from any type ripples.                                                       |
+| `test/**`                                               | New tests above; update tests coupled to old shapes.                                         |
 
 ## Risks / watch-outs
 

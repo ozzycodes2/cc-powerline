@@ -25,10 +25,12 @@
 ### Task 1: Composition helpers
 
 **Files:**
+
 - Create: `src/widgets/compose.ts`
 - Test: `test/widgets/compose.test.ts`
 
 **Interfaces:**
+
 - Consumes: `WidgetContext` from `src/widgets/Widget.js`.
 - Produces:
   - `type Core<O> = (ctx: WidgetContext, opts: O) => string | null`
@@ -41,7 +43,11 @@
 ```ts
 // test/widgets/compose.test.ts
 import { describe, it, expect } from 'vitest';
-import { prefixed, prefixIcon, prefixLabel } from '../../src/widgets/compose.js';
+import {
+  prefixed,
+  prefixIcon,
+  prefixLabel,
+} from '../../src/widgets/compose.js';
 import type { WidgetContext } from '../../src/widgets/Widget.js';
 
 const ctx = {} as WidgetContext;
@@ -53,7 +59,12 @@ describe('prefixed', () => {
   });
 
   it('skip-empty omits the prefix when the option is empty', () => {
-    const r = prefixed<{ icon?: string }>('icon', ' ', 'skip-empty', () => 'body');
+    const r = prefixed<{ icon?: string }>(
+      'icon',
+      ' ',
+      'skip-empty',
+      () => 'body',
+    );
     expect(r(ctx, {})).toBe('body');
     expect(r(ctx, { icon: '' })).toBe('body');
     expect(r(ctx, { icon: 'X' })).toBe('X body');
@@ -123,8 +134,9 @@ export function prefixed<O extends Record<string, unknown>>(
   };
 }
 
-export const prefixIcon = <O extends Record<string, unknown>>(core: Core<O>): Core<O> =>
-  prefixed<O>('icon', ' ', 'skip-empty', core);
+export const prefixIcon = <O extends Record<string, unknown>>(
+  core: Core<O>,
+): Core<O> => prefixed<O>('icon', ' ', 'skip-empty', core);
 
 export const prefixLabel = <O extends Record<string, unknown>>(
   core: Core<O>,
@@ -159,11 +171,13 @@ EOF
 ### Task 2: Widget descriptor + registry rewrite
 
 **Files:**
+
 - Modify: `src/widgets/Widget.ts`
 - Modify: `src/widgets/registry.ts` (full rewrite of the definitions)
 - Test: `test/widgets/registry.test.ts` (existing — must stay green), add `test/widgets/registryShape.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Core`, `prefixIcon`, `prefixLabel`, `prefixed` from `src/widgets/compose.js`; format helpers from `src/widgets/format.js`; `z` from `zod`.
 - Produces (from `Widget.ts`):
   - `type PartialContext` — a deep-partial of `WidgetContext`.
@@ -181,7 +195,11 @@ EOF
 ```ts
 // test/widgets/registryShape.test.ts
 import { describe, it, expect } from 'vitest';
-import { WIDGET_DEFS, WIDGET_TYPES, parseWidgetOptions } from '../../src/widgets/registry.js';
+import {
+  WIDGET_DEFS,
+  WIDGET_TYPES,
+  parseWidgetOptions,
+} from '../../src/widgets/registry.js';
 
 describe('widget descriptors', () => {
   it('every widget declares an options schema', () => {
@@ -198,7 +216,9 @@ describe('widget descriptors', () => {
     // git-branch default icon is the powerline branch glyph U+E0A0
     expect(parseWidgetOptions('git-branch', {})).toEqual({ icon: '' });
     // wrong type degrades to defaults rather than throwing
-    expect(parseWidgetOptions('git-branch', { icon: 123 })).toEqual({ icon: '' });
+    expect(parseWidgetOptions('git-branch', { icon: 123 })).toEqual({
+      icon: '',
+    });
     // unknown widget → empty options
     expect(parseWidgetOptions('nope', { x: 1 })).toEqual({});
   });
@@ -207,7 +227,9 @@ describe('widget descriptors', () => {
     // Guards the "widget declares its own mock" contract.
     const { previewContext } = require('../../src/cli/previewContext.js');
     // Skipped here; covered fully in Task 6. Placeholder keeps intent visible.
-    expect(typeof previewContext === 'function' || previewContext === undefined).toBe(true);
+    expect(
+      typeof previewContext === 'function' || previewContext === undefined,
+    ).toBe(true);
   });
 });
 ```
@@ -280,7 +302,13 @@ export function defineWidget<S extends z.ZodType>(def: {
 import { z } from 'zod';
 import { defineWidget, type WidgetContext, type WidgetDef } from './Widget.js';
 import { prefixIcon, prefixLabel, prefixed, type Core } from './compose.js';
-import { basename, compressPath, formatCost, formatDuration, formatPercent } from './format.js';
+import {
+  basename,
+  compressPath,
+  formatCost,
+  formatDuration,
+  formatPercent,
+} from './format.js';
 
 // Default Nerd Font glyphs (present in virtually every Nerd Font).
 const ICON_EFFORT = '\u{f0e7}'; //  bolt
@@ -295,8 +323,11 @@ const NO_OPTS = z.object({});
 const model = defineWidget({
   type: 'model',
   options: NO_OPTS,
-  render: (ctx) => ctx.status.model?.display_name ?? ctx.status.model?.id ?? null,
-  sample: () => ({ status: { model: { id: 'claude-opus-4-8', display_name: 'Opus 4.8' } } }),
+  render: (ctx) =>
+    ctx.status.model?.display_name ?? ctx.status.model?.id ?? null,
+  sample: () => ({
+    status: { model: { id: 'claude-opus-4-8', display_name: 'Opus 4.8' } },
+  }),
 });
 
 const modelEffort = defineWidget({
@@ -331,7 +362,9 @@ const gitChanges = defineWidget({
 
 const directory = defineWidget({
   type: 'directory',
-  options: z.object({ mode: z.enum(['compressed', 'basename', 'full']).default('compressed') }),
+  options: z.object({
+    mode: z.enum(['compressed', 'basename', 'full']).default('compressed'),
+  }),
   render: (ctx, opts) => {
     const dir = ctx.status.cwd ?? ctx.status.workspace?.project_dir;
     if (!dir) {
@@ -345,7 +378,9 @@ const directory = defineWidget({
     }
     return compressPath(dir, ctx.home);
   },
-  sample: () => ({ status: { cwd: '/Users/you/Documents/work/voice-connect' } }),
+  sample: () => ({
+    status: { cwd: '/Users/you/Documents/work/voice-connect' },
+  }),
 });
 
 const contextLength = defineWidget({
@@ -356,22 +391,34 @@ const contextLength = defineWidget({
     let pct: number | null = null;
     if (typeof cw?.used_percentage === 'number') {
       pct = cw.used_percentage;
-    } else if (typeof cw?.context_window_size === 'number' && cw.context_window_size > 0) {
+    } else if (
+      typeof cw?.context_window_size === 'number' &&
+      cw.context_window_size > 0
+    ) {
       pct = (ctx.totals.contextTokens / cw.context_window_size) * 100;
     }
     return pct === null ? null : formatPercent(pct);
   }),
-  sample: () => ({ status: { context_window: { used_percentage: 42 } }, totals: { contextTokens: 84_000 } }),
+  sample: () => ({
+    status: { context_window: { used_percentage: 42 } },
+    totals: { contextTokens: 84_000 },
+  }),
 });
 
 const sessionCost = defineWidget({
   type: 'session-cost',
   options: NO_OPTS,
   render: (ctx) => {
-    const cost = ctx.totals.costUsd > 0 ? ctx.totals.costUsd : ctx.status.cost?.total_cost_usd ?? 0;
+    const cost =
+      ctx.totals.costUsd > 0
+        ? ctx.totals.costUsd
+        : (ctx.status.cost?.total_cost_usd ?? 0);
     return formatCost(cost);
   },
-  sample: () => ({ status: { cost: { total_cost_usd: 1.23 } }, totals: { costUsd: 1.23 } }),
+  sample: () => ({
+    status: { cost: { total_cost_usd: 1.23 } },
+    totals: { costUsd: 1.23 },
+  }),
 });
 
 const cacheHitRate = defineWidget({
@@ -382,7 +429,9 @@ const cacheHitRate = defineWidget({
     const denom = cacheReadTokens + cacheCreationTokens;
     return denom <= 0 ? null : formatPercent((cacheReadTokens / denom) * 100);
   }),
-  sample: () => ({ totals: { cacheReadTokens: 9000, cacheCreationTokens: 1000 } }),
+  sample: () => ({
+    totals: { cacheReadTokens: 9000, cacheCreationTokens: 1000 },
+  }),
 });
 
 const cacheWindow = defineWidget({
@@ -416,7 +465,9 @@ const rateLimit = defineWidget({
     const pct = ctx.status.rate_limits?.five_hour?.used_percentage;
     return typeof pct === 'number' ? formatPercent(pct) : null;
   }),
-  sample: () => ({ status: { rate_limits: { five_hour: { used_percentage: 18 } } } }),
+  sample: () => ({
+    status: { rate_limits: { five_hour: { used_percentage: 18 } } },
+  }),
 });
 
 const separator = defineWidget({
@@ -506,10 +557,12 @@ EOF
 ### Task 3: Config schema — line-level defaults
 
 **Files:**
+
 - Modify: `src/types/Settings.ts`
 - Test: `test/config/loadSettings.test.ts` (add a case) or `test/types/settingsDefaults.test.ts` (NEW)
 
 **Interfaces:**
+
 - Produces: `LineConfig` now has optional `defaults?: { fg?: string; bg?: string }`. `LineConfigSchema` accepts and defaults it to `undefined`. Back-compatible: configs without `defaults` parse unchanged.
 
 - [ ] **Step 1: Write the failing test**
@@ -523,13 +576,17 @@ describe('line-level defaults', () => {
   it('parses optional per-line fg/bg defaults', () => {
     const parsed = SettingsSchema.parse({
       style: 'powerline',
-      lines: [{ left: [{ type: 'model' }], defaults: { fg: 'white', bg: '#123456' } }],
+      lines: [
+        { left: [{ type: 'model' }], defaults: { fg: 'white', bg: '#123456' } },
+      ],
     });
     expect(parsed.lines[0]!.defaults).toEqual({ fg: 'white', bg: '#123456' });
   });
 
   it('leaves defaults undefined when omitted (back-compat)', () => {
-    const parsed = SettingsSchema.parse({ lines: [{ left: [{ type: 'model' }] }] });
+    const parsed = SettingsSchema.parse({
+      lines: [{ left: [{ type: 'model' }] }],
+    });
     expect(parsed.lines[0]!.defaults).toBeUndefined();
   });
 });
@@ -589,10 +646,12 @@ EOF
 ### Task 4: Config resolver — the value cascade
 
 **Files:**
+
 - Create: `src/config/resolveSettings.ts`
 - Test: `test/config/resolveSettings.test.ts`
 
 **Interfaces:**
+
 - Consumes: `Settings`, `LineConfig` from `src/types/Settings.js`; `parseWidgetOptions` from `src/widgets/registry.js`; `DEFAULT_THEME`, `PowerlineTheme` from `src/render/powerlineRenderer.js`; `Color` from `src/render/types.js`.
 - Produces:
   - `interface ResolvedItem { type: string; fg: Color; bg: Color; options: unknown }`
@@ -629,7 +688,10 @@ describe('resolveSettings cascade', () => {
 
   it('falls through item -> line -> theme -> builtin', () => {
     const noLine = resolveSettings(
-      parse({ theme: { defaultFg: 'red' }, lines: [{ left: [{ type: 'model' }] }] }),
+      parse({
+        theme: { defaultFg: 'red' },
+        lines: [{ left: [{ type: 'model' }] }],
+      }),
     );
     // fg from theme, bg falls all the way to the builtin default
     expect(noLine.lines[0]!.left[0]!.fg).toBe('red');
@@ -638,14 +700,23 @@ describe('resolveSettings cascade', () => {
 
   it('uses line defaults when the item omits colors', () => {
     const r = resolveSettings(
-      parse({ lines: [{ defaults: { fg: 'green', bg: 'magenta' }, left: [{ type: 'model' }] }] }),
+      parse({
+        lines: [
+          {
+            defaults: { fg: 'green', bg: 'magenta' },
+            left: [{ type: 'model' }],
+          },
+        ],
+      }),
     );
     expect(r.lines[0]!.left[0]).toMatchObject({ fg: 'green', bg: 'magenta' });
   });
 
   it('parses widget options with defaults and degrades bad ones', () => {
     const r = resolveSettings(
-      parse({ lines: [{ left: [{ type: 'git-branch', options: { icon: 999 } }] }] }),
+      parse({
+        lines: [{ left: [{ type: 'git-branch', options: { icon: 999 } }] }],
+      }),
     );
     expect(r.lines[0]!.left[0]!.options).toEqual({ icon: '' });
   });
@@ -672,7 +743,10 @@ Expected: FAIL — module not found.
  * (item -> line defaults -> theme -> builtin) and parse each widget's options,
  * so the render layer only draws and never resolves defaults.
  */
-import { DEFAULT_THEME, type PowerlineTheme } from '../render/powerlineRenderer.js';
+import {
+  DEFAULT_THEME,
+  type PowerlineTheme,
+} from '../render/powerlineRenderer.js';
 import type { Color } from '../render/types.js';
 import type { LineConfig, Settings, WidgetItem } from '../types/Settings.js';
 import { parseWidgetOptions } from '../widgets/registry.js';
@@ -699,7 +773,8 @@ export interface ResolvedSettings {
 function resolveTheme(settings: Settings): PowerlineTheme {
   return {
     separator: settings.theme?.separator ?? DEFAULT_THEME.separator,
-    rightSeparator: settings.theme?.rightSeparator ?? DEFAULT_THEME.rightSeparator,
+    rightSeparator:
+      settings.theme?.rightSeparator ?? DEFAULT_THEME.rightSeparator,
     defaultFg: (settings.theme?.defaultFg as Color) ?? DEFAULT_THEME.defaultFg,
     defaultBg: (settings.theme?.defaultBg as Color) ?? DEFAULT_THEME.defaultBg,
   };
@@ -758,10 +833,12 @@ EOF
 ### Task 5: Wire the pipeline to the resolver
 
 **Files:**
+
 - Modify: `src/pipeline.ts`
 - Test: `test/pipeline.test.ts` (existing — must stay green), `test/golden/render.test.ts` (existing — must stay green)
 
 **Interfaces:**
+
 - Consumes: `resolveSettings`, `ResolvedItem` from `src/config/resolveSettings.js`.
 - Produces: `buildStatus(settings: Settings, ctx: WidgetContext, width: number): string` — unchanged signature; internally resolves first. The renderers receive segments carrying concrete `fg`/`bg` and the resolved theme.
 
@@ -784,9 +861,15 @@ it('applies line-level default colors through resolveSettings', () => {
 ```
 
 Fill `ctx` using the existing helper pattern in `test/pipeline.test.ts` (a `WidgetContext` with `status.model.display_name` set). If the file lacks one, construct inline:
+
 ```ts
-const ctx = { status: { model: { display_name: 'M' } }, totals: ZERO_TOTALS, git: { branch: null } } as unknown as WidgetContext;
+const ctx = {
+  status: { model: { display_name: 'M' } },
+  totals: ZERO_TOTALS,
+  git: { branch: null },
+} as unknown as WidgetContext;
 ```
+
 (import `ZERO_TOTALS` from `../src/transcript/parseTranscript.js`).
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -807,7 +890,11 @@ import { renderBuiltin } from './render/builtinRenderer.js';
 import { renderPowerline } from './render/powerlineRenderer.js';
 import type { LineGroups, Segment } from './render/types.js';
 import type { Settings } from './types/Settings.js';
-import { resolveSettings, type ResolvedItem, type ResolvedLine } from './config/resolveSettings.js';
+import {
+  resolveSettings,
+  type ResolvedItem,
+  type ResolvedLine,
+} from './config/resolveSettings.js';
 import { renderWidget } from './widgets/registry.js';
 import type { WidgetContext } from './widgets/Widget.js';
 
@@ -824,7 +911,11 @@ function toGroups(line: ResolvedLine, ctx: WidgetContext): LineGroups {
 }
 
 /** Build the full (possibly multi-line) status string. */
-export function buildStatus(settings: Settings, ctx: WidgetContext, width: number): string {
+export function buildStatus(
+  settings: Settings,
+  ctx: WidgetContext,
+  width: number,
+): string {
   const resolved = resolveSettings(settings);
   return resolved.lines
     .map((line) => {
@@ -866,10 +957,12 @@ EOF
 ### Task 6: Derive the preview context from widget samples
 
 **Files:**
+
 - Modify: `src/cli/previewContext.ts` (rewrite as derivation + export `deepMerge`)
 - Test: `test/cli/previewContext.test.ts` (NEW), `test/cli/init.test.ts` (existing — must stay green)
 
 **Interfaces:**
+
 - Consumes: `WIDGET_DEFS` from `src/widgets/registry.js`; `WidgetDef`, `WidgetContext`, `PartialContext` from `src/widgets/Widget.js`; `ZERO_TOTALS` from `src/transcript/parseTranscript.js`.
 - Produces:
   - `function deepMerge<T>(base: T, patch: unknown): T`
@@ -886,8 +979,13 @@ import type { WidgetDef } from '../../src/widgets/Widget.js';
 
 describe('deepMerge', () => {
   it('recursively merges sibling keys without clobbering', () => {
-    const merged = deepMerge({ git: { branch: 'x' } }, { git: { changes: { added: 1, deleted: 0 } } });
-    expect(merged).toEqual({ git: { branch: 'x', changes: { added: 1, deleted: 0 } } });
+    const merged = deepMerge(
+      { git: { branch: 'x' } },
+      { git: { changes: { added: 1, deleted: 0 } } },
+    );
+    expect(merged).toEqual({
+      git: { branch: 'x', changes: { added: 1, deleted: 0 } },
+    });
   });
 });
 
@@ -944,7 +1042,11 @@ Expected: FAIL — `deepMerge` not exported / preview not derived.
  */
 import { ZERO_TOTALS } from '../transcript/parseTranscript.js';
 import { WIDGET_DEFS } from '../widgets/registry.js';
-import type { PartialContext, WidgetContext, WidgetDef } from '../widgets/Widget.js';
+import type {
+  PartialContext,
+  WidgetContext,
+  WidgetDef,
+} from '../widgets/Widget.js';
 
 type Obj = Record<string, unknown>;
 
@@ -955,11 +1057,12 @@ function isPlainObject(v: unknown): v is Obj {
 /** Recursively merge `patch` onto `base`; objects merge, everything else overwrites. */
 export function deepMerge<T>(base: T, patch: unknown): T {
   if (!isPlainObject(base) || !isPlainObject(patch)) {
-    return (patch === undefined ? base : (patch as T));
+    return patch === undefined ? base : (patch as T);
   }
   const out: Obj = { ...base };
   for (const [k, v] of Object.entries(patch)) {
-    out[k] = isPlainObject(v) && isPlainObject(out[k]) ? deepMerge(out[k], v) : v;
+    out[k] =
+      isPlainObject(v) && isPlainObject(out[k]) ? deepMerge(out[k], v) : v;
   }
   return out as T;
 }
@@ -1009,11 +1112,13 @@ EOF
 ### Task 7: Cleanup and final verification
 
 **Files:**
+
 - Modify: `src/widgets/format.ts` (remove `optString` if unused)
 - Modify: `test/widgets/format.test.ts` (drop `optString` cases if the function is removed)
 - Modify: `README.md` if it documents the preview/mock mechanism
 
 **Interfaces:**
+
 - No new interfaces. This task removes dead code and verifies the whole suite + coverage.
 
 - [ ] **Step 1: Find remaining `optString` usages**
@@ -1028,11 +1133,13 @@ If the grep shows no `src/` usage other than the definition, delete the `optStri
 - [ ] **Step 3: Run the full suite, typecheck, and coverage**
 
 Run:
+
 ```bash
 node_modules/.bin/vitest run
 node_modules/.bin/tsc --noEmit
 node_modules/.bin/vitest run --coverage
 ```
+
 Expected: all tests pass; tsc clean; coverage ≥90% on changed files (`compose.ts`, `registry.ts`, `resolveSettings.ts`, `previewContext.ts`, `Settings.ts`, `pipeline.ts`). `Widget.ts` is type-only (0% expected, not a gap).
 
 - [ ] **Step 4: Confirm golden snapshots untouched**
@@ -1064,6 +1171,7 @@ EOF
 ## Self-Review
 
 **1. Spec coverage:**
+
 - Self-describing widgets (options schema + render + sample) → Task 2. ✓
 - Composition helpers for shared behavior → Task 1. ✓
 - Value cascade item → line → theme → builtin → Task 3 (schema) + Task 4 (resolver). ✓

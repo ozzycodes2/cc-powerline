@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { fgParams, bgParams, colorize, RESET } from '../../src/render/colors.js';
+import {
+  fgParams,
+  bgParams,
+  colorize,
+  RESET,
+} from '../../src/render/colors.js';
 
 describe('fgParams / bgParams', () => {
   it('maps named colors to SGR codes', () => {
@@ -21,7 +26,9 @@ describe('fgParams / bgParams', () => {
 
 describe('colorize', () => {
   it('wraps text in fg+bg and resets', () => {
-    expect(colorize('x', { fg: 'red', bg: 'blue' })).toBe(`\x1b[31;44mx${RESET}`);
+    expect(colorize('x', { fg: 'red', bg: 'blue' })).toBe(
+      `\x1b[31;44mx${RESET}`,
+    );
   });
 
   it('returns bare text when no color resolves', () => {

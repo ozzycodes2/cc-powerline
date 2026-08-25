@@ -79,7 +79,7 @@ ${XDG_CONFIG_HOME:-~/.config}/cc-powerline/settings.json
     "separator": "",
     "rightSeparator": "",
     "defaultFg": "brightWhite",
-    "defaultBg": "#2d3142"
+    "defaultBg": "#2d3142",
   },
 
   // one entry per output line; each has a left and right widget group
@@ -88,15 +88,15 @@ ${XDG_CONFIG_HOME:-~/.config}/cc-powerline/settings.json
       "left": [
         { "type": "model", "fg": "brightWhite", "bg": "#2d3142" },
         { "type": "git-branch", "fg": "brightWhite", "bg": "#4f5d75" },
-        { "type": "directory", "fg": "brightWhite", "bg": "#3d5a80" }
+        { "type": "directory", "fg": "brightWhite", "bg": "#3d5a80" },
       ],
       "right": [
         { "type": "context-length", "fg": "brightWhite", "bg": "#5c6b73" },
         { "type": "cache-hit-rate", "fg": "brightWhite", "bg": "#6d597a" },
-        { "type": "session-cost", "fg": "black", "bg": "#2a9d8f" }
-      ]
-    }
-  ]
+        { "type": "session-cost", "fg": "black", "bg": "#2a9d8f" },
+      ],
+    },
+  ],
 }
 ```
 
@@ -109,20 +109,20 @@ ${XDG_CONFIG_HOME:-~/.config}/cc-powerline/settings.json
 
 ### Widgets
 
-| type             | shows                                                        |
-| ---------------- | ------------------------------------------------------------ |
-| `model`          | model display name (falls back to id)                        |
-| `model-effort`   | reasoning-effort level (e.g. `high`); `options.icon`         |
-| `git-branch`     | current branch (hidden outside a repo); `options.icon`       |
-| `git-changes`    | working-tree churn `+added -deleted` vs. HEAD; `options.icon`|
+| type             | shows                                                                                                     |
+| ---------------- | --------------------------------------------------------------------------------------------------------- |
+| `model`          | model display name (falls back to id)                                                                     |
+| `model-effort`   | reasoning-effort level (e.g. `high`); `options.icon`                                                      |
+| `git-branch`     | current branch (hidden outside a repo); `options.icon`                                                    |
+| `git-changes`    | working-tree churn `+added -deleted` vs. HEAD; `options.icon`                                             |
 | `directory`      | working directory; `options.mode` = `compressed` (default, powerline `~/D/w/proj`), `basename`, or `full` |
-| `context-length` | percent of the context window used; `options.label`          |
-| `session-cost`   | precise running cost from the transcript                     |
-| `cache-hit-rate` | cache-read share of all cache tokens; `options.label`        |
-| `cache-window`   | countdown to prompt-cache (5m/1h) expiry; `options.icon`     |
-| `compactions`    | count of compaction events this session; `options.icon`      |
-| `rate-limit`     | 5-hour usage percentage; `options.label`                     |
-| `separator`      | a literal separator string; `options.char`                   |
+| `context-length` | percent of the context window used; `options.label`                                                       |
+| `session-cost`   | precise running cost from the transcript                                                                  |
+| `cache-hit-rate` | cache-read share of all cache tokens; `options.label`                                                     |
+| `cache-window`   | countdown to prompt-cache (5m/1h) expiry; `options.icon`                                                  |
+| `compactions`    | count of compaction events this session; `options.icon`                                                   |
+| `rate-limit`     | 5-hour usage percentage; `options.label`                                                                  |
+| `separator`      | a literal separator string; `options.char`                                                                |
 
 Icon-bearing widgets default to Nerd Font glyphs; every one is overridable via
 `options.icon` (set it to `""` to drop the icon). Any widget that has nothing

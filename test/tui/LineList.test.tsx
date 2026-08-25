@@ -31,10 +31,16 @@ const mount = (settings: Settings) => {
       onState: (s: TuiState) => {
         state = s;
       },
-      children: (s, dispatch) => createElement(LineList, { state: s, dispatch }),
+      children: (s, dispatch) =>
+        createElement(LineList, { state: s, dispatch }),
     }),
   );
-  return { ...app, get state() { return state; } };
+  return {
+    ...app,
+    get state() {
+      return state;
+    },
+  };
 };
 
 describe('LineList', () => {
@@ -47,7 +53,11 @@ describe('LineList', () => {
     h.stdin.write(KEY.enter);
     await delay();
     expect(h.state.screen).toBe('widgets');
-    expect(h.state.focus).toMatchObject({ lineIndex: 1, side: 'left', itemIndex: 0 });
+    expect(h.state.focus).toMatchObject({
+      lineIndex: 1,
+      side: 'left',
+      itemIndex: 0,
+    });
   });
 
   it('adds and removes lines', async () => {

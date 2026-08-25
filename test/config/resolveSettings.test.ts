@@ -23,7 +23,10 @@ describe('resolveSettings cascade', () => {
 
   it('falls through item -> line -> theme -> builtin', () => {
     const noLine = resolveSettings(
-      parse({ theme: { defaultFg: 'red' }, lines: [{ left: [{ type: 'model' }] }] }),
+      parse({
+        theme: { defaultFg: 'red' },
+        lines: [{ left: [{ type: 'model' }] }],
+      }),
     );
     // fg from theme, bg falls all the way to the builtin default
     expect(noLine.lines[0]!.left[0]!.fg).toBe('red');
@@ -32,14 +35,23 @@ describe('resolveSettings cascade', () => {
 
   it('uses line defaults when the item omits colors', () => {
     const r = resolveSettings(
-      parse({ lines: [{ defaults: { fg: 'green', bg: 'magenta' }, left: [{ type: 'model' }] }] }),
+      parse({
+        lines: [
+          {
+            defaults: { fg: 'green', bg: 'magenta' },
+            left: [{ type: 'model' }],
+          },
+        ],
+      }),
     );
     expect(r.lines[0]!.left[0]).toMatchObject({ fg: 'green', bg: 'magenta' });
   });
 
   it('parses widget options with defaults and degrades bad ones', () => {
     const r = resolveSettings(
-      parse({ lines: [{ left: [{ type: 'git-branch', options: { icon: 999 } }] }] }),
+      parse({
+        lines: [{ left: [{ type: 'git-branch', options: { icon: 999 } }] }],
+      }),
     );
     // git-branch's icon fails z.string() validation on 999 and degrades to its
     // schema default, the powerline branch glyph U+E0A0 (see registryShape.test.ts).

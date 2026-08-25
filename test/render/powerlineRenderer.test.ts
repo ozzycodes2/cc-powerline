@@ -33,7 +33,9 @@ describe('renderLeftGroup', () => {
 
   it('is empty for no visible segments', () => {
     expect(renderLeftGroup([], DEFAULT_THEME)).toEqual({ text: '', width: 0 });
-    expect(renderLeftGroup([{ text: '', hidden: true }], DEFAULT_THEME)).toEqual({
+    expect(
+      renderLeftGroup([{ text: '', hidden: true }], DEFAULT_THEME),
+    ).toEqual({
       text: '',
       width: 0,
     });

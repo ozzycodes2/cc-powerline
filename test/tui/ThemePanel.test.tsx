@@ -24,10 +24,16 @@ const mount = (themes?: Preset[]) => {
       onState: (s: TuiState) => {
         state = s;
       },
-      children: (s, dispatch) => createElement(ThemePanel, { state: s, dispatch, themes }),
+      children: (s, dispatch) =>
+        createElement(ThemePanel, { state: s, dispatch, themes }),
     }),
   );
-  return { ...app, get state() { return state; } };
+  return {
+    ...app,
+    get state() {
+      return state;
+    },
+  };
 };
 
 describe('ThemePanel', () => {
@@ -53,10 +59,17 @@ describe('ThemePanel', () => {
   });
 
   it('lists detected themes after the built-ins and can apply one', async () => {
-    const detected: Preset = { key: 'detected:p10k', label: 'Powerlevel10k (detected)', fg: 'black', bgs: ['#111111', '#222222'] };
+    const detected: Preset = {
+      key: 'detected:p10k',
+      label: 'Powerlevel10k (detected)',
+      fg: 'black',
+      bgs: ['#111111', '#222222'],
+    };
     const h = mount([detected]);
     await delay();
-    expect(stripAnsi(h.lastFrame() ?? '')).toContain('Powerlevel10k (detected)');
+    expect(stripAnsi(h.lastFrame() ?? '')).toContain(
+      'Powerlevel10k (detected)',
+    );
     // The detected theme sits one row past the built-in presets.
     for (let i = 0; i < PRESETS.length; i++) {
       h.stdin.write(KEY.down);

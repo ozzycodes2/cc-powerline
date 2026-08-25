@@ -11,7 +11,10 @@ const PRICING: PricingTable = {
 };
 
 const line = (input: number) =>
-  JSON.stringify({ type: 'assistant', message: { model: 'm', usage: { input_tokens: input } } });
+  JSON.stringify({
+    type: 'assistant',
+    message: { model: 'm', usage: { input_tokens: input } },
+  });
 
 /** In-memory transcript file + cache store for exercising the incremental path. */
 function fakeDeps(initial: string): {
@@ -42,14 +45,20 @@ function fakeDeps(initial: string): {
 
 describe('parseChunk', () => {
   it('parses only the complete-line prefix and reports bytes consumed', () => {
-    const buf = Buffer.from(`${line(1000)}\n${line(500)}\n${line(999)}`, 'utf8'); // last line has no \n
+    const buf = Buffer.from(
+      `${line(1000)}\n${line(500)}\n${line(999)}`,
+      'utf8',
+    ); // last line has no \n
     const { delta, consumed } = parseChunk(buf, PRICING);
     expect(delta.inputTokens).toBe(1500); // third (partial) line excluded
     expect(consumed).toBe(`${line(1000)}\n${line(500)}\n`.length);
   });
 
   it('consumes nothing when there is no complete line', () => {
-    const { delta, consumed } = parseChunk(Buffer.from(line(1000), 'utf8'), PRICING);
+    const { delta, consumed } = parseChunk(
+      Buffer.from(line(1000), 'utf8'),
+      PRICING,
+    );
     expect(consumed).toBe(0);
     expect(delta.inputTokens).toBe(0);
   });
@@ -58,7 +67,9 @@ describe('parseChunk', () => {
 describe('loadTranscriptTotals', () => {
   it('returns zeros for a missing path or missing file', async () => {
     const { deps } = fakeDeps('');
-    expect((await loadTranscriptTotals(undefined, PRICING, deps)).costUsd).toBe(0);
+    expect((await loadTranscriptTotals(undefined, PRICING, deps)).costUsd).toBe(
+      0,
+    );
     const gone: TranscriptDeps = { ...deps, stat: async () => null };
     expect((await loadTranscriptTotals('/x', PRICING, gone)).costUsd).toBe(0);
   });
@@ -86,7 +97,9 @@ describe('loadTranscriptTotals', () => {
   it('does not reset the running cost across a compaction append', async () => {
     const t = fakeDeps(`${line(1000)}\n`);
     const first = await loadTranscriptTotals('/t', PRICING, t.deps);
-    t.append(`${JSON.stringify({ type: 'system', subtype: 'compact_boundary' })}\n`);
+    t.append(
+      `${JSON.stringify({ type: 'system', subtype: 'compact_boundary' })}\n`,
+    );
     const second = await loadTranscriptTotals('/t', PRICING, t.deps);
     expect(second.costUsd).toBeCloseTo(first.costUsd, 12);
     expect(second.compactions).toBe(1);

@@ -27,7 +27,9 @@ export function SelectList({ items, cursor }: SelectListProps) {
         const selected = i === cursor;
         return (
           <Box key={i}>
-            <Text color={selected ? 'cyan' : undefined}>{selected ? '❯ ' : '  '}</Text>
+            <Text color={selected ? 'cyan' : undefined}>
+              {selected ? '❯ ' : '  '}
+            </Text>
             {item.render ? (
               item.render(selected)
             ) : (

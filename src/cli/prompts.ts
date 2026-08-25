@@ -30,7 +30,11 @@ export function readlineIO(): PromptIO {
   };
 }
 
-function renderMenu<T>(io: PromptIO, message: string, choices: Choice<T>[]): void {
+function renderMenu<T>(
+  io: PromptIO,
+  message: string,
+  choices: Choice<T>[],
+): void {
   io.write(message);
   choices.forEach((c, i) => io.write(`  ${i + 1}) ${c.label}`));
 }
@@ -51,7 +55,9 @@ export async function promptNumber(
   message: string,
   opts: { def: number; min: number; max: number },
 ): Promise<number> {
-  const raw = await io.ask(`${message} [${opts.min}-${opts.max}] (default ${opts.def}): `);
+  const raw = await io.ask(
+    `${message} [${opts.min}-${opts.max}] (default ${opts.def}): `,
+  );
   if (raw === '') {
     return opts.def;
   }
@@ -67,7 +73,9 @@ export async function select<T>(
   defaultIndex = 0,
 ): Promise<T> {
   renderMenu(io, message, choices);
-  const raw = await io.ask(`Choose [1-${choices.length}] (default ${defaultIndex + 1}): `);
+  const raw = await io.ask(
+    `Choose [1-${choices.length}] (default ${defaultIndex + 1}): `,
+  );
   const idx = raw === '' ? defaultIndex : parseIndex(raw, choices.length);
   return choices[idx ?? defaultIndex]!.value;
 }

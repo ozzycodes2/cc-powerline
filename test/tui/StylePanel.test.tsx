@@ -21,10 +21,16 @@ const mount = () => {
       onState: (s: TuiState) => {
         state = s;
       },
-      children: (s, dispatch) => createElement(StylePanel, { state: s, dispatch }),
+      children: (s, dispatch) =>
+        createElement(StylePanel, { state: s, dispatch }),
     }),
   );
-  return { ...app, get state() { return state; } };
+  return {
+    ...app,
+    get state() {
+      return state;
+    },
+  };
 };
 
 describe('StylePanel', () => {

@@ -20,7 +20,10 @@ function defaultExec(cmd: string): string | null {
   }
 }
 
-export function resolveGitBranch(status: StatusJSON, deps: GitDeps = { exec: defaultExec }): string | null {
+export function resolveGitBranch(
+  status: StatusJSON,
+  deps: GitDeps = { exec: defaultExec },
+): string | null {
   const reported = status.worktree?.branch;
   if (typeof reported === 'string' && reported.length > 0) {
     return reported;
@@ -45,7 +48,10 @@ export interface GitChanges {
  * or when the tree is clean — so the widget hides rather than showing `+0 -0`.
  * Binary files report `-` for both counts in numstat; those rows are skipped.
  */
-export function resolveGitChanges(status: StatusJSON, deps: GitDeps = { exec: defaultExec }): GitChanges | null {
+export function resolveGitChanges(
+  status: StatusJSON,
+  deps: GitDeps = { exec: defaultExec },
+): GitChanges | null {
   const cwd = status.cwd ?? status.workspace?.project_dir;
   if (!cwd) {
     return null;

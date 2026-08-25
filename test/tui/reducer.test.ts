@@ -20,14 +20,20 @@ const base: Settings = {
   ],
 };
 
-const start = (settings: Settings = base): TuiState => initialState(settings, '/tmp/settings.json');
+const start = (settings: Settings = base): TuiState =>
+  initialState(settings, '/tmp/settings.json');
 
 /** Apply a sequence of actions from a starting state. */
-const run = (s: TuiState, ...actions: Action[]): TuiState => actions.reduce(reducer, s);
+const run = (s: TuiState, ...actions: Action[]): TuiState =>
+  actions.reduce(reducer, s);
 
 describe('reducer — load & save', () => {
   it('LOAD seeds settings and saved together (not dirty)', () => {
-    const s = reducer(start(), { type: 'LOAD', settings: base, sourcePath: '/x' });
+    const s = reducer(start(), {
+      type: 'LOAD',
+      settings: base,
+      sourcePath: '/x',
+    });
     expect(s.sourcePath).toBe('/x');
     expect(isDirty(s)).toBe(false);
   });
@@ -43,7 +49,11 @@ describe('reducer — load & save', () => {
 
 describe('reducer — navigation', () => {
   it('NAVIGATE sets the screen and merges focus', () => {
-    const s = reducer(start(), { type: 'NAVIGATE', screen: 'widgets', focus: { itemIndex: 1 } });
+    const s = reducer(start(), {
+      type: 'NAVIGATE',
+      screen: 'widgets',
+      focus: { itemIndex: 1 },
+    });
     expect(s.screen).toBe('widgets');
     expect(s.focus.itemIndex).toBe(1);
   });
@@ -54,8 +64,12 @@ describe('reducer — navigation', () => {
   });
 
   it('SET_MESSAGE sets and clears the status text', () => {
-    expect(reducer(start(), { type: 'SET_MESSAGE', text: 'hi' }).message).toBe('hi');
-    expect(reducer(start(), { type: 'SET_MESSAGE', text: null }).message).toBeNull();
+    expect(reducer(start(), { type: 'SET_MESSAGE', text: 'hi' }).message).toBe(
+      'hi',
+    );
+    expect(
+      reducer(start(), { type: 'SET_MESSAGE', text: null }).message,
+    ).toBeNull();
   });
 });
 
@@ -82,7 +96,12 @@ describe('reducer — style & theme', () => {
 
 describe('reducer — widgets', () => {
   it('ADD_WIDGET appends by default and inserts at an index', () => {
-    const appended = reducer(start(), { type: 'ADD_WIDGET', lineIndex: 0, side: 'left', widgetType: 'directory' });
+    const appended = reducer(start(), {
+      type: 'ADD_WIDGET',
+      lineIndex: 0,
+      side: 'left',
+      widgetType: 'directory',
+    });
     expect(appended.settings.lines[0]!.left.map((w) => w.type)).toEqual([
       'model',
       'git-branch',
@@ -99,27 +118,65 @@ describe('reducer — widgets', () => {
   });
 
   it('REMOVE_WIDGET drops the item and re-clamps focus', () => {
-    const focused = reducer(start(), { type: 'NAVIGATE', focus: { itemIndex: 1 } });
-    const removed = reducer(focused, { type: 'REMOVE_WIDGET', lineIndex: 0, side: 'left', itemIndex: 1 });
-    expect(removed.settings.lines[0]!.left.map((w) => w.type)).toEqual(['model']);
+    const focused = reducer(start(), {
+      type: 'NAVIGATE',
+      focus: { itemIndex: 1 },
+    });
+    const removed = reducer(focused, {
+      type: 'REMOVE_WIDGET',
+      lineIndex: 0,
+      side: 'left',
+      itemIndex: 1,
+    });
+    expect(removed.settings.lines[0]!.left.map((w) => w.type)).toEqual([
+      'model',
+    ]);
     expect(removed.focus.itemIndex).toBe(0); // clamped from 1 → 0
   });
 
   it('MOVE_WIDGET reorders within a side and follows the item with focus', () => {
-    const moved = reducer(start(), { type: 'MOVE_WIDGET', lineIndex: 0, side: 'left', itemIndex: 0, dir: 1 });
-    expect(moved.settings.lines[0]!.left.map((w) => w.type)).toEqual(['git-branch', 'model']);
+    const moved = reducer(start(), {
+      type: 'MOVE_WIDGET',
+      lineIndex: 0,
+      side: 'left',
+      itemIndex: 0,
+      dir: 1,
+    });
+    expect(moved.settings.lines[0]!.left.map((w) => w.type)).toEqual([
+      'git-branch',
+      'model',
+    ]);
     expect(moved.focus.itemIndex).toBe(1);
   });
 
   it('MOVE_WIDGET is a no-op at the boundary', () => {
-    const s = reducer(start(), { type: 'MOVE_WIDGET', lineIndex: 0, side: 'left', itemIndex: 0, dir: -1 });
-    expect(s.settings.lines[0]!.left.map((w) => w.type)).toEqual(['model', 'git-branch']);
+    const s = reducer(start(), {
+      type: 'MOVE_WIDGET',
+      lineIndex: 0,
+      side: 'left',
+      itemIndex: 0,
+      dir: -1,
+    });
+    expect(s.settings.lines[0]!.left.map((w) => w.type)).toEqual([
+      'model',
+      'git-branch',
+    ]);
   });
 
   it('MOVE_WIDGET_ACROSS moves an item to the other side and moves focus with it', () => {
-    const s = reducer(start(), { type: 'MOVE_WIDGET_ACROSS', lineIndex: 0, side: 'left', itemIndex: 0 });
-    expect(s.settings.lines[0]!.left.map((w) => w.type)).toEqual(['git-branch']);
-    expect(s.settings.lines[0]!.right.map((w) => w.type)).toEqual(['session-cost', 'model']);
+    const s = reducer(start(), {
+      type: 'MOVE_WIDGET_ACROSS',
+      lineIndex: 0,
+      side: 'left',
+      itemIndex: 0,
+    });
+    expect(s.settings.lines[0]!.left.map((w) => w.type)).toEqual([
+      'git-branch',
+    ]);
+    expect(s.settings.lines[0]!.right.map((w) => w.type)).toEqual([
+      'session-cost',
+      'model',
+    ]);
     expect(s.focus.side).toBe('right');
     expect(s.focus.itemIndex).toBe(1);
   });
@@ -150,10 +207,27 @@ describe('reducer — colors & options', () => {
   it('SET_WIDGET_OPTION merges into the options bag', () => {
     const s = run(
       start(),
-      { type: 'SET_WIDGET_OPTION', lineIndex: 0, side: 'left', itemIndex: 1, key: 'icon', value: '' },
-      { type: 'SET_WIDGET_OPTION', lineIndex: 0, side: 'left', itemIndex: 1, key: 'width', value: 10 },
+      {
+        type: 'SET_WIDGET_OPTION',
+        lineIndex: 0,
+        side: 'left',
+        itemIndex: 1,
+        key: 'icon',
+        value: '',
+      },
+      {
+        type: 'SET_WIDGET_OPTION',
+        lineIndex: 0,
+        side: 'left',
+        itemIndex: 1,
+        key: 'width',
+        value: 10,
+      },
     );
-    expect(s.settings.lines[0]!.left[1]!.options).toEqual({ icon: '', width: 10 });
+    expect(s.settings.lines[0]!.left[1]!.options).toEqual({
+      icon: '',
+      width: 10,
+    });
   });
 });
 
@@ -178,12 +252,16 @@ describe('reducer — lines', () => {
   });
 
   it('MOVE_LINE swaps lines and follows with focus', () => {
-    const two = run(start(), { type: 'ADD_LINE' }, {
-      type: 'ADD_WIDGET',
-      lineIndex: 1,
-      side: 'left',
-      widgetType: 'directory',
-    });
+    const two = run(
+      start(),
+      { type: 'ADD_LINE' },
+      {
+        type: 'ADD_WIDGET',
+        lineIndex: 1,
+        side: 'left',
+        widgetType: 'directory',
+      },
+    );
     const s = reducer(two, { type: 'MOVE_LINE', lineIndex: 1, dir: -1 });
     expect(s.settings.lines[0]!.left[0]!.type).toBe('directory');
     expect(s.focus.lineIndex).toBe(0);
@@ -193,16 +271,27 @@ describe('reducer — lines', () => {
 describe('reducer — presets', () => {
   it('APPLY_PRESET paints fg on all items and round-robins bg per group', () => {
     const preset = presetByKey('mono');
-    const s = reducer(start(), { type: 'APPLY_PRESET', fg: preset.fg, bgs: preset.bgs });
+    const s = reducer(start(), {
+      type: 'APPLY_PRESET',
+      fg: preset.fg,
+      bgs: preset.bgs,
+    });
     const left = s.settings.lines[0]!.left;
     expect(left[0]).toMatchObject({ fg: preset.fg, bg: preset.bgs[0] });
     expect(left[1]).toMatchObject({ fg: preset.fg, bg: preset.bgs[1] });
     // The ring restarts per group, so the right group leads with bg[0] again.
-    expect(s.settings.lines[0]!.right[0]).toMatchObject({ fg: preset.fg, bg: preset.bgs[0] });
+    expect(s.settings.lines[0]!.right[0]).toMatchObject({
+      fg: preset.fg,
+      bg: preset.bgs[0],
+    });
   });
 
   it('APPLY_PRESET accepts an arbitrary palette (e.g. a detected theme)', () => {
-    const s = reducer(start(), { type: 'APPLY_PRESET', fg: 'black', bgs: ['#111111', '#222222'] });
+    const s = reducer(start(), {
+      type: 'APPLY_PRESET',
+      fg: 'black',
+      bgs: ['#111111', '#222222'],
+    });
     const left = s.settings.lines[0]!.left;
     expect(left[0]).toMatchObject({ fg: 'black', bg: '#111111' });
     expect(left[1]).toMatchObject({ fg: 'black', bg: '#222222' });
@@ -210,10 +299,17 @@ describe('reducer — presets', () => {
 });
 
 describe('reducer — replace settings', () => {
-  const other: Settings = { style: 'builtin', lines: [{ left: [{ type: 'directory' }], right: [] }] };
+  const other: Settings = {
+    style: 'builtin',
+    lines: [{ left: [{ type: 'directory' }], right: [] }],
+  };
 
   it('swaps settings in but leaves the saved snapshot, so it reads as dirty', () => {
-    const s = reducer(start(), { type: 'REPLACE_SETTINGS', settings: other, message: 'Loaded' });
+    const s = reducer(start(), {
+      type: 'REPLACE_SETTINGS',
+      settings: other,
+      message: 'Loaded',
+    });
     expect(s.settings).toEqual(other);
     expect(isDirty(s)).toBe(true);
     expect(s.message).toBe('Loaded');
@@ -235,7 +331,12 @@ describe('reducer — replace settings', () => {
 
 describe('clampFocus', () => {
   it('resets to origin when there are no lines', () => {
-    expect(clampFocus({ style: 'powerline', lines: [] }, { lineIndex: 3, side: 'right', itemIndex: 5 })).toEqual({
+    expect(
+      clampFocus(
+        { style: 'powerline', lines: [] },
+        { lineIndex: 3, side: 'right', itemIndex: 5 },
+      ),
+    ).toEqual({
       lineIndex: 0,
       side: 'right',
       itemIndex: 0,

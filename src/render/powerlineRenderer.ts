@@ -50,7 +50,10 @@ function visible(segments: Segment[]): Segment[] {
 }
 
 /** Render the left group: `[ seg ][ seg ]…` chained with `` and an end cap. */
-export function renderLeftGroup(segments: Segment[], theme: PowerlineTheme): RenderedGroup {
+export function renderLeftGroup(
+  segments: Segment[],
+  theme: PowerlineTheme,
+): RenderedGroup {
   const segs = visible(segments);
   if (segs.length === 0) {
     return { text: '', width: 0 };
@@ -78,7 +81,10 @@ export function renderLeftGroup(segments: Segment[], theme: PowerlineTheme): Ren
 }
 
 /** Render the right group: a leading `` cap, then mirrored chaining. */
-export function renderRightGroup(segments: Segment[], theme: PowerlineTheme): RenderedGroup {
+export function renderRightGroup(
+  segments: Segment[],
+  theme: PowerlineTheme,
+): RenderedGroup {
   const segs = visible(segments);
   if (segs.length === 0) {
     return { text: '', width: 0 };

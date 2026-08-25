@@ -5,8 +5,13 @@ import type { WidgetDef } from '../../src/widgets/Widget.js';
 
 describe('deepMerge', () => {
   it('recursively merges sibling keys without clobbering', () => {
-    const merged = deepMerge({ git: { branch: 'x' } }, { git: { changes: { added: 1, deleted: 0 } } });
-    expect(merged).toEqual({ git: { branch: 'x', changes: { added: 1, deleted: 0 } } });
+    const merged = deepMerge(
+      { git: { branch: 'x' } },
+      { git: { changes: { added: 1, deleted: 0 } } },
+    );
+    expect(merged).toEqual({
+      git: { branch: 'x', changes: { added: 1, deleted: 0 } },
+    });
   });
 });
 
