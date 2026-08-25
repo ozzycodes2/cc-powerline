@@ -6,8 +6,9 @@
  * The answer→settings mapping ({@link buildSettingsFromAnswers}) is pure and
  * separately tested; {@link runInit} is the thin IO driver around it.
  */
-import { writeSettings } from './writeConfig.js';
+import { saveConfig } from '../config/store.js';
 import { DEFAULT_PRESET_KEY, PRESETS, presetByKey } from './presets.js';
+import { applyPalette } from '../config/palette.js';
 import { multiSelect, promptNumber, readlineIO, select, type Choice, type PromptIO } from './prompts.js';
 import { previewContext } from './previewContext.js';
 import { buildStatus } from '../pipeline.js';
@@ -30,28 +31,20 @@ export interface WizardAnswers {
 /** The most lines the wizard offers to configure. */
 export const MAX_LINES = 5;
 
-/** Assign a group's widgets their fg + a round-robin bg from the preset. */
-function toItems(types: string[], presetKey: string): WidgetItem[] {
-  const preset = presetByKey(presetKey);
-  return types.map((type, i) => ({
-    type,
-    fg: preset.fg,
-    bg: preset.bgs[i % preset.bgs.length],
-  }));
-}
-
 /** Pure: turn wizard answers into a Settings object. */
 export function buildSettingsFromAnswers(answers: WizardAnswers): Settings {
-  return {
+  const bare = (types: string[]): WidgetItem[] => types.map((type) => ({ type }));
+  const settings: Settings = {
     style: answers.style,
-    // The background ring restarts per group, so each line leads with the
-    // preset's first color regardless of the lines before it.
     lines: answers.lines.map((line) => ({
-      left: toItems(line.left, answers.preset),
+      left: bare(line.left),
       // Built-in style ignores the right group entirely, so never write one.
-      right: answers.style === 'powerline' ? toItems(line.right, answers.preset) : [],
+      right: answers.style === 'powerline' ? bare(line.right) : [],
     })),
   };
+  // applyPalette restarts the bg ring per group, so each line leads with the
+  // preset's first color regardless of the lines before it.
+  return applyPalette(settings, presetByKey(answers.preset));
 }
 
 const widgetChoices = (defaults: string[]): Choice<string>[] =>
@@ -108,7 +101,7 @@ export function renderPreview(settings: Settings, width: number): string {
 /** Run the interactive wizard, persist the result, and return it. */
 export async function runInit(deps: InitDeps = {}): Promise<Settings> {
   const io = deps.io ?? readlineIO();
-  const writeConfig = deps.writeConfig ?? ((s: Settings) => writeSettings(s));
+  const writeConfig = deps.writeConfig ?? ((s: Settings) => saveConfig(s));
   // eslint-disable-next-line no-console
   const log = deps.log ?? ((m: string) => console.log(m));
 

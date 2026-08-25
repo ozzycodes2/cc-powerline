@@ -1,17 +1,11 @@
 /**
- * Color presets for the `init` wizard. A preset is just a foreground plus a
- * ring of background colors applied round-robin to a group's widgets, so any
- * widget list gets a coherent palette without the user hand-picking colors.
+ * The built-in presets the `init` wizard and the TUI Theme panel offer. A
+ * {@link Preset} is a named {@link Palette}; painting a Settings from one lives
+ * in `config/palette.ts`, so this module only holds the catalog of choices.
  */
-import type { Color } from '../render/types.js';
+import type { Preset } from '../config/palette.js';
 
-export interface Preset {
-  key: string;
-  label: string;
-  fg: Color;
-  /** Background ring, cycled across the widgets in each group. */
-  bgs: Color[];
-}
+export type { Preset } from '../config/palette.js';
 
 export const PRESETS: Preset[] = [
   {

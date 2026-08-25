@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { expandSgr } from '../../src/tui/expandSgr.js';
+import { expandSgr } from '../../src/render/sgr.js';
 
 const E = '\x1b';
 

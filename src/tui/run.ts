@@ -5,14 +5,12 @@
  * injectable (load / write / streams) so it can be driven by ink-testing-library.
  */
 import { createElement } from 'react';
-import { readFile } from 'node:fs/promises';
 import { render } from 'ink';
 import { App } from './App.js';
-import { loadSettings, settingsPath } from '../config/loadSettings.js';
-import { writeSettings } from '../cli/writeConfig.js';
+import { loadSettings, settingsPath, saveConfig, loadConfigStrict } from '../config/store.js';
 import { scanThemes } from './themeScan.js';
-import { SettingsSchema, type Settings } from '../types/Settings.js';
-import type { Preset } from '../cli/presets.js';
+import type { Settings } from '../types/Settings.js';
+import type { Preset } from '../config/palette.js';
 
 export interface RunTuiDeps {
   load?: () => Promise<{ settings: Settings; sourcePath: string }>;
@@ -29,23 +27,14 @@ export async function defaultLoad(): Promise<{ settings: Settings; sourcePath: s
   return { settings, sourcePath: settingsPath() };
 }
 
-/**
- * Strict importer for the Import/export screen: unlike `loadSettings`, a missing
- * file or invalid schema throws so the editor can show the error rather than
- * silently swapping in defaults.
- */
+/** Strict importer for the Import/export screen — see {@link loadConfigStrict}. */
 export async function defaultLoadFrom(path: string): Promise<Settings> {
-  const text = await readFile(path, 'utf8');
-  const result = SettingsSchema.safeParse(JSON.parse(text));
-  if (!result.success) {
-    throw new Error('not a valid settings file');
-  }
-  return result.data;
+  return loadConfigStrict(path);
 }
 
 export async function runTui(deps: RunTuiDeps = {}): Promise<void> {
   const load = deps.load ?? defaultLoad;
-  const save = deps.save ?? ((s: Settings) => writeSettings(s).then(() => undefined));
+  const save = deps.save ?? ((s: Settings) => saveConfig(s).then(() => undefined));
   const loadFrom = deps.loadFrom ?? defaultLoadFrom;
   const themes = deps.themes ?? scanThemes();
 

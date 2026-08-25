@@ -4,7 +4,7 @@
  * the human-facing entry point.
  */
 import { Command } from 'commander';
-import { settingsPath } from './config/loadSettings.js';
+import { settingsPath } from './config/store.js';
 import {
   fetchLiteLLMTable,
   resolvePricing,

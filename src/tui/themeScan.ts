@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 import type { Color } from '../render/types.js';
-import type { Preset } from '../cli/presets.js';
+import type { Preset } from '../config/palette.js';
 import { parseP10k, parsePowerline, parseOhMyPosh } from './themeParse.js';
 
 /** Read a file's text, or null if it is missing/unreadable. */

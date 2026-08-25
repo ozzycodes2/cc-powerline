@@ -10,10 +10,24 @@
  * cursors that don't touch settings (e.g. which menu row) stay local to the
  * component.
  */
-import type { Settings, WidgetItem, LineConfig } from '../types/Settings.js';
+import type { Settings } from '../types/Settings.js';
 import type { Color } from '../render/types.js';
+import {
+  addLine,
+  addWidget,
+  applyPalette,
+  clamp,
+  moveLine,
+  moveWidget,
+  moveWidgetAcross,
+  removeLine,
+  removeWidget,
+  setWidgetColor,
+  setWidgetOption,
+  type Side,
+} from '../config/edit.js';
 
-export type Side = 'left' | 'right';
+export type { Side };
 
 /** Which editor screen is showing. Unimplemented screens render a placeholder. */
 export type Screen = 'menu' | 'lines' | 'widgets' | 'picker' | 'color' | 'style' | 'theme' | 'io';
@@ -78,64 +92,9 @@ export type Action =
    *  so the swap shows as unsaved until the user writes it. */
   | { type: 'REPLACE_SETTINGS'; settings: Settings; message?: string };
 
-/** An empty line placeholder used when adding a fresh line. */
-const EMPTY_LINE: LineConfig = { left: [], right: [] };
-
 /** True when the working config differs from what's on disk. */
 export function isDirty(state: TuiState): boolean {
   return JSON.stringify(state.settings) !== JSON.stringify(state.saved);
-}
-
-function clamp(n: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, n));
-}
-
-/** Replace one line immutably; out-of-range indices are a no-op. */
-function withLine(
-  settings: Settings,
-  lineIndex: number,
-  update: (line: LineConfig) => LineConfig,
-): Settings {
-  const line = settings.lines[lineIndex];
-  if (!line) {
-    return settings;
-  }
-  const lines = settings.lines.slice();
-  lines[lineIndex] = update(line);
-  return { ...settings, lines };
-}
-
-/** Replace one widget item immutably; out-of-range indices are a no-op. */
-function withItem(
-  settings: Settings,
-  lineIndex: number,
-  side: Side,
-  itemIndex: number,
-  update: (item: WidgetItem) => WidgetItem,
-): Settings {
-  return withLine(settings, lineIndex, (line) => {
-    const group = line[side];
-    if (!group[itemIndex]) {
-      return line;
-    }
-    const next = group.slice();
-    next[itemIndex] = update(next[itemIndex]!);
-    return { ...line, [side]: next };
-  });
-}
-
-/** Assign the palette's fg to every item and a round-robin bg per group. */
-function applyPreset(settings: Settings, fg: Color, bgs: Color[]): Settings {
-  const paint = (group: WidgetItem[]): WidgetItem[] =>
-    group.map((item, i) => ({ ...item, fg, bg: bgs[i % bgs.length] }));
-  return {
-    ...settings,
-    lines: settings.lines.map((line) => ({
-      ...line,
-      left: paint(line.left),
-      right: paint(line.right),
-    })),
-  };
 }
 
 /** Fold a settings edit back into state, keeping `focus` in range. */
@@ -201,37 +160,23 @@ export function reducer(state: TuiState, action: Action): TuiState {
     case 'ADD_WIDGET':
       return commit(
         state,
-        withLine(state.settings, action.lineIndex, (line) => {
-          const group = line[action.side].slice();
-          const at = action.at ?? group.length;
-          group.splice(clamp(at, 0, group.length), 0, { type: action.widgetType });
-          return { ...line, [action.side]: group };
-        }),
+        addWidget(state.settings, action.lineIndex, action.side, action.widgetType, action.at),
       );
 
     case 'REMOVE_WIDGET':
       return commit(
         state,
-        withLine(state.settings, action.lineIndex, (line) => {
-          const group = line[action.side].slice();
-          if (!group[action.itemIndex]) {
-            return line;
-          }
-          group.splice(action.itemIndex, 1);
-          return { ...line, [action.side]: group };
-        }),
+        removeWidget(state.settings, action.lineIndex, action.side, action.itemIndex),
       );
 
     case 'MOVE_WIDGET': {
-      const settings = withLine(state.settings, action.lineIndex, (line) => {
-        const group = line[action.side].slice();
-        const to = action.itemIndex + action.dir;
-        if (!group[action.itemIndex] || to < 0 || to >= group.length) {
-          return line;
-        }
-        [group[action.itemIndex], group[to]] = [group[to]!, group[action.itemIndex]!];
-        return { ...line, [action.side]: group };
-      });
+      const settings = moveWidget(
+        state.settings,
+        action.lineIndex,
+        action.side,
+        action.itemIndex,
+        action.dir,
+      );
       // Follow the widget with the focus so a run of moves keeps grabbing it.
       const line = state.settings.lines[action.lineIndex];
       const to = action.itemIndex + action.dir;
@@ -245,15 +190,7 @@ export function reducer(state: TuiState, action: Action): TuiState {
 
     case 'MOVE_WIDGET_ACROSS': {
       const other: Side = action.side === 'left' ? 'right' : 'left';
-      const settings = withLine(state.settings, action.lineIndex, (line) => {
-        const from = line[action.side].slice();
-        const item = from[action.itemIndex];
-        if (!item) {
-          return line;
-        }
-        from.splice(action.itemIndex, 1);
-        return { ...line, [action.side]: from, [other]: [...line[other], item] };
-      });
+      const settings = moveWidgetAcross(state.settings, action.lineIndex, action.side, action.itemIndex);
       const dest = state.settings.lines[action.lineIndex]?.[other].length ?? 0;
       return commit({ ...state, focus: { ...state.focus, side: other, itemIndex: dest } }, settings);
     }
@@ -261,55 +198,52 @@ export function reducer(state: TuiState, action: Action): TuiState {
     case 'SET_WIDGET_COLOR':
       return commit(
         state,
-        withItem(state.settings, action.lineIndex, action.side, action.itemIndex, (item) => {
-          const next = { ...item };
-          if (action.color === undefined) {
-            delete next[action.channel];
-          } else {
-            next[action.channel] = action.color;
-          }
-          return next;
-        }),
+        setWidgetColor(
+          state.settings,
+          action.lineIndex,
+          action.side,
+          action.itemIndex,
+          action.channel,
+          action.color,
+        ),
       );
 
     case 'SET_WIDGET_OPTION':
       return commit(
         state,
-        withItem(state.settings, action.lineIndex, action.side, action.itemIndex, (item) => ({
-          ...item,
-          options: { ...(item.options ?? {}), [action.key]: action.value },
-        })),
+        setWidgetOption(
+          state.settings,
+          action.lineIndex,
+          action.side,
+          action.itemIndex,
+          action.key,
+          action.value,
+        ),
       );
 
     case 'ADD_LINE': {
-      const lines = [...state.settings.lines, { ...EMPTY_LINE }];
+      const settings = addLine(state.settings);
       return commit(
-        { ...state, focus: { ...state.focus, lineIndex: lines.length - 1, itemIndex: 0 } },
-        { ...state.settings, lines },
+        { ...state, focus: { ...state.focus, lineIndex: settings.lines.length - 1, itemIndex: 0 } },
+        settings,
       );
     }
 
-    case 'REMOVE_LINE': {
-      if (state.settings.lines.length <= 1 || !state.settings.lines[action.lineIndex]) {
-        return state; // keep at least one line
-      }
-      const lines = state.settings.lines.slice();
-      lines.splice(action.lineIndex, 1);
-      return commit(state, { ...state.settings, lines });
-    }
+    case 'REMOVE_LINE':
+      return commit(state, removeLine(state.settings, action.lineIndex));
 
     case 'MOVE_LINE': {
       const to = action.lineIndex + action.dir;
-      if (!state.settings.lines[action.lineIndex] || to < 0 || to >= state.settings.lines.length) {
-        return state;
-      }
-      const lines = state.settings.lines.slice();
-      [lines[action.lineIndex], lines[to]] = [lines[to]!, lines[action.lineIndex]!];
-      return commit({ ...state, focus: { ...state.focus, lineIndex: to } }, { ...state.settings, lines });
+      const settings = moveLine(state.settings, action.lineIndex, action.dir);
+      const moved = settings !== state.settings;
+      return commit(
+        moved ? { ...state, focus: { ...state.focus, lineIndex: to } } : state,
+        settings,
+      );
     }
 
     case 'APPLY_PRESET':
-      return commit(state, applyPreset(state.settings, action.fg, action.bgs));
+      return commit(state, applyPalette(state.settings, { fg: action.fg, bgs: action.bgs }));
 
     case 'REPLACE_SETTINGS':
       return { ...commit(state, action.settings), message: action.message ?? null };

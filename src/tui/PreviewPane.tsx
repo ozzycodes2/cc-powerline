@@ -12,7 +12,7 @@ import { useMemo } from 'react';
 import type { Settings } from '../types/Settings.js';
 import { buildStatus } from '../pipeline.js';
 import { previewContext } from '../cli/previewContext.js';
-import { expandSgr } from './expandSgr.js';
+import { expandSgr } from '../render/sgr.js';
 
 export interface PreviewPaneProps {
   settings: Settings;

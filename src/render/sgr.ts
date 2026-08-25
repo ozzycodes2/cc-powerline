@@ -1,14 +1,15 @@
 /**
  * Split compound SGR escapes into one escape per attribute.
  *
- * Our powerline renderer emits packed sequences like
+ * The powerline renderer emits packed sequences like
  * `\x1b[38;2;79;93;117;48;2;61;90;128m` (foreground *and* background in a single
- * escape). Ink lays the preview out with an ANSI-aware text engine that tracks
- * styles per attribute, but it only registers the *first* attribute of a packed
- * escape — so it never learns a background was opened and never closes it. The
- * background then bleeds across the box padding and down the screen at wide
- * widths. Rewriting each attribute into its own `\x1b[..m` is visually identical
- * on a real terminal but gives Ink a background-open it can actually close.
+ * escape). That is valid ANSI, but some consumers track styles per attribute and
+ * only register the *first* attribute of a packed escape — so they never learn a
+ * background was opened and never close it. (Ink's preview text engine is the
+ * concrete case: the unclosed background bleeds across the box and down the
+ * screen at wide widths.) Rewriting each attribute into its own `\x1b[..m` is
+ * visually identical on a real terminal but hands such a consumer a
+ * background-open it can actually close.
  *
  * Only the SGR family (`\x1b[..m`) is touched; other escapes pass through.
  */
