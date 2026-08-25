@@ -16,6 +16,7 @@ import {
   type TranscriptTotals,
 } from './transcript/parseTranscript.js';
 import { resolveGitBranch, resolveGitChanges, type GitChanges } from './git.js';
+import { isMainEntry } from './isMainEntry.js';
 import { homedir } from 'node:os';
 import { detectTerminalWidth } from './render/terminalWidth.js';
 import { buildStatus } from './pipeline.js';
@@ -109,7 +110,6 @@ export async function main(): Promise<void> {
 }
 
 // Run only when executed directly (not when imported by tests).
-const invokedPath = process.argv[1] ?? '';
-if (invokedPath.endsWith('index.js') || invokedPath.endsWith('index.ts')) {
+if (isMainEntry(process.argv[1], import.meta.url)) {
   void main();
 }

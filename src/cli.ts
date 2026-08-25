@@ -4,6 +4,7 @@
  * the human-facing entry point.
  */
 import { Command } from 'commander';
+import { isMainEntry } from './isMainEntry.js';
 import { settingsPath } from './config/store.js';
 import { fetchLiteLLMTable, resolvePricing } from './pricing/resolvePricing.js';
 import { pricingCachePath, writePricingCache } from './pricing/pricingCache.js';
@@ -153,7 +154,6 @@ export async function main(argv = process.argv): Promise<void> {
   await buildProgram().parseAsync(argv);
 }
 
-const invokedPath = process.argv[1] ?? '';
-if (invokedPath.endsWith('cli.js') || invokedPath.endsWith('cli.ts')) {
+if (isMainEntry(process.argv[1], import.meta.url)) {
   void main();
 }

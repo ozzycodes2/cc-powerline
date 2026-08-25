@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-25
+
+### Fixed
+
+- CLI commands did nothing when the package was installed from npm. The entry
+  guard checked `process.argv[1].endsWith('cli.js')`, but npm invokes the CLI
+  through a bin symlink named `cc-powerline`, so `main()` never ran and every
+  command (`init`, `--help`, ...) silently exited 0. The entry point is now
+  detected by resolving `argv[1]` and the module path through `realpathSync`,
+  which sees through the symlink for global installs, `npx`, and direct runs.
+
 ## [0.1.0] - 2026-08-25
 
 ### Added
@@ -25,5 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context-length, session-cost, cache-hit-rate, cache-window, compactions,
   rate-limit, and separator.
 
-[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ozzycodes2/cc-powerline/releases/tag/v0.1.0
