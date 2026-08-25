@@ -45,6 +45,23 @@ function showPreview(opts: { style?: string; width?: number }): void {
   console.log(renderPreview(settings, width));
 }
 
+/**
+ * Open the interactive config editor. Uses the rich Ink TUI when attached to a
+ * real terminal, and falls back to the plain readline wizard for piped / CI
+ * runs or when `--no-tui` is passed. Ink (and React) are pulled in via a lazy
+ * import so they never load on the non-interactive path or the hot statusline
+ * entry.
+ */
+async function runConfigUi(opts: { tui?: boolean }): Promise<void> {
+  const interactive = Boolean(process.stdin.isTTY && process.stdout.isTTY);
+  if (opts.tui !== false && interactive) {
+    const { runTui } = await import('./tui/run.js');
+    await runTui();
+  } else {
+    await runInit();
+  }
+}
+
 async function showPricing(opts: { model?: string }): Promise<void> {
   const { table, source } = await resolvePricing();
   if (!opts.model) {
@@ -70,9 +87,10 @@ export function buildProgram(): Command {
 
   program
     .command('init')
-    .description('Create a configuration interactively.')
-    .action(async () => {
-      await runInit();
+    .description('Create or edit your configuration interactively.')
+    .option('--no-tui', 'use the plain readline wizard instead of the interactive TUI')
+    .action(async (opts: { tui?: boolean }) => {
+      await runConfigUi(opts);
     });
 
   program
@@ -87,6 +105,13 @@ export function buildProgram(): Command {
     .command('path')
     .description('Print the settings file path.')
     .action(() => console.log(settingsPath()));
+  config
+    .command('edit')
+    .description('Edit the configuration in the interactive editor.')
+    .option('--no-tui', 'use the plain readline wizard instead of the interactive TUI')
+    .action(async (opts: { tui?: boolean }) => {
+      await runConfigUi(opts);
+    });
 
   const pricing = program.command('pricing').description('Pricing cache control.');
   pricing

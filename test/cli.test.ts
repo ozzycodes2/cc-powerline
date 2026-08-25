@@ -20,7 +20,7 @@ describe('buildProgram', () => {
         .find((c) => c.name() === name)!
         .commands.map((c) => c.name())
         .sort();
-    expect(sub('config')).toEqual(['path']);
+    expect(sub('config')).toEqual(['edit', 'path']);
     expect(sub('pricing')).toEqual(['refresh', 'show']);
   });
 

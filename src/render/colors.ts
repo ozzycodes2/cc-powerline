@@ -26,6 +26,9 @@ const NAMED_FG: Record<string, number> = {
   brightWhite: 97,
 };
 
+/** The basic named colors, in SGR order — the palette the color picker offers. */
+export const NAMED_COLORS = Object.keys(NAMED_FG) as Color[];
+
 function hexToRgb(hex: string): [number, number, number] | null {
   const m = /^#([0-9a-fA-F]{6})$/.exec(hex);
   if (!m) {

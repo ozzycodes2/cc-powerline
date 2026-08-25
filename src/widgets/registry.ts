@@ -27,6 +27,8 @@ const NO_OPTS = z.object({});
 
 const model = defineWidget({
   type: 'model',
+  label: 'Model',
+  description: 'Active model display name',
   options: NO_OPTS,
   render: (ctx) => ctx.status.model?.display_name ?? ctx.status.model?.id ?? null,
   sample: () => ({ status: { model: { id: 'claude-opus-4-8', display_name: 'Opus 4.8' } } }),
@@ -34,6 +36,8 @@ const model = defineWidget({
 
 const modelEffort = defineWidget({
   type: 'model-effort',
+  label: 'Model effort',
+  description: 'Reasoning effort level (e.g. high)',
   options: NO_OPTS,
   render: (ctx) => {
     const level = ctx.status.effort?.level;
@@ -44,6 +48,8 @@ const modelEffort = defineWidget({
 
 const gitBranch = defineWidget({
   type: 'git-branch',
+  label: 'Git branch',
+  description: 'Current branch name',
   options: z.object({ icon: z.string().default(ICON_BRANCH) }),
   render: prefixIcon((ctx) => ctx.git.branch ?? null),
   sample: () => ({ git: { branch: 'main' } }),
@@ -51,6 +57,8 @@ const gitBranch = defineWidget({
 
 const gitChanges = defineWidget({
   type: 'git-changes',
+  label: 'Git changes',
+  description: 'Added / deleted line counts',
   options: z.object({ icon: z.string().default(ICON_CHANGES) }),
   render: prefixIcon((ctx) => {
     const c = ctx.git.changes;
@@ -64,6 +72,8 @@ const gitChanges = defineWidget({
 
 const directory = defineWidget({
   type: 'directory',
+  label: 'Directory',
+  description: 'Working directory path',
   options: z.object({ mode: z.enum(['compressed', 'basename', 'full']).default('compressed') }),
   render: (ctx, opts) => {
     const dir = ctx.status.cwd ?? ctx.status.workspace?.project_dir;
@@ -83,6 +93,8 @@ const directory = defineWidget({
 
 const contextLength = defineWidget({
   type: 'context-length',
+  label: 'Context length',
+  description: 'Percent of the context window used',
   options: z.object({ label: z.string().default(ICON_CONTEXT) }),
   render: prefixed<{ label: string }>('label', ' ', 'skip-empty', (ctx) => {
     const cw = ctx.status.context_window;
@@ -99,6 +111,8 @@ const contextLength = defineWidget({
 
 const sessionCost = defineWidget({
   type: 'session-cost',
+  label: 'Session cost',
+  description: 'Total USD spent this session',
   options: NO_OPTS,
   render: (ctx) => {
     const cost = ctx.totals.costUsd > 0 ? ctx.totals.costUsd : ctx.status.cost?.total_cost_usd ?? 0;
@@ -131,6 +145,8 @@ function baseInputPrice(name: string | undefined): number | null {
 
 const nextCost = defineWidget({
   type: 'next-cost',
+  label: 'Next-message cost',
+  description: 'Projected warm→cold cost of the next turn',
   options: z.object({ icon: z.string().default('') }),
   render: prefixIcon((ctx) => {
     const tokens = ctx.totals.contextTokens;
@@ -162,6 +178,8 @@ const nextCost = defineWidget({
 
 const cacheHitRate = defineWidget({
   type: 'cache-hit-rate',
+  label: 'Cache hit rate',
+  description: 'Cache-read share of prompt tokens',
   options: z.object({ icon: z.string().default(ICON_CACHE) }),
   render: prefixIcon((ctx) => {
     const { cacheReadTokens, cacheCreationTokens } = ctx.totals;
@@ -173,6 +191,8 @@ const cacheHitRate = defineWidget({
 
 const cacheWindow = defineWidget({
   type: 'cache-window',
+  label: 'Cache window',
+  description: 'Time left before the prompt cache expires',
   options: z.object({ icon: z.string().default(ICON_CLOCK) }),
   render: prefixIcon((ctx) => {
     const exp = ctx.totals.cacheExpiresAt;
@@ -187,6 +207,8 @@ const cacheWindow = defineWidget({
 
 const compactions = defineWidget({
   type: 'compactions',
+  label: 'Compactions',
+  description: 'Number of context compactions so far',
   options: z.object({ icon: z.string().default(ICON_COMPACT) }),
   render: prefixIcon((ctx) => {
     const n = ctx.totals.compactions;
@@ -197,6 +219,8 @@ const compactions = defineWidget({
 
 const rateLimit = defineWidget({
   type: 'rate-limit',
+  label: 'Rate limit',
+  description: 'Percent of the 5-hour rate limit used',
   options: z.object({ label: z.string().default('5h') }),
   render: prefixLabel<{ label: string }>((ctx) => {
     const pct = ctx.status.rate_limits?.five_hour?.used_percentage;
@@ -207,6 +231,8 @@ const rateLimit = defineWidget({
 
 const separator = defineWidget({
   type: 'separator',
+  label: 'Separator',
+  description: 'A literal divider character',
   options: z.object({ char: z.string().default('|') }),
   render: (_ctx, opts) => opts.char,
 });

@@ -24,6 +24,10 @@ export type PartialContext = {
 
 export interface WidgetDef<O = unknown> {
   type: string;
+  /** Human-friendly name for the picker; falls back to `type` when absent. */
+  label?: string;
+  /** One-line explanation shown beside the widget in the picker. */
+  description?: string;
   /** Zod schema for this widget's options; every field carries a `.default()`. */
   options: z.ZodType<O>;
   /** Produce display text, or `null` to omit the widget. Options are typed + defaulted. */
@@ -35,6 +39,8 @@ export interface WidgetDef<O = unknown> {
 /** Identity factory that infers the options type from the Zod schema. */
 export function defineWidget<S extends z.ZodType>(def: {
   type: string;
+  label?: string;
+  description?: string;
   options: S;
   render: (ctx: WidgetContext, opts: z.infer<S>) => string | null;
   sample?: () => PartialContext;
