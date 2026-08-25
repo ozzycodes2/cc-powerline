@@ -60,7 +60,8 @@ describe('WidgetPicker', () => {
       h.stdin.write(ch);
       await delay(5);
     }
-    expect(stripAnsi(h.lastFrame() ?? '')).toContain('Git branch'); // catalog label
+    // Rows read "Category: one-line explanation".
+    expect(stripAnsi(h.lastFrame() ?? '')).toContain('Git branch: Current branch name');
     h.stdin.write(KEY.enter);
     await delay();
     expect(h.state.settings.lines[0]!.left).toEqual([{ type: 'git-branch' }]);

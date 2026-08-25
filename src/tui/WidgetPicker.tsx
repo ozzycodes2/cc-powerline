@@ -62,7 +62,21 @@ export function WidgetPicker({ state, dispatch }: WidgetPickerProps) {
         <Text dimColor>no matches</Text>
       ) : (
         <SelectList
-          items={results.map((c) => ({ label: c.label, hint: c.description }))}
+          items={results.map((c) => ({
+            label: c.label,
+            // "Category: what it is" — the colon binds to the name, the
+            // one-line explanation trails dimmed after it.
+            render: (selected) => (
+              <Text color={selected ? 'cyan' : undefined} bold={selected}>
+                {c.label}
+                {c.description ? (
+                  <Text>
+                    :<Text dimColor> {c.description}</Text>
+                  </Text>
+                ) : null}
+              </Text>
+            ),
+          }))}
           cursor={clamped}
         />
       )}
