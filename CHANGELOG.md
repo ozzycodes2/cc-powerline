@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-08-25
+
+### Documentation
+
+- The README now shows the `init` editor in action: an animated walkthrough GIF
+  plus stills of the style, widgets, theme, and Claude Code wiring panels. The
+  assets are generated from a checked-in [VHS](https://github.com/charmbracelet/vhs)
+  tape (`docs/tapes/init-walkthrough.tape`) that isolates `HOME`,
+  `XDG_CONFIG_HOME`, and `CLAUDE_CONFIG_DIR` into temp dirs, so anyone can
+  regenerate them after a TUI change with `vhs docs/tapes/init-walkthrough.tape`.
+
 ## [0.2.5] - 2026-08-25
 
 ### Changed
@@ -139,7 +150,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context-length, session-cost, cache-hit-rate, cache-window, compactions,
   rate-limit, and separator.
 
-[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.6...HEAD
+[0.2.6]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.2...v0.2.3
