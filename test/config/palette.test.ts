@@ -58,8 +58,9 @@ describe('applyPalette', () => {
       }),
       { fg: 'white', bgs: ['cyan'] },
     );
-    // cyan is dark, so the contrasting fg is brightWhite, not the palette fg.
-    expect(r.lines[0]!.left[0]).toMatchObject({ fg: 'brightWhite', bg: 'cyan' });
+    // The auto-contrast fg replaces the item's own, and cyan is bright enough
+    // (as a terminal paints it) to take dark text rather than the palette fg.
+    expect(r.lines[0]!.left[0]).toMatchObject({ fg: 'black', bg: 'cyan' });
   });
 
   it('is a no-op on a config with no lines', () => {

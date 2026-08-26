@@ -29,22 +29,24 @@ const NAMED_FG: Record<string, number> = {
 /** The basic named colors, in SGR order — the palette the color picker offers. */
 export const NAMED_COLORS = Object.keys(NAMED_FG) as Color[];
 
-// Approximate sRGB for each named color, so luminance can be judged uniformly
-// with hex colors. Values follow the common xterm default palette.
+// sRGB for each named color, matching what terminals actually paint (the common
+// xterm default palette), so contrast is judged against the real background.
+// Using the dim SGR half-values here underestimates the brightness of normal
+// yellow/green/cyan and leaves them with unreadable white text.
 const NAMED_RGB: Record<string, [number, number, number]> = {
   black: [0, 0, 0],
-  red: [128, 0, 0],
-  green: [0, 128, 0],
-  yellow: [128, 128, 0],
-  blue: [0, 0, 128],
-  magenta: [128, 0, 128],
-  cyan: [0, 128, 128],
-  white: [192, 192, 192],
-  gray: [128, 128, 128],
+  red: [205, 0, 0],
+  green: [0, 205, 0],
+  yellow: [205, 205, 0],
+  blue: [0, 0, 238],
+  magenta: [205, 0, 205],
+  cyan: [0, 205, 205],
+  white: [229, 229, 229],
+  gray: [127, 127, 127],
   brightRed: [255, 0, 0],
   brightGreen: [0, 255, 0],
   brightYellow: [255, 255, 0],
-  brightBlue: [0, 0, 255],
+  brightBlue: [92, 92, 255],
   brightMagenta: [255, 0, 255],
   brightCyan: [0, 255, 255],
   brightWhite: [255, 255, 255],
@@ -80,20 +82,35 @@ export function bgParams(color: Color): string | null {
   return code === undefined ? null : String(code + 10);
 }
 
+/** One channel's contribution to WCAG relative luminance (sRGB → linear). */
+function channelLuminance(c: number): number {
+  const s = c / 255;
+  return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+}
+
+// Above this WCAG relative luminance, black text out-contrasts white on the
+// background. Derived from the contrast-ratio crossover √(0.05·1.05) − 0.05, so
+// mid-tones like green (which a YIQ threshold wrongly kept white) get dark text.
+const BLACK_TEXT_THRESHOLD = 0.179;
+
 /**
  * Choose a foreground that stays legible on `bg`: dark text on a light
- * background, light text on a dark one. Uses perceived (YIQ) luminance so
- * imported theme rings with light segments (white, bright yellow) don't end up
- * with unreadable white-on-white text. Unrecognized colors default to light
- * text, matching the powerline default.
+ * background, light text on a dark one. Compares WCAG relative luminance against
+ * the black/white contrast-ratio crossover, so saturated mid-tones (green, cyan)
+ * and bright named colors (yellow) get readable dark text instead of the near-
+ * invisible white a perceived-brightness threshold would pick. Unrecognized
+ * colors default to light text, matching the powerline default.
  */
 export function readableFg(bg: Color): Color {
   const rgb = hexToRgb(bg) ?? NAMED_RGB[bg];
   if (!rgb) {
     return 'brightWhite';
   }
-  const luminance = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
-  return luminance > 128 ? 'black' : 'brightWhite';
+  const luminance =
+    0.2126 * channelLuminance(rgb[0]) +
+    0.7152 * channelLuminance(rgb[1]) +
+    0.0722 * channelLuminance(rgb[2]);
+  return luminance > BLACK_TEXT_THRESHOLD ? 'black' : 'brightWhite';
 }
 
 /** Wrap `text` in the given fg/bg colors, resetting afterward. */

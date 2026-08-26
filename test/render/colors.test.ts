@@ -33,9 +33,21 @@ describe('readableFg', () => {
     expect(readableFg('#ffffff')).toBe('black');
   });
 
+  // Terminals render the normal (non-bright) named colors far brighter than the
+  // dim SGR half-values, and saturated mid-tones like green read better with
+  // dark text than a YIQ threshold suggests. These are the colors a p10k ring
+  // hands us, and white-on-yellow was the reported unreadable case.
+  it('picks dark text on the bright normal named colors', () => {
+    expect(readableFg('yellow')).toBe('black');
+    expect(readableFg('green')).toBe('black');
+    expect(readableFg('cyan')).toBe('black');
+  });
+
   it('picks light text on a dark background', () => {
     expect(readableFg('blue')).toBe('brightWhite');
     expect(readableFg('black')).toBe('brightWhite');
+    expect(readableFg('red')).toBe('brightWhite');
+    expect(readableFg('magenta')).toBe('brightWhite');
     expect(readableFg('#000080')).toBe('brightWhite');
   });
 
