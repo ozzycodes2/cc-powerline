@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-08-25
+
+### Added
+
+- The `git-branch` widget now signals the git state with its icon: a linked
+  worktree, the `main`/`master` branch, or any other branch each get a distinct
+  glyph. Worktree state wins over the branch name (being outside the main
+  checkout is the more notable state, even on a `main` worktree). The three
+  glyphs are configurable via the widget's `icon`, `mainIcon`, and
+  `worktreeIcon` options; set any to `""` to drop that state's prefix.
+
+### Fixed
+
+- The per-widget color picker grid was misaligned: cells used only a right
+  margin, so the ragged color-name widths (`red` through `brightMagenta`)
+  pushed every column out of line. Cells are now fixed width with padded
+  labels, so the caret, swatch, and name line up across rows.
+
 ## [0.2.3] - 2026-08-25
 
 ### Fixed
