@@ -12,7 +12,8 @@ import type { StatusJSON } from '../src/types/StatusJSON.js';
  * requested with `--path-format=absolute`, so match on the trailing flag.
  */
 function worktreeExec(gitDir: string | null, common: string | null) {
-  return (cmd: string) => (cmd.includes('--git-common-dir') ? common : gitDir);
+  return (_file: string, args: string[]) =>
+    args.includes('--git-common-dir') ? common : gitDir;
 }
 
 describe('resolveGitBranch', () => {
@@ -28,13 +29,22 @@ describe('resolveGitBranch', () => {
   });
 
   it('shells out in the working directory when no branch is reported', () => {
-    let seen = '';
-    const exec = (cmd: string) => {
-      seen = cmd;
+    let seenFile = '';
+    let seenArgs: string[] = [];
+    const exec = (file: string, args: string[]) => {
+      seenFile = file;
+      seenArgs = args;
       return 'main';
     };
     expect(resolveGitBranch({ cwd: '/repo' }, { exec })).toBe('main');
-    expect(seen).toContain('git -C "/repo" rev-parse --abbrev-ref HEAD');
+    expect(seenFile).toBe('git');
+    expect(seenArgs).toEqual([
+      '-C',
+      '/repo',
+      'rev-parse',
+      '--abbrev-ref',
+      'HEAD',
+    ]);
   });
 
   it('returns null with no cwd to probe', () => {
@@ -49,16 +59,19 @@ describe('resolveGitBranch', () => {
 
 describe('resolveGitChanges', () => {
   it('sums insertions and deletions across numstat rows', () => {
-    let seen = '';
-    const exec = (cmd: string) => {
-      seen = cmd;
+    let seenFile = '';
+    let seenArgs: string[] = [];
+    const exec = (file: string, args: string[]) => {
+      seenFile = file;
+      seenArgs = args;
       return '12\t3\tsrc/a.ts\n0\t5\tsrc/b.ts';
     };
     expect(resolveGitChanges({ cwd: '/repo' }, { exec })).toEqual({
       added: 12,
       deleted: 8,
     });
-    expect(seen).toContain('git -C "/repo" diff --numstat HEAD');
+    expect(seenFile).toBe('git');
+    expect(seenArgs).toEqual(['-C', '/repo', 'diff', '--numstat', 'HEAD']);
   });
 
   it('skips binary rows (numstat reports "-") without corrupting the sum', () => {
@@ -78,9 +91,9 @@ describe('resolveGitChanges', () => {
   });
 
   it('falls back to workspace.project_dir when cwd is absent', () => {
-    let seen = '';
-    const exec = (cmd: string) => {
-      seen = cmd;
+    let seenArgs: string[] = [];
+    const exec = (_file: string, args: string[]) => {
+      seenArgs = args;
       return '2\t0\tf';
     };
     expect(
@@ -89,7 +102,7 @@ describe('resolveGitChanges', () => {
       added: 2,
       deleted: 0,
     });
-    expect(seen).toContain('/w');
+    expect(seenArgs).toContain('/w');
   });
 });
 
@@ -106,18 +119,26 @@ describe('resolveGitWorktree', () => {
   });
 
   it('probes git in the working directory with absolute path formatting', () => {
-    const cmds: string[] = [];
-    const exec = (cmd: string) => {
-      cmds.push(cmd);
-      return cmd.includes('--git-common-dir') ? '/repo/.git' : '/repo/.git';
+    const calls: Array<{ file: string; args: string[] }> = [];
+    const exec = (file: string, args: string[]) => {
+      calls.push({ file, args });
+      return '/repo/.git';
     };
     resolveGitWorktree({ cwd: '/repo' }, { exec });
-    expect(cmds[0]).toBe(
-      'git -C "/repo" rev-parse --path-format=absolute --git-dir',
-    );
-    expect(cmds[1]).toBe(
-      'git -C "/repo" rev-parse --path-format=absolute --git-common-dir',
-    );
+    expect(calls[0]).toEqual({
+      file: 'git',
+      args: ['-C', '/repo', 'rev-parse', '--path-format=absolute', '--git-dir'],
+    });
+    expect(calls[1]).toEqual({
+      file: 'git',
+      args: [
+        '-C',
+        '/repo',
+        'rev-parse',
+        '--path-format=absolute',
+        '--git-common-dir',
+      ],
+    });
   });
 
   it('is false when either probe fails or there is no cwd', () => {
@@ -139,16 +160,16 @@ describe('resolveGitWorktree', () => {
   });
 
   it('falls back to workspace.project_dir when cwd is absent', () => {
-    let seen = '';
-    const exec = (cmd: string) => {
-      seen = cmd;
-      return cmd.includes('--git-common-dir')
+    let seenArgs: string[] = [];
+    const exec = (_file: string, args: string[]) => {
+      seenArgs = args;
+      return args.includes('--git-common-dir')
         ? '/w/.git'
         : '/w/.git/worktrees/wt';
     };
     expect(
       resolveGitWorktree({ workspace: { project_dir: '/w' } }, { exec }),
     ).toBe(true);
-    expect(seen).toContain('/w');
+    expect(seenArgs).toContain('/w');
   });
 });

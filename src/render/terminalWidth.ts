@@ -6,7 +6,8 @@
  * back to `tput cols`, then a fixed default. `CC_POWERLINE_WIDTH` overrides
  * everything.
  */
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
+import { openSync, closeSync } from 'node:fs';
 
 export const DEFAULT_WIDTH = 80;
 const MAX_ANCESTORS = 8;
@@ -25,8 +26,14 @@ export interface WidthDeps {
   stdoutColumns: number | undefined;
   platform: NodeJS.Platform;
   pid: number;
-  /** Run a command, returning trimmed stdout, or null on any failure. */
-  exec: (cmd: string) => string | null;
+  /**
+   * Run a command with args passed as an argv array (via `execve`, never a
+   * shell). When `stdinDevice` is given, that device is opened read-only and
+   * wired to the child's stdin — this replaces the `stty size < /dev/…` shell
+   * redirection without reintroducing a shell. Returns trimmed stdout, or null
+   * on any failure.
+   */
+  exec: (file: string, args: string[], stdinDevice?: string) => string | null;
 }
 
 /** Parse a `stty size` line ("rows cols") into a column count. */
@@ -70,8 +77,8 @@ function widthFromDevice(
   // stty flag for "operate on this device" differs by platform.
   const flag = platform === 'linux' ? '-F' : '-f';
   return (
-    parseSttySize(exec(`stty ${flag} ${device} size`)) ??
-    parseSttySize(exec(`stty size < ${device}`))
+    parseSttySize(exec('stty', [flag, device, 'size'])) ??
+    parseSttySize(exec('stty', ['size'], device))
   );
 }
 
@@ -88,13 +95,24 @@ export function detectTerminalWidth(
     stdoutColumns: process.stdout.columns,
     platform: process.platform,
     pid: process.pid,
-    exec: (cmd) => {
+    exec: (file, args, stdinDevice) => {
+      let fd: number | undefined;
       try {
-        return execSync(cmd, { stdio: ['ignore', 'pipe', 'ignore'] })
+        const stdin =
+          stdinDevice !== undefined
+            ? (fd = openSync(stdinDevice, 'r'))
+            : 'ignore';
+        return execFileSync(file, args, {
+          stdio: [stdin, 'pipe', 'ignore'],
+        })
           .toString()
           .trim();
       } catch {
         return null;
+      } finally {
+        if (fd !== undefined) {
+          closeSync(fd);
+        }
       }
     },
     ...overrides,
@@ -115,21 +133,25 @@ export function detectTerminalWidth(
 
   let pid = deps.pid;
   for (let i = 0; i < MAX_ANCESTORS && pid > 1; i += 1) {
-    const device = ttyToDevice(deps.exec(`ps -o tty= -p ${pid}`));
+    const device = ttyToDevice(
+      deps.exec('ps', ['-o', 'tty=', '-p', String(pid)]),
+    );
     if (device) {
       const cols = widthFromDevice(device, deps.platform, deps.exec);
       if (cols) {
         return cols;
       }
     }
-    const ppid = Number((deps.exec(`ps -o ppid= -p ${pid}`) ?? '').trim());
+    const ppid = Number(
+      (deps.exec('ps', ['-o', 'ppid=', '-p', String(pid)]) ?? '').trim(),
+    );
     if (!Number.isInteger(ppid) || ppid <= 1 || ppid === pid) {
       break;
     }
     pid = ppid;
   }
 
-  const tput = positiveInt(deps.exec('tput cols') ?? undefined);
+  const tput = positiveInt(deps.exec('tput', ['cols']) ?? undefined);
   if (tput) {
     return tput;
   }

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { execSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -71,5 +72,21 @@ describe('resolveGitWorktree with the default (real) exec', () => {
     expect(
       resolveGitWorktree({ cwd: tmpdir() + '/definitely-not-a-repo-xyz' }),
     ).toBe(false);
+  });
+});
+
+describe('cwd is passed to git as data, never through a shell', () => {
+  // A directory name is attacker-influenced (you can be dropped into one by a
+  // cloned repo or an unzipped archive). If cwd reached git via a shell, the
+  // command substitution below would run `touch`. Passing argv directly to
+  // git means the whole string is a single path argument — git just fails to
+  // find the repo. Each probe is exercised so no code path regresses.
+  it('does not execute shell metacharacters embedded in cwd', () => {
+    const marker = join(tmpdir(), 'ccpl-injection-marker-should-not-exist');
+    const evil = `/nonexistent-$(touch ${marker})-\`touch ${marker}\`-; touch ${marker}`;
+    resolveGitBranch({ cwd: evil });
+    resolveGitChanges({ cwd: evil });
+    resolveGitWorktree({ cwd: evil });
+    expect(existsSync(marker)).toBe(false);
   });
 });

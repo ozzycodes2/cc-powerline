@@ -64,7 +64,8 @@ describe('detectTerminalWidth', () => {
   });
 
   it('walks ancestors and reads width from the first TTY-owning process', () => {
-    const exec = (cmd: string): string | null => {
+    const exec: WidthDeps['exec'] = (file, args): string | null => {
+      const cmd = [file, ...args].join(' ');
       if (cmd === 'ps -o tty= -p 100') return '?'; // self: piped, no tty
       if (cmd === 'ps -o ppid= -p 100') return '42';
       if (cmd === 'ps -o tty= -p 42') return 'ttys004'; // ancestor owns a tty
@@ -77,7 +78,8 @@ describe('detectTerminalWidth', () => {
   });
 
   it('uses the linux -F stty flag', () => {
-    const exec = (cmd: string): string | null => {
+    const exec: WidthDeps['exec'] = (file, args): string | null => {
+      const cmd = [file, ...args].join(' ');
       if (cmd === 'ps -o tty= -p 100') return 'pts/1';
       if (cmd === 'stty -F /dev/pts/1 size') return '40 160';
       return null;
@@ -87,8 +89,27 @@ describe('detectTerminalWidth', () => {
     );
   });
 
+  it('reads size from the device via stdin when the flag form yields nothing', () => {
+    const exec: WidthDeps['exec'] = (
+      file,
+      args,
+      stdinDevice,
+    ): string | null => {
+      const cmd = [file, ...args].join(' ');
+      if (cmd === 'ps -o tty= -p 100') return 'ttys009';
+      if (cmd === 'stty -f /dev/ttys009 size') return null; // flag form unsupported
+      if (cmd === 'stty size' && stdinDevice === '/dev/ttys009')
+        return '10 111';
+      return null;
+    };
+    expect(detectTerminalWidth(baseDeps({ platform: 'darwin', exec }))).toBe(
+      111,
+    );
+  });
+
   it('falls back to tput cols when no ancestor TTY is found', () => {
-    const exec = (cmd: string): string | null => {
+    const exec: WidthDeps['exec'] = (file, args): string | null => {
+      const cmd = [file, ...args].join(' ');
       if (cmd === 'tput cols') return '77';
       return null; // every ps/stty probe fails
     };

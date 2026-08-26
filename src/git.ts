@@ -3,16 +3,21 @@
  * reports in `worktree.branch`; otherwise shells out to git in the working
  * directory. Never throws — a failed probe yields `null`.
  */
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import type { StatusJSON } from './types/StatusJSON.js';
 
 export interface GitDeps {
-  exec: (cmd: string) => string | null;
+  /**
+   * Run a command with its arguments passed as an argv array. Args reach the
+   * program via `execve`, never a shell, so a `cwd` containing shell
+   * metacharacters is inert data rather than an injection vector.
+   */
+  exec: (file: string, args: string[]) => string | null;
 }
 
-function defaultExec(cmd: string): string | null {
+function defaultExec(file: string, args: string[]): string | null {
   try {
-    return execSync(cmd, { stdio: ['ignore', 'pipe', 'ignore'] })
+    return execFileSync(file, args, { stdio: ['ignore', 'pipe', 'ignore'] })
       .toString()
       .trim();
   } catch {
@@ -32,7 +37,13 @@ export function resolveGitBranch(
   if (!cwd) {
     return null;
   }
-  const branch = deps.exec(`git -C "${cwd}" rev-parse --abbrev-ref HEAD`);
+  const branch = deps.exec('git', [
+    '-C',
+    cwd,
+    'rev-parse',
+    '--abbrev-ref',
+    'HEAD',
+  ]);
   return branch && branch !== 'HEAD' ? branch : null;
 }
 
@@ -56,7 +67,7 @@ export function resolveGitWorktree(
     return false;
   }
   const at = (which: string) =>
-    deps.exec(`git -C "${cwd}" rev-parse --path-format=absolute ${which}`);
+    deps.exec('git', ['-C', cwd, 'rev-parse', '--path-format=absolute', which]);
   const gitDir = at('--git-dir');
   const commonDir = at('--git-common-dir');
   if (!gitDir || !commonDir) {
@@ -85,7 +96,7 @@ export function resolveGitChanges(
   if (!cwd) {
     return null;
   }
-  const out = deps.exec(`git -C "${cwd}" diff --numstat HEAD`);
+  const out = deps.exec('git', ['-C', cwd, 'diff', '--numstat', 'HEAD']);
   if (out === null) {
     return null;
   }
