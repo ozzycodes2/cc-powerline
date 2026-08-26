@@ -9,8 +9,12 @@ import { stripAnsi } from '../../src/render/stripAnsi.js';
 import type { PromptIO } from '../../src/cli/prompts.js';
 import type { Settings } from '../../src/types/Settings.js';
 
+// applyPalette derives each fg from its bg for contrast; it is a gray hex.
+const isGrayHex = (fg: unknown) =>
+  typeof fg === 'string' && /^#([0-9a-f]{2})\1\1$/.test(fg);
+
 describe('buildSettingsFromAnswers', () => {
-  it('maps widgets to items with the preset fg and round-robin bg', () => {
+  it('maps widgets to items with a contrasting fg and round-robin bg', () => {
     const preset = presetByKey('mono');
     const s = buildSettingsFromAnswers({
       style: 'powerline',
@@ -18,10 +22,11 @@ describe('buildSettingsFromAnswers', () => {
       preset: 'mono',
     });
     expect(s.style).toBe('powerline');
-    expect(s.lines[0]!.left).toEqual([
-      { type: 'model', fg: preset.fg, bg: preset.bgs[0] },
-      { type: 'git-branch', fg: preset.fg, bg: preset.bgs[1] },
+    expect(s.lines[0]!.left.map((i) => ({ type: i.type, bg: i.bg }))).toEqual([
+      { type: 'model', bg: preset.bgs[0] },
+      { type: 'git-branch', bg: preset.bgs[1] },
     ]);
+    expect(s.lines[0]!.left.every((i) => isGrayHex(i.fg))).toBe(true);
     expect(s.lines[0]!.right).toEqual([]);
   });
 
@@ -39,9 +44,12 @@ describe('buildSettingsFromAnswers', () => {
     // second line does not pick up where the first left off.
     expect(s.lines[0]!.left[0]!.bg).toBe(preset.bgs[0]);
     expect(s.lines[1]!.left).toEqual([]);
-    expect(s.lines[1]!.right).toEqual([
-      { type: 'session-cost', fg: preset.fg, bg: preset.bgs[0] },
-    ]);
+    expect(s.lines[1]!.right).toHaveLength(1);
+    expect(s.lines[1]!.right[0]).toMatchObject({
+      type: 'session-cost',
+      bg: preset.bgs[0],
+    });
+    expect(isGrayHex(s.lines[1]!.right[0]!.fg)).toBe(true);
   });
 
   it('drops the right group entirely for the builtin style', () => {

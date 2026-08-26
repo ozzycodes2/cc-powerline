@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-08-25
+
+### Changed
+
+- Auto-contrast now computes a softened foreground instead of snapping to pure
+  black or bright white. It solves for the neutral gray whose WCAG contrast
+  ratio against the segment background lands at the AAA target (7:1), so text is
+  readable without the harsh pure-white glare that did not match themed prompts.
+  Backgrounds where 7:1 is physically unreachable clamp to black/white (maximum
+  contrast). The result is a `#rrggbb` gray baked in at palette-apply time, exact
+  for hex backgrounds and approximated through the xterm-default palette for the
+  16 named colors. Re-pick your theme in the Theme panel to repaint an
+  already-saved config.
+
 ## [0.2.4] - 2026-08-25
 
 ### Added
@@ -125,7 +139,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context-length, session-cost, cache-hit-rate, cache-window, compactions,
   rate-limit, and separator.
 
-[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.4...v0.2.5
+[0.2.4]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.0...v0.2.1

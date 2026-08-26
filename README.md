@@ -150,9 +150,15 @@ of the three to `""` to suppress the icon for that state.
 ### Themes
 
 A theme is just a ring of background colors applied round-robin across each
-group's widgets, with each segment's foreground picked automatically for
-contrast (dark text on light backgrounds, light text on dark) so nothing ever
-renders unreadable. Three are built in: `slate` (default), `mono`, and `ocean`.
+group's widgets, with each segment's foreground computed for contrast. Rather
+than snapping to pure black or white, cc-powerline solves for the neutral gray
+whose WCAG contrast ratio against the background lands at the AAA target (7:1) —
+a soft gray, darkening on light backgrounds and lightening on dark ones, so text
+is readable without the harsh pure-white glare. Backgrounds where 7:1 is
+unreachable clamp to black or white (maximum contrast). The math is exact for
+`#rrggbb` backgrounds; named colors are resolved through the xterm-default
+palette, so a terminal with a heavily customized palette may differ slightly.
+Three themes are built in: `slate` (default), `mono`, and `ocean`.
 
 The editor also **detects prompt themes you already run** and offers each as a
 palette, so your status line can match the rest of your shell:

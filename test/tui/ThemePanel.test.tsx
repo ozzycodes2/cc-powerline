@@ -46,7 +46,8 @@ describe('ThemePanel', () => {
     await delay();
     const preset = PRESETS[1]!;
     const first = h.state.settings.lines[0]!.left[0]!;
-    expect(first.fg).toBe(preset.fg);
+    // fg is derived from the bg for contrast — a gray hex, not the preset's fg.
+    expect(first.fg).toMatch(/^#([0-9a-f]{2})\1\1$/);
     expect(first.bg).toBe(preset.bgs[0]);
   });
 
@@ -78,8 +79,10 @@ describe('ThemePanel', () => {
     h.stdin.write(KEY.enter);
     await delay();
     const first = h.state.settings.lines[0]!.left[0]!;
-    // The light imported background auto-contrasts to dark, readable text.
-    expect(first.fg).toBe('black');
+    // The light imported background auto-contrasts to dark, readable text: a
+    // dark gray hex (channel below the mid-point), not the passed fg.
+    expect(first.fg).toMatch(/^#([0-9a-f]{2})\1\1$/);
+    expect(parseInt((first.fg as string).slice(1, 3), 16)).toBeLessThan(128);
     expect(first.bg).toBe('#eeeeee');
   });
 });

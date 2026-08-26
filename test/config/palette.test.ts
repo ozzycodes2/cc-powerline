@@ -4,21 +4,30 @@ import { SettingsSchema } from '../../src/types/Settings.js';
 
 const parse = (raw: unknown) => SettingsSchema.parse(raw);
 
+// The gray level readableFg baked in, as a 0-255 channel value.
+const grayLevel = (fg: unknown) => {
+  expect(fg).toMatch(/^#([0-9a-f]{2})\1\1$/);
+  return parseInt((fg as string).slice(1, 3), 16);
+};
+
 describe('applyPalette', () => {
   it('picks a contrasting fg per item from its background', () => {
     const r = applyPalette(
       parse({ lines: [{ left: [{ type: 'model' }, { type: 'directory' }] }] }),
       { fg: 'brightWhite', bgs: ['white', 'blue'] },
     );
-    // white bg -> dark text; blue bg -> light text. Not a single shared fg.
-    expect(r.lines[0]!.left.map((i) => i.fg)).toEqual(['black', 'brightWhite']);
+    // white bg -> dark gray text; blue bg -> light gray text. Each fg is derived
+    // from its own bg for contrast, not a single shared fg.
+    const [onWhite, onBlue] = r.lines[0]!.left.map((i) => grayLevel(i.fg));
+    expect(onWhite!).toBeLessThan(128);
+    expect(onBlue!).toBeGreaterThan(128);
   });
 
   it('falls back to the palette fg when the ring leaves bg untouched', () => {
-    const r = applyPalette(
-      parse({ lines: [{ left: [{ type: 'model' }] }] }),
-      { fg: 'red', bgs: [] },
-    );
+    const r = applyPalette(parse({ lines: [{ left: [{ type: 'model' }] }] }), {
+      fg: 'red',
+      bgs: [],
+    });
     expect(r.lines[0]!.left[0]!.fg).toBe('red');
   });
 
@@ -60,7 +69,8 @@ describe('applyPalette', () => {
     );
     // The auto-contrast fg replaces the item's own, and cyan is bright enough
     // (as a terminal paints it) to take dark text rather than the palette fg.
-    expect(r.lines[0]!.left[0]).toMatchObject({ fg: 'black', bg: 'cyan' });
+    expect(r.lines[0]!.left[0]!.bg).toBe('cyan');
+    expect(grayLevel(r.lines[0]!.left[0]!.fg)).toBeLessThan(128);
   });
 
   it('is a no-op on a config with no lines', () => {

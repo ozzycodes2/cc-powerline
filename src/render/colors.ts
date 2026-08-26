@@ -88,29 +88,61 @@ function channelLuminance(c: number): number {
   return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
 }
 
-// Above this WCAG relative luminance, black text out-contrasts white on the
-// background. Derived from the contrast-ratio crossover √(0.05·1.05) − 0.05, so
-// mid-tones like green (which a YIQ threshold wrongly kept white) get dark text.
-const BLACK_TEXT_THRESHOLD = 0.179;
+/** WCAG relative luminance of an sRGB color, in [0, 1]. */
+function relativeLuminance(rgb: [number, number, number]): number {
+  return (
+    0.2126 * channelLuminance(rgb[0]) +
+    0.7152 * channelLuminance(rgb[1]) +
+    0.0722 * channelLuminance(rgb[2])
+  );
+}
 
 /**
- * Choose a foreground that stays legible on `bg`: dark text on a light
- * background, light text on a dark one. Compares WCAG relative luminance against
- * the black/white contrast-ratio crossover, so saturated mid-tones (green, cyan)
- * and bright named colors (yellow) get readable dark text instead of the near-
- * invisible white a perceived-brightness threshold would pick. Unrecognized
- * colors default to light text, matching the powerline default.
+ * Invert {@link channelLuminance}: the 8-bit channel value whose linear
+ * contribution is `l`. For a neutral gray (R=G=B) the per-channel weights sum to
+ * 1, so a color's relative luminance equals this single channel's contribution —
+ * which is why a target luminance maps straight to one gray value.
+ */
+function luminanceToChannel(l: number): number {
+  const s = l <= 0.03928 / 12.92 ? l * 12.92 : 1.055 * l ** (1 / 2.4) - 0.055;
+  return Math.round(Math.min(1, Math.max(0, s)) * 255);
+}
+
+// Above this WCAG relative luminance, dark text out-contrasts light text on the
+// background, so the readable foreground darkens rather than lightens. It is the
+// black/white contrast-ratio crossover √(0.05·1.05) − 0.05.
+const DARKEN_THRESHOLD = 0.179;
+
+// Target WCAG contrast ratio (AAA for normal text). The foreground is softened
+// to land near this rather than maxed at pure black/white, which reads as harsh
+// on a colored segment; mid-tones that can't reach it clamp to the extreme.
+const TARGET_CONTRAST = 7;
+
+/**
+ * Choose a foreground that keeps `bg` legible at a deterministic contrast
+ * distance. Rather than snapping to pure black or bright white, it solves for the
+ * neutral gray whose WCAG contrast ratio against the background lands at
+ * {@link TARGET_CONTRAST}, darkening on light backgrounds and lightening on dark
+ * ones. Mid-tone backgrounds where 7:1 is physically unreachable clamp to the
+ * extreme (maximum contrast). Returns a `#rrggbb` string; unrecognized
+ * backgrounds are treated as dark and take light text.
+ *
+ * Named backgrounds are resolved through the xterm-default palette, so the ratio
+ * is exact only for `#rrggbb` backgrounds; a terminal's own palette may differ.
  */
 export function readableFg(bg: Color): Color {
   const rgb = hexToRgb(bg) ?? NAMED_RGB[bg];
-  if (!rgb) {
-    return 'brightWhite';
-  }
-  const luminance =
-    0.2126 * channelLuminance(rgb[0]) +
-    0.7152 * channelLuminance(rgb[1]) +
-    0.0722 * channelLuminance(rgb[2]);
-  return luminance > BLACK_TEXT_THRESHOLD ? 'black' : 'brightWhite';
+  const bgLum = rgb ? relativeLuminance(rgb) : 0;
+  // Contrast ratio is (Llight + 0.05) / (Ldark + 0.05); solve for the foreground
+  // luminance that hits the target, in whichever direction has headroom. Clamp
+  // handles the unreachable mid-tones by bottoming/topping out at black/white.
+  const targetLum =
+    bgLum > DARKEN_THRESHOLD
+      ? (bgLum + 0.05) / TARGET_CONTRAST - 0.05
+      : TARGET_CONTRAST * (bgLum + 0.05) - 0.05;
+  const v = luminanceToChannel(targetLum);
+  const hex = v.toString(16).padStart(2, '0');
+  return `#${hex}${hex}${hex}`;
 }
 
 /** Wrap `text` in the given fg/bg colors, resetting afterward. */

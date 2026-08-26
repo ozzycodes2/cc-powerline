@@ -144,7 +144,11 @@ describe('line ops', () => {
 describe('applyPalette re-export', () => {
   it('is available from the algebra module', () => {
     const r = applyPalette(twoLeft(), { fg: 'white', bgs: ['red'] });
-    // red is dark, so each item auto-contrasts to light text.
-    expect(r.lines[0]!.left.every((i) => i.fg === 'brightWhite')).toBe(true);
+    // red is dark, so each item auto-contrasts to a light gray hex.
+    expect(
+      r.lines[0]!.left.every(
+        (i) => typeof i.fg === 'string' && /^#([0-9a-f]{2})\1\1$/.test(i.fg),
+      ),
+    ).toBe(true);
   });
 });

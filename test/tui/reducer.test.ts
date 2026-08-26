@@ -269,7 +269,11 @@ describe('reducer — lines', () => {
 });
 
 describe('reducer — presets', () => {
-  it('APPLY_PRESET paints fg on all items and round-robins bg per group', () => {
+  // applyPalette derives each fg from its bg for contrast; it is a gray hex.
+  const isGrayHex = (fg: unknown) =>
+    typeof fg === 'string' && /^#([0-9a-f]{2})\1\1$/.test(fg);
+
+  it('APPLY_PRESET paints a contrasting fg on all items and round-robins bg per group', () => {
     const preset = presetByKey('mono');
     const s = reducer(start(), {
       type: 'APPLY_PRESET',
@@ -277,13 +281,12 @@ describe('reducer — presets', () => {
       bgs: preset.bgs,
     });
     const left = s.settings.lines[0]!.left;
-    expect(left[0]).toMatchObject({ fg: preset.fg, bg: preset.bgs[0] });
-    expect(left[1]).toMatchObject({ fg: preset.fg, bg: preset.bgs[1] });
+    expect(left[0]).toMatchObject({ bg: preset.bgs[0] });
+    expect(left[1]).toMatchObject({ bg: preset.bgs[1] });
+    expect(left.every((i) => isGrayHex(i.fg))).toBe(true);
     // The ring restarts per group, so the right group leads with bg[0] again.
-    expect(s.settings.lines[0]!.right[0]).toMatchObject({
-      fg: preset.fg,
-      bg: preset.bgs[0],
-    });
+    expect(s.settings.lines[0]!.right[0]).toMatchObject({ bg: preset.bgs[0] });
+    expect(isGrayHex(s.settings.lines[0]!.right[0]!.fg)).toBe(true);
   });
 
   it('APPLY_PRESET accepts an arbitrary palette (e.g. a detected theme)', () => {
@@ -293,9 +296,15 @@ describe('reducer — presets', () => {
       bgs: ['#111111', '#222222'],
     });
     const left = s.settings.lines[0]!.left;
-    // Dark backgrounds auto-contrast to light text regardless of the passed fg.
-    expect(left[0]).toMatchObject({ fg: 'brightWhite', bg: '#111111' });
-    expect(left[1]).toMatchObject({ fg: 'brightWhite', bg: '#222222' });
+    // Dark backgrounds auto-contrast to light text (a light gray) regardless of
+    // the passed fg.
+    expect(left[0]!.bg).toBe('#111111');
+    expect(left[1]!.bg).toBe('#222222');
+    expect(isGrayHex(left[0]!.fg)).toBe(true);
+    // Light text on a near-black bg: channel well above the mid-point.
+    expect(parseInt((left[0]!.fg as string).slice(1, 3), 16)).toBeGreaterThan(
+      128,
+    );
   });
 });
 
