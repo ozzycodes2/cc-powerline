@@ -17,6 +17,14 @@ Two things set it apart from a generic statusline:
    you already run (Powerlevel10k, oh-my-posh, or classic Powerline), with
    per-segment foregrounds chosen automatically for contrast.
 
+## See it in action
+
+`cc-powerline init` opens an interactive editor with a live preview: pick a
+render style, arrange widgets per line, recolor from a theme, and wire it into
+Claude Code — no hand-editing JSON.
+
+![The cc-powerline init editor: choosing a style, reordering widgets, applying a theme, then wiring into Claude Code](docs/media/init-walkthrough.gif)
+
 ## Install
 
 ```bash
@@ -36,6 +44,8 @@ The global install exposes the `cc-powerline` binary regardless of the scope.
 `cc-powerline init` does this for you: after saving your config it offers to
 add the `statusLine` hook to Claude Code's `settings.json`, preserving every
 other setting in that file. Answer yes and you're done — no hand-editing.
+
+![The post-save prompt offering to add the statusLine hook to Claude Code's settings.json](docs/media/wire-panel.png)
 
 If you'd rather wire it manually (or the wizard couldn't write the file), add
 this to `${CLAUDE_CONFIG_DIR:-~/.claude}/settings.json`:
@@ -72,6 +82,17 @@ Code, then writes the config to:
 ```
 ${XDG_CONFIG_HOME:-~/.config}/cc-powerline/settings.json
 ```
+
+The **style** panel toggles between the powerline and builtin layouts, with the
+preview above updating as you move:
+
+![The render-style panel: powerline versus builtin, with a live preview](docs/media/style-panel.png)
+
+The **widgets** panel edits one line at a time — left and right groups side by
+side. Add (`a`), remove (`d`), recolor (`c`), or reorder (`m`, then ↑↓ / Tab to
+move a widget within a group or across sides):
+
+![The widget editor showing the left and right groups for a status line](docs/media/widgets-panel.png)
 
 `cc-powerline config path` prints that location. To see every widget rendered
 over sample data without touching your config, run `cc-powerline preview`
@@ -160,6 +181,8 @@ unreachable clamp to black or white (maximum contrast). The math is exact for
 palette, so a terminal with a heavily customized palette may differ slightly.
 Three themes are built in: `slate` (default), `mono`, and `ocean`.
 
+![The theme panel: each palette previewed by its background-color ring](docs/media/theme-panel.png)
+
 The editor also **detects prompt themes you already run** and offers each as a
 palette, so your status line can match the rest of your shell:
 
@@ -221,6 +244,17 @@ npm run build      # tsup → dist/
 Golden snapshot tests under `test/golden/` render a fixed fixture through both
 styles at 80 columns and compare byte-for-byte; regenerate them deliberately
 with `npx vitest -u` after an intentional rendering change.
+
+The README's GIF and panel stills under `docs/media/` are generated from a
+[VHS](https://github.com/charmbracelet/vhs) script. After a TUI change,
+regenerate them (needs `vhs` and a Nerd Font — the tape uses `MesloLGS NF`):
+
+```bash
+npm run build && vhs docs/tapes/init-walkthrough.tape
+```
+
+The tape isolates `HOME`, `XDG_CONFIG_HOME`, and `CLAUDE_CONFIG_DIR` into temp
+directories, so recording never touches your real config.
 
 ## Publishing
 
