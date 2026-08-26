@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-08-26
+
+### Security
+
+- The statusline no longer runs its git and terminal-width probes through a
+  shell. It previously built commands by interpolating the working directory
+  into a string passed to `execSync`, so a directory whose name contained shell
+  metacharacters (`$(…)`, backticks, `;`) would execute rather than be treated
+  as a path — rendering the status line inside a maliciously named directory was
+  enough to run arbitrary commands. Both probes now use `execFileSync` with an
+  argv array, so paths reach `git`/`stty`/`tput` as inert data.
+
+### Documentation
+
+- Added `SECURITY.md` (private vulnerability reporting plus a threat model),
+  `CONTRIBUTING.md`, and a Dependabot config that watches npm and GitHub Actions
+  dependencies weekly.
+
 ## [0.2.7] - 2026-08-25
 
 ### Added
