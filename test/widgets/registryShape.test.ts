@@ -17,12 +17,17 @@ describe('widget descriptors', () => {
   });
 
   it('parseWidgetOptions fills defaults and degrades bad input', () => {
-    // git-branch default icon is the powerline branch glyph U+E0A0
-    expect(parseWidgetOptions('git-branch', {})).toEqual({ icon: '\u{e0a0}' });
-    // wrong type degrades to defaults rather than throwing
-    expect(parseWidgetOptions('git-branch', { icon: 123 })).toEqual({
+    // git-branch defaults: branch glyph U+E0A0, main U+F015, worktree U+F126.
+    const gitBranchDefaults = {
       icon: '\u{e0a0}',
-    });
+      mainIcon: '\u{f015}',
+      worktreeIcon: '\u{f126}',
+    };
+    expect(parseWidgetOptions('git-branch', {})).toEqual(gitBranchDefaults);
+    // wrong type degrades to defaults rather than throwing
+    expect(parseWidgetOptions('git-branch', { icon: 123 })).toEqual(
+      gitBranchDefaults,
+    );
     // unknown widget → empty options
     expect(parseWidgetOptions('nope', { x: 1 })).toEqual({});
   });

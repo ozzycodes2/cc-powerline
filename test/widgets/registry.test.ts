@@ -12,13 +12,18 @@ function ctx(over: {
   totals?: Partial<TranscriptTotals>;
   branch?: string | null;
   changes?: { added: number; deleted: number } | null;
+  worktree?: boolean;
   now?: number;
   home?: string;
 }): WidgetContext {
   return {
     status: over.status ?? {},
     totals: { ...ZERO_TOTALS, ...over.totals },
-    git: { branch: over.branch ?? null, changes: over.changes ?? null },
+    git: {
+      branch: over.branch ?? null,
+      changes: over.changes ?? null,
+      worktree: over.worktree,
+    },
     now: over.now,
     home: over.home,
   };
@@ -63,18 +68,66 @@ describe('renderWidget', () => {
   });
 
   describe('git-branch', () => {
-    it('renders the branch, optionally with an icon, and hides when absent', () => {
+    it('renders a plain branch with the default branch glyph, and hides when absent', () => {
       // Default icon is a nerd-font branch glyph, so the branch trails a "<glyph> " prefix.
-      expect(renderWidget('git-branch', ctx({ branch: 'main' }))).toMatch(
-        / main$/,
+      expect(renderWidget('git-branch', ctx({ branch: 'feature/x' }))).toMatch(
+        / feature\/x$/,
       );
       expect(
-        renderWidget('git-branch', ctx({ branch: 'main' }), { icon: '⎇' }),
-      ).toBe('⎇ main');
+        renderWidget('git-branch', ctx({ branch: 'feature/x' }), { icon: '⎇' }),
+      ).toBe('⎇ feature/x');
       expect(
-        renderWidget('git-branch', ctx({ branch: 'main' }), { icon: '' }),
-      ).toBe('main');
+        renderWidget('git-branch', ctx({ branch: 'feature/x' }), { icon: '' }),
+      ).toBe('feature/x');
       expect(renderWidget('git-branch', ctx({ branch: null }))).toBeNull();
+    });
+
+    it('uses the main icon on main/master', () => {
+      expect(
+        renderWidget('git-branch', ctx({ branch: 'main' }), { mainIcon: '★' }),
+      ).toBe('★ main');
+      expect(
+        renderWidget('git-branch', ctx({ branch: 'master' }), {
+          mainIcon: '★',
+        }),
+      ).toBe('★ master');
+      // The main icon is chosen over the plain branch icon, not appended to it.
+      expect(
+        renderWidget('git-branch', ctx({ branch: 'main' }), {
+          icon: '⎇',
+          mainIcon: '★',
+        }),
+      ).toBe('★ main');
+    });
+
+    it('uses the worktree icon in a linked worktree, even on main', () => {
+      expect(
+        renderWidget(
+          'git-branch',
+          ctx({ branch: 'feature/x', worktree: true }),
+          {
+            worktreeIcon: '⑂',
+          },
+        ),
+      ).toBe('⑂ feature/x');
+      // Worktree wins over the main-branch icon.
+      expect(
+        renderWidget('git-branch', ctx({ branch: 'main', worktree: true }), {
+          mainIcon: '★',
+          worktreeIcon: '⑂',
+        }),
+      ).toBe('⑂ main');
+    });
+
+    it('drops the prefix entirely when the chosen icon is empty', () => {
+      expect(
+        renderWidget('git-branch', ctx({ branch: 'main' }), { mainIcon: '' }),
+      ).toBe('main');
+      expect(
+        renderWidget('git-branch', ctx({ branch: 'x', worktree: true }), {
+          worktreeIcon: '',
+        }),
+      ).toBe('x');
     });
   });
 

@@ -3,7 +3,11 @@ import { execSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { resolveGitBranch, resolveGitChanges } from '../src/git.js';
+import {
+  resolveGitBranch,
+  resolveGitChanges,
+  resolveGitWorktree,
+} from '../src/git.js';
 
 let repo: string;
 
@@ -41,5 +45,31 @@ describe('resolveGitChanges with the default (real) exec', () => {
     const changes = resolveGitChanges({ cwd: repo });
     expect(changes).not.toBeNull();
     expect(changes!.added).toBeGreaterThan(0);
+  });
+});
+
+describe('resolveGitWorktree with the default (real) exec', () => {
+  it('is false in the main checkout and true in a linked worktree', async () => {
+    expect(resolveGitWorktree({ cwd: repo })).toBe(false);
+    const wt = await mkdtemp(join(tmpdir(), 'ccpl-wt-'));
+    try {
+      execSync(`git worktree add -q "${wt}" -b feature`, {
+        cwd: repo,
+        stdio: 'ignore',
+      });
+      expect(resolveGitWorktree({ cwd: wt })).toBe(true);
+    } finally {
+      execSync(`git worktree remove --force "${wt}"`, {
+        cwd: repo,
+        stdio: 'ignore',
+      });
+      await rm(wt, { recursive: true, force: true });
+    }
+  });
+
+  it('is false for a directory that is not a git repo', () => {
+    expect(
+      resolveGitWorktree({ cwd: tmpdir() + '/definitely-not-a-repo-xyz' }),
+    ).toBe(false);
   });
 });

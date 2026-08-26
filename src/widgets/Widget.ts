@@ -7,8 +7,13 @@ import type { GitChanges } from '../git.js';
 export interface WidgetContext {
   status: StatusJSON;
   totals: TranscriptTotals;
-  /** Resolved git info (branch + churn resolved once by the pipeline). */
-  git: { branch: string | null; changes?: GitChanges | null };
+  /** Resolved git info (branch, churn, and worktree flag resolved once by the pipeline). */
+  git: {
+    branch: string | null;
+    changes?: GitChanges | null;
+    /** True when the working dir is a linked worktree, not the main checkout. */
+    worktree?: boolean;
+  };
   /** Wall-clock epoch ms, injected so the cache-window countdown is testable. */
   now?: number;
   /** Home directory, injected for powerline path compression. */

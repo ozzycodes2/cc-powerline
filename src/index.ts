@@ -15,7 +15,12 @@ import {
   ZERO_TOTALS,
   type TranscriptTotals,
 } from './transcript/parseTranscript.js';
-import { resolveGitBranch, resolveGitChanges, type GitChanges } from './git.js';
+import {
+  resolveGitBranch,
+  resolveGitChanges,
+  resolveGitWorktree,
+  type GitChanges,
+} from './git.js';
 import { homedir } from 'node:os';
 import { statuslineWidth } from './render/terminalWidth.js';
 import { buildStatus } from './pipeline.js';
@@ -31,6 +36,7 @@ export interface StatuslineDeps {
   ) => Promise<TranscriptTotals>;
   resolveBranch: (status: StatusJSON) => string | null;
   resolveChanges: (status: StatusJSON) => GitChanges | null;
+  resolveWorktree: (status: StatusJSON) => boolean;
   now: () => number;
   home: () => string;
   width: () => number;
@@ -45,6 +51,7 @@ function defaultDeps(): StatuslineDeps {
       loadTranscriptTotals(path, table, defaultTranscriptDeps()),
     resolveBranch: (status) => resolveGitBranch(status),
     resolveChanges: (status) => resolveGitChanges(status),
+    resolveWorktree: (status) => resolveGitWorktree(status),
     now: () => Date.now(),
     home: () => homedir(),
     width: () => statuslineWidth(),
@@ -80,6 +87,7 @@ export async function renderStatusline(
       git: {
         branch: deps.resolveBranch(status),
         changes: deps.resolveChanges(status),
+        worktree: deps.resolveWorktree(status),
       },
       now: deps.now(),
       home: deps.home(),

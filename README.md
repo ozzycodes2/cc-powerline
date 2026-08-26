@@ -122,25 +122,30 @@ over sample data without touching your config, run `cc-powerline preview`
 
 ### Widgets
 
-| type             | shows                                                                                                     |
-| ---------------- | --------------------------------------------------------------------------------------------------------- |
-| `model`          | model display name (falls back to id)                                                                     |
-| `model-effort`   | reasoning-effort level (e.g. `high`); `options.icon`                                                      |
-| `git-branch`     | current branch (hidden outside a repo); `options.icon`                                                    |
-| `git-changes`    | working-tree churn `+added -deleted` vs. HEAD; `options.icon`                                             |
-| `directory`      | working directory; `options.mode` = `compressed` (default, powerline `~/D/w/proj`), `basename`, or `full` |
-| `context-length` | percent of the context window used; `options.label`                                                       |
-| `session-cost`   | precise running cost from the transcript                                                                  |
-| `cache-hit-rate` | cache-read share of all cache tokens; `options.label`                                                     |
-| `cache-window`   | countdown to prompt-cache (5m/1h) expiry; `options.icon`                                                  |
-| `compactions`    | count of compaction events this session; `options.icon`                                                   |
-| `rate-limit`     | 5-hour usage percentage; `options.label`                                                                  |
-| `separator`      | a literal separator string; `options.char`                                                                |
+| type             | shows                                                                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`          | model display name (falls back to id)                                                                                                   |
+| `model-effort`   | reasoning-effort level (e.g. `high`); `options.icon`                                                                                    |
+| `git-branch`     | current branch (hidden outside a repo); state icon: `options.icon` (branch), `mainIcon` (main/master), `worktreeIcon` (linked worktree) |
+| `git-changes`    | working-tree churn `+added -deleted` vs. HEAD; `options.icon`                                                                           |
+| `directory`      | working directory; `options.mode` = `compressed` (default, powerline `~/D/w/proj`), `basename`, or `full`                               |
+| `context-length` | percent of the context window used; `options.label`                                                                                     |
+| `session-cost`   | precise running cost from the transcript                                                                                                |
+| `cache-hit-rate` | cache-read share of all cache tokens; `options.label`                                                                                   |
+| `cache-window`   | countdown to prompt-cache (5m/1h) expiry; `options.icon`                                                                                |
+| `compactions`    | count of compaction events this session; `options.icon`                                                                                 |
+| `rate-limit`     | 5-hour usage percentage; `options.label`                                                                                                |
+| `separator`      | a literal separator string; `options.char`                                                                                              |
 
 Icon-bearing widgets default to Nerd Font glyphs; every one is overridable via
 `options.icon` (set it to `""` to drop the icon). Any widget that has nothing
 to show (no branch, no rate-limit data, an expired cache window, zero
 compactions, etc.) is omitted from the line rather than rendered blank.
+
+`git-branch` swaps its icon to reflect the git state: the `worktreeIcon` when
+the working directory is a linked worktree (this wins, even on `main`), the
+`mainIcon` on `main`/`master`, and the default branch `icon` otherwise. Set any
+of the three to `""` to suppress the icon for that state.
 
 ### Themes
 

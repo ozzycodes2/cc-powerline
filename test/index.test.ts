@@ -21,6 +21,7 @@ function deps(over: Partial<StatuslineDeps> = {}): StatuslineDeps {
     loadTotals: async () => ZERO_TOTALS,
     resolveBranch: () => null,
     resolveChanges: () => null,
+    resolveWorktree: () => false,
     now: () => 0,
     home: () => '',
     width: () => 80,

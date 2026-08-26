@@ -21,7 +21,12 @@ const ICON_CONTEXT = '\u{f0e4}'; //  gauge
 const ICON_COMPACT = '\u{f066}'; //  compress
 const ICON_CLOCK = '\u{f017}'; //  clock
 const ICON_BRANCH = '\u{e0a0}'; //  powerline branch
+const ICON_BRANCH_MAIN = '\u{f015}'; //  home (on the main/trunk branch)
+const ICON_WORKTREE = '\u{f126}'; //  code-fork (in a linked worktree)
 const ICON_CACHE = '\u{f1c0}'; //  database (cache)
+
+/** The conventional trunk branch names that get the "main" icon. */
+const MAIN_BRANCHES = new Set(['main', 'master']);
 
 const NO_OPTS = z.object({});
 
@@ -52,9 +57,29 @@ const modelEffort = defineWidget({
 const gitBranch = defineWidget({
   type: 'git-branch',
   label: 'Git branch',
-  description: 'Current branch name',
-  options: z.object({ icon: z.string().default(ICON_BRANCH) }),
-  render: prefixIcon((ctx) => ctx.git.branch ?? null),
+  description: 'Current branch name, with a state-specific icon',
+  // Three icons pick out the git state at a glance: a linked worktree, the
+  // main/trunk branch, or any other branch (the default powerline glyph).
+  options: z.object({
+    icon: z.string().default(ICON_BRANCH),
+    mainIcon: z.string().default(ICON_BRANCH_MAIN),
+    worktreeIcon: z.string().default(ICON_WORKTREE),
+  }),
+  render: (ctx, opts) => {
+    const branch = ctx.git.branch;
+    if (!branch) {
+      return null;
+    }
+    // Worktree wins over branch name: being outside the main checkout is the
+    // more notable state, even when that worktree happens to sit on main.
+    const icon = ctx.git.worktree
+      ? opts.worktreeIcon
+      : MAIN_BRANCHES.has(branch)
+        ? opts.mainIcon
+        : opts.icon;
+    // Empty icon means "no prefix", matching the shared prefixIcon behavior.
+    return icon ? `${icon} ${branch}` : branch;
+  },
   sample: () => ({ git: { branch: 'main' } }),
 });
 

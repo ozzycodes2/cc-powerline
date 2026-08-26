@@ -36,6 +36,35 @@ export function resolveGitBranch(
   return branch && branch !== 'HEAD' ? branch : null;
 }
 
+/**
+ * True when `cwd` sits in a linked worktree rather than the repo's main
+ * checkout. A linked worktree keeps its per-tree git dir under
+ * `.git/worktrees/<name>` while the shared "common" dir stays at the repo's
+ * top-level `.git`; in the main worktree the two are the same directory. Both
+ * are requested with `--path-format=absolute` so git canonicalizes them the
+ * same way — a plain string compare then works even when `cwd` reaches the
+ * repo through a symlink (e.g. macOS `/var` → `/private/var`), which a manual
+ * resolve against the relative `.git` git reports for the main tree would not.
+ * Returns false outside a repo or on a failed probe.
+ */
+export function resolveGitWorktree(
+  status: StatusJSON,
+  deps: GitDeps = { exec: defaultExec },
+): boolean {
+  const cwd = status.cwd ?? status.workspace?.project_dir;
+  if (!cwd) {
+    return false;
+  }
+  const at = (which: string) =>
+    deps.exec(`git -C "${cwd}" rev-parse --path-format=absolute ${which}`);
+  const gitDir = at('--git-dir');
+  const commonDir = at('--git-common-dir');
+  if (!gitDir || !commonDir) {
+    return false;
+  }
+  return gitDir !== commonDir;
+}
+
 /** Line churn in the working tree relative to HEAD (staged + unstaged). */
 export interface GitChanges {
   added: number;

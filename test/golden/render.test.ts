@@ -41,7 +41,10 @@ const BUILTIN: Settings = {
     {
       left: [
         { type: 'model' },
-        { type: 'git-branch', options: { icon: '' } },
+        {
+          type: 'git-branch',
+          options: { icon: '', mainIcon: '', worktreeIcon: '' },
+        },
         { type: 'directory' },
         { type: 'context-length' },
         { type: 'session-cost' },

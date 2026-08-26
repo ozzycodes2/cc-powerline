@@ -53,9 +53,13 @@ describe('resolveSettings cascade', () => {
         lines: [{ left: [{ type: 'git-branch', options: { icon: 999 } }] }],
       }),
     );
-    // git-branch's icon fails z.string() validation on 999 and degrades to its
-    // schema default, the powerline branch glyph U+E0A0 (see registryShape.test.ts).
-    expect(r.lines[0]!.left[0]!.options).toEqual({ icon: '\u{e0a0}' });
+    // git-branch's icon fails z.string() validation on 999, so the whole option
+    // object degrades to the schema defaults (see registryShape.test.ts).
+    expect(r.lines[0]!.left[0]!.options).toEqual({
+      icon: '\u{e0a0}',
+      mainIcon: '\u{f015}',
+      worktreeIcon: '\u{f126}',
+    });
   });
 
   it('keeps unknown widget types (they hide at render) with empty options', () => {

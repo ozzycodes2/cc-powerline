@@ -1,6 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { resolveGitBranch, resolveGitChanges } from '../src/git.js';
+import {
+  resolveGitBranch,
+  resolveGitChanges,
+  resolveGitWorktree,
+} from '../src/git.js';
 import type { StatusJSON } from '../src/types/StatusJSON.js';
+
+/**
+ * Stub git's two rev-parse probes. `gitDir` answers `--git-dir` and `common`
+ * answers `--git-common-dir`; either can be null to model a failure. Both are
+ * requested with `--path-format=absolute`, so match on the trailing flag.
+ */
+function worktreeExec(gitDir: string | null, common: string | null) {
+  return (cmd: string) => (cmd.includes('--git-common-dir') ? common : gitDir);
+}
 
 describe('resolveGitBranch', () => {
   it('prefers the branch Claude Code already reports', () => {
@@ -76,6 +89,66 @@ describe('resolveGitChanges', () => {
       added: 2,
       deleted: 0,
     });
+    expect(seen).toContain('/w');
+  });
+});
+
+describe('resolveGitWorktree', () => {
+  it('is false in the main checkout (git dir == common dir)', () => {
+    // --path-format=absolute makes git canonicalize both to the same path.
+    const exec = worktreeExec('/repo/.git', '/repo/.git');
+    expect(resolveGitWorktree({ cwd: '/repo' }, { exec })).toBe(false);
+  });
+
+  it('is true in a linked worktree (git dir under .git/worktrees)', () => {
+    const exec = worktreeExec('/repo/.git/worktrees/wt', '/repo/.git');
+    expect(resolveGitWorktree({ cwd: '/wt' }, { exec })).toBe(true);
+  });
+
+  it('probes git in the working directory with absolute path formatting', () => {
+    const cmds: string[] = [];
+    const exec = (cmd: string) => {
+      cmds.push(cmd);
+      return cmd.includes('--git-common-dir') ? '/repo/.git' : '/repo/.git';
+    };
+    resolveGitWorktree({ cwd: '/repo' }, { exec });
+    expect(cmds[0]).toBe(
+      'git -C "/repo" rev-parse --path-format=absolute --git-dir',
+    );
+    expect(cmds[1]).toBe(
+      'git -C "/repo" rev-parse --path-format=absolute --git-common-dir',
+    );
+  });
+
+  it('is false when either probe fails or there is no cwd', () => {
+    expect(
+      resolveGitWorktree(
+        { cwd: '/repo' },
+        { exec: worktreeExec(null, '.git') },
+      ),
+    ).toBe(false);
+    expect(
+      resolveGitWorktree(
+        { cwd: '/repo' },
+        { exec: worktreeExec('/repo/.git', null) },
+      ),
+    ).toBe(false);
+    expect(resolveGitWorktree({}, { exec: worktreeExec('/a', '/b') })).toBe(
+      false,
+    );
+  });
+
+  it('falls back to workspace.project_dir when cwd is absent', () => {
+    let seen = '';
+    const exec = (cmd: string) => {
+      seen = cmd;
+      return cmd.includes('--git-common-dir')
+        ? '/w/.git'
+        : '/w/.git/worktrees/wt';
+    };
+    expect(
+      resolveGitWorktree({ workspace: { project_dir: '/w' } }, { exec }),
+    ).toBe(true);
     expect(seen).toContain('/w');
   });
 });
