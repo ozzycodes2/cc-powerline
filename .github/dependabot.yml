@@ -1,0 +1,26 @@
+version: 2
+updates:
+  # npm dependencies. Group the noise so a routine bump is one PR, not a dozen;
+  # security fixes still arrive as their own PRs regardless of grouping.
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      prod-dependencies:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+
+  # Keep the pinned Actions in the CI/release workflows current.
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: weekly
