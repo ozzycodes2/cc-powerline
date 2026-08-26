@@ -86,7 +86,9 @@ describe('wireStatusLine', () => {
 
   it('overwrites a different statusLine and reports the old command', async () => {
     const { deps, written } = memFile(
-      JSON.stringify({ statusLine: { type: 'command', command: 'other-line' } }),
+      JSON.stringify({
+        statusLine: { type: 'command', command: 'other-line' },
+      }),
     );
     const res = await wireStatusLine(deps);
 
@@ -157,7 +159,10 @@ describe('manualWiringHint', () => {
 
 describe('describeWireResult', () => {
   it('reports an unchanged config as already wired', () => {
-    const msg = describeWireResult({ path: '/x/settings.json', outcome: 'unchanged' });
+    const msg = describeWireResult({
+      path: '/x/settings.json',
+      outcome: 'unchanged',
+    });
     expect(msg).toContain('already renders cc-powerline');
     expect(msg).toContain('/x/settings.json');
   });
@@ -172,7 +177,10 @@ describe('describeWireResult', () => {
   });
 
   it('reports a fresh wire without a previous command', () => {
-    const msg = describeWireResult({ path: '/x/settings.json', outcome: 'created' });
+    const msg = describeWireResult({
+      path: '/x/settings.json',
+      outcome: 'created',
+    });
     expect(msg).toContain('Wired cc-powerline into Claude Code');
     expect(msg).not.toContain('replaced');
   });
@@ -183,7 +191,9 @@ describe('isStatusLineWired', () => {
     const wired = await isStatusLineWired({
       path: '/fake/settings.json',
       readText: async () =>
-        JSON.stringify({ statusLine: { type: 'command', command: STATUSLINE_COMMAND } }),
+        JSON.stringify({
+          statusLine: { type: 'command', command: STATUSLINE_COMMAND },
+        }),
     });
     expect(wired).toBe(true);
   });
@@ -207,7 +217,10 @@ describe('isStatusLineWired', () => {
 
   it('is false for non-JSON, non-object, and array contents', async () => {
     const read = (text: string) =>
-      isStatusLineWired({ path: '/fake/settings.json', readText: async () => text });
+      isStatusLineWired({
+        path: '/fake/settings.json',
+        readText: async () => text,
+      });
     expect(await read('{ not json')).toBe(false);
     expect(await read(JSON.stringify('a string'))).toBe(false);
     expect(await read(JSON.stringify([1, 2, 3]))).toBe(false);

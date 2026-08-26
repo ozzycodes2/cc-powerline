@@ -18,8 +18,15 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run format:check
-      - run: npm run lint
+      # Run both checks even when the first fails, so a formatting slip doesn't
+      # hide lint errors (and vice versa) behind a single red step. `!cancelled`
+      # still short-circuits if `npm ci` itself fails.
+      - name: Prettier
+        id: format
+        run: npm run format:check
+      - name: ESLint
+        if: ${{ !cancelled() && steps.format.outcome != 'skipped' }}
+        run: npm run lint
 
   # The published tool supports Node >= 18 (its runtime deps do), so prove
   # typecheck/tests/build pass across the whole supported range.

@@ -229,7 +229,9 @@ describe('App shell', () => {
   });
 
   it('does not offer to wire when Claude Code already points at us', async () => {
-    const { lastFrame, stdin, checkWired, wire } = mountWithWire({ wired: true });
+    const { lastFrame, stdin, checkWired, wire } = mountWithWire({
+      wired: true,
+    });
     await delay();
     stdin.write(KEY.ctrlS);
     await delay();

@@ -59,8 +59,7 @@ function showPreview(opts: { style?: string; width?: number }): void {
     lines: [{ left: WIDGET_TYPES, right: [] }],
     preset: DEFAULT_PRESET_KEY,
   });
-  const width =
-    opts.width && opts.width > 0 ? opts.width : statuslineWidth();
+  const width = opts.width && opts.width > 0 ? opts.width : statuslineWidth();
   console.log(renderPreview(settings, width));
 }
 
@@ -79,7 +78,9 @@ export interface WireCliDeps {
  * CI / scripted `init` still wires up. A settings file we can't parse is
  * reported with the manual snippet, never clobbered.
  */
-export async function wireIntoClaudeCode(deps: WireCliDeps = {}): Promise<void> {
+export async function wireIntoClaudeCode(
+  deps: WireCliDeps = {},
+): Promise<void> {
   const interactive =
     deps.interactive ?? Boolean(process.stdin.isTTY && process.stdout.isTTY);
   const log = deps.log ?? ((m: string) => console.log(m));

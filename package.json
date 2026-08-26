@@ -45,7 +45,11 @@
     "coverage": "vitest run --coverage",
     "pricing:snapshot": "tsx scripts/build-pricing-snapshot.ts",
     "prepack": "npm run build",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs,json,md,yml,yaml}": "prettier --write"
   },
   "keywords": [
     "claude-code",
@@ -69,8 +73,10 @@
     "eslint-plugin-react": "^7.37.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "globals": "^15.11.0",
+    "husky": "^9.1.7",
     "ink-testing-library": "^4.0.0",
-    "prettier": "^3.3.0",
+    "lint-staged": "^17.3.0",
+    "prettier": "3.9.6",
     "tsup": "^8.3.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",

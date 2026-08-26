@@ -157,13 +157,19 @@ describe('wireIntoClaudeCode', () => {
     const lines: string[] = [];
     return { log: (m) => lines.push(m), text: () => lines.join('\n') };
   };
-  const ok = (r: Partial<WireResult> = {}): (() => Promise<WireResult>) =>
+  const ok =
+    (r: Partial<WireResult> = {}): (() => Promise<WireResult>) =>
     async () => ({ path: '/x/settings.json', outcome: 'created', ...r });
 
   it('wires up after a yes and reports the path', async () => {
     const { log, text } = collectLog();
     const wire = vi.fn(ok());
-    await wireIntoClaudeCode({ interactive: true, io: scriptedIO('y'), wire, log });
+    await wireIntoClaudeCode({
+      interactive: true,
+      io: scriptedIO('y'),
+      wire,
+      log,
+    });
     expect(wire).toHaveBeenCalledOnce();
     expect(text()).toContain('Wired cc-powerline into Claude Code');
   });
@@ -171,7 +177,12 @@ describe('wireIntoClaudeCode', () => {
   it('skips the write on a no and prints the manual snippet', async () => {
     const { log, text } = collectLog();
     const wire = vi.fn(ok());
-    await wireIntoClaudeCode({ interactive: true, io: scriptedIO('n'), wire, log });
+    await wireIntoClaudeCode({
+      interactive: true,
+      io: scriptedIO('n'),
+      wire,
+      log,
+    });
     expect(wire).not.toHaveBeenCalled();
     expect(text()).toContain('Add this to');
     expect(text()).toContain('"command": "cc-powerline"');
