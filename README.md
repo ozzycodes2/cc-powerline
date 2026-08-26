@@ -12,8 +12,10 @@ Two things set it apart from a generic statusline:
    number matches what you'll actually be billed.
 2. **Exactly two render styles.** A true **powerline** style (left- and
    right-anchored segment groups joined by arrow separators) and Claude Code's
-   plain **builtin** single-line style. No 60-widget zoo, no gradient themes —
-   just the two layouts people actually use.
+   plain **builtin** single-line style — just the two layouts people actually
+   use. Pick a built-in preset or let it adopt the palette of the prompt theme
+   you already run (Powerlevel10k, oh-my-posh, or classic Powerline), with
+   per-segment foregrounds chosen automatically for contrast.
 
 ## Install
 
@@ -54,21 +56,26 @@ pricing file can never break your prompt.
 
 ## Configure
 
-Run the interactive wizard:
+Run the interactive editor:
 
 ```bash
-cc-powerline init
+cc-powerline init      # same as: cc-powerline config edit
 ```
 
-It walks through render style → left widgets → right widgets (skipped for the
-builtin style) → color preset, offers to wire itself into Claude Code, then
-writes the config to:
+On a real terminal this opens a full-screen **Ink TUI** where you pick the
+render style, arrange widgets per line, and browse themes with a live preview.
+On a piped/CI run — or with `--no-tui` — it falls back to a plain readline
+wizard that walks through render style → left widgets → right widgets (skipped
+for the builtin style) → theme. Either way it offers to wire itself into Claude
+Code, then writes the config to:
 
 ```
 ${XDG_CONFIG_HOME:-~/.config}/cc-powerline/settings.json
 ```
 
-`cc-powerline config path` prints that location.
+`cc-powerline config path` prints that location. To see every widget rendered
+over sample data without touching your config, run `cc-powerline preview`
+(add `--style builtin` or `--width <cols>`).
 
 ### Config schema
 
@@ -135,11 +142,22 @@ Icon-bearing widgets default to Nerd Font glyphs; every one is overridable via
 to show (no branch, no rate-limit data, an expired cache window, zero
 compactions, etc.) is omitted from the line rather than rendered blank.
 
-### Color presets
+### Themes
 
-The wizard offers `slate` (default), `mono`, and `ocean`. A preset is just a
-foreground plus a ring of backgrounds applied round-robin across each group's
-widgets — a fast way to get a coherent palette without hand-picking colors.
+A theme is just a ring of background colors applied round-robin across each
+group's widgets, with each segment's foreground picked automatically for
+contrast (dark text on light backgrounds, light text on dark) so nothing ever
+renders unreadable. Three are built in: `slate` (default), `mono`, and `ocean`.
+
+The editor also **detects prompt themes you already run** and offers each as a
+palette, so your status line can match the rest of your shell:
+
+- **Powerlevel10k** — `~/.p10k.zsh`
+- **oh-my-posh** — the file named by `$POSH_THEME`
+- **classic Powerline** — `${XDG_CONFIG_HOME:-~/.config}/powerline/colorschemes/default.json`
+
+The first two-or-more distinct colors from each source (up to eight) become the
+ring. Sources that are missing or yield too few colors are simply skipped.
 
 ## Pricing
 
@@ -161,12 +179,23 @@ guesses.
 
 ```
 cc-powerline                     # (invoked by Claude Code) render a status line from stdin
-cc-powerline init                # interactive config wizard
+cc-powerline init                # create/edit config (TUI, or readline with --no-tui)
+cc-powerline preview             # render every widget over sample data (--style, --width)
 cc-powerline config path         # print the settings file path
+cc-powerline config edit         # edit the config (alias for init)
 cc-powerline pricing refresh     # fetch + cache the latest LiteLLM pricing
 cc-powerline pricing show        # show the resolved pricing source
 cc-powerline pricing show --model <name>   # show one model's rates
 ```
+
+### Terminal width
+
+Claude Code spawns the status line with piped stdio, so cc-powerline can't read
+the terminal width directly. It walks the process ancestry to find the owning
+TTY (`stty`), falling back to `tput cols` and then 80 columns. It also reserves
+a few columns for Claude Code's own chrome so the right-anchored group never
+gets clipped. Set `CC_POWERLINE_WIDTH=<cols>` to force an exact width and skip
+both the detection and the reserved margin.
 
 ## Develop
 
@@ -188,15 +217,13 @@ Releases are published to npm as `@ozzycodes2/cc-powerline` by GitHub Actions,
 not by hand. To cut a release:
 
 1. Bump `version` in `package.json` and add a matching `CHANGELOG.md` entry.
-2. Tag and push: `git tag vX.Y.Z && git push --tags`.
-3. Publish a GitHub Release for that tag.
+2. Publish a GitHub Release for the `vX.Y.Z` tag (e.g. `gh release create vX.Y.Z`).
 
 The `release.yml` workflow then runs the full check gate (lint, typecheck,
-coverage, build) and `npm publish --provenance --access public`, authenticating
-with the `NPM_TOKEN` repository secret (a granular npm automation token).
-Provenance requires the workflow's OIDC `id-token` permission, which is why the
-publish runs in CI rather than locally. `prepublishOnly` rebuilds `dist/` as a
-safety net.
+coverage, build) and `npm publish --provenance --access public`. Auth is npm
+**Trusted Publishing** (OIDC) — no `NPM_TOKEN`: npm exchanges the workflow's
+short-lived `id-token` for publish rights, which is why the publish runs in CI
+rather than locally. `prepublishOnly` rebuilds `dist/` as a safety net.
 
 ## Credits
 
