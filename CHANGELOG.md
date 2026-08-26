@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-08-25
+
+### Added
+
+- A `total-tokens` widget shows the running total of all tokens consumed this
+  session — input, output, and both cache streams (read and creation) summed —
+  compacted to `k`/`M` with a single decimal (`84.3k`, `1.2M`). Like the other
+  usage widgets it hides itself at zero. Add it from the `init` widget picker.
+
 ## [0.2.6] - 2026-08-25
 
 ### Documentation
