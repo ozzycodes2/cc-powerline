@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.10] - 2026-08-26
+
+### Documentation
+
+- Re-release so the README images on npm resolve to the regenerated,
+  sanitized panel captures. npm rewrites the README's relative image paths
+  against the `gitHead` recorded at publish time, and 0.2.9 was cut one
+  commit before the assets were re-captured, so its package page still
+  showed the old screenshots. No code changes from 0.2.9.
+
 ## [0.2.9] - 2026-08-26
 
 ### Fixed

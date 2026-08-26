@@ -1,6 +1,6 @@
 {
   "name": "@ozzycodes2/cc-powerline",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "A precise-cost, powerline-capable statusline for Claude Code.",
   "type": "module",
   "author": "Osniel Quintana",
