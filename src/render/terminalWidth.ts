@@ -11,6 +11,14 @@ import { execSync } from 'node:child_process';
 export const DEFAULT_WIDTH = 80;
 const MAX_ANCESTORS = 8;
 
+/**
+ * Columns Claude Code keeps for its own statusline chrome. It renders the line
+ * inside a UI with built-in horizontal spacing, so the usable width is a few
+ * columns short of the terminal; drawing to the full width overflows and the
+ * right group is clipped. Matches ccstatusline's `detectedWidth - 6` fill mode.
+ */
+export const CLAUDE_CODE_RESERVED_COLUMNS = 6;
+
 /** Injectable side effects so the walk is unit-testable. */
 export interface WidthDeps {
   env: NodeJS.ProcessEnv;
@@ -127,4 +135,20 @@ export function detectTerminalWidth(
   }
 
   return DEFAULT_WIDTH;
+}
+
+/**
+ * The width to render a Claude Code statusline at: the detected terminal width
+ * minus the columns Claude Code reserves for its own chrome, so the right group
+ * never spills past the visible edge. The `CC_POWERLINE_WIDTH` override is an
+ * exact escape hatch and keeps its value verbatim; every detected width gets the
+ * margin. Never returns below one column.
+ */
+export function statuslineWidth(overrides: Partial<WidthDeps> = {}): number {
+  const env = overrides.env ?? process.env;
+  const width = detectTerminalWidth(overrides);
+  if (positiveInt(env.CC_POWERLINE_WIDTH)) {
+    return width;
+  }
+  return Math.max(1, width - CLAUDE_CODE_RESERVED_COLUMNS);
 }

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   detectTerminalWidth,
+  statuslineWidth,
+  CLAUDE_CODE_RESERVED_COLUMNS,
   parseSttySize,
   ttyToDevice,
   DEFAULT_WIDTH,
@@ -97,5 +99,23 @@ describe('detectTerminalWidth', () => {
     expect(detectTerminalWidth(baseDeps({ exec: () => null }))).toBe(
       DEFAULT_WIDTH,
     );
+  });
+});
+
+describe('statuslineWidth', () => {
+  it('reserves room for Claude Code built-in spacing below the detected width', () => {
+    expect(statuslineWidth(baseDeps({ stdoutColumns: 100 }))).toBe(
+      100 - CLAUDE_CODE_RESERVED_COLUMNS,
+    );
+  });
+
+  it('treats the CC_POWERLINE_WIDTH override as an exact width, no margin', () => {
+    expect(
+      statuslineWidth(baseDeps({ env: { CC_POWERLINE_WIDTH: '120' } })),
+    ).toBe(120);
+  });
+
+  it('never returns less than one column on a tiny terminal', () => {
+    expect(statuslineWidth(baseDeps({ stdoutColumns: 3 }))).toBe(1);
   });
 });

@@ -24,7 +24,7 @@ import {
   runInit,
 } from './cli/init.js';
 import { DEFAULT_PRESET_KEY } from './cli/presets.js';
-import { detectTerminalWidth } from './render/terminalWidth.js';
+import { statuslineWidth } from './render/terminalWidth.js';
 import { WIDGET_TYPES } from './widgets/registry.js';
 
 // Single source of truth for the reported version — a hardcoded string here
@@ -60,7 +60,7 @@ function showPreview(opts: { style?: string; width?: number }): void {
     preset: DEFAULT_PRESET_KEY,
   });
   const width =
-    opts.width && opts.width > 0 ? opts.width : detectTerminalWidth();
+    opts.width && opts.width > 0 ? opts.width : statuslineWidth();
   console.log(renderPreview(settings, width));
 }
 

@@ -17,7 +17,7 @@ import {
 } from './transcript/parseTranscript.js';
 import { resolveGitBranch, resolveGitChanges, type GitChanges } from './git.js';
 import { homedir } from 'node:os';
-import { detectTerminalWidth } from './render/terminalWidth.js';
+import { statuslineWidth } from './render/terminalWidth.js';
 import { buildStatus } from './pipeline.js';
 import type { PricingTable } from './types/Pricing.js';
 import type { Settings } from './types/Settings.js';
@@ -47,7 +47,7 @@ function defaultDeps(): StatuslineDeps {
     resolveChanges: (status) => resolveGitChanges(status),
     now: () => Date.now(),
     home: () => homedir(),
-    width: () => detectTerminalWidth(),
+    width: () => statuslineWidth(),
     warn: (message) => process.stderr.write(`cc-powerline: ${message}\n`),
   };
 }

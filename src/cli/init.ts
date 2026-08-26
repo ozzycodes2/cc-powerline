@@ -19,7 +19,7 @@ import {
 } from './prompts.js';
 import { previewContext } from './previewContext.js';
 import { buildStatus } from '../pipeline.js';
-import { detectTerminalWidth } from '../render/terminalWidth.js';
+import { statuslineWidth } from '../render/terminalWidth.js';
 import { WIDGET_TYPES } from '../widgets/registry.js';
 import type { Settings, WidgetItem } from '../types/Settings.js';
 
@@ -159,7 +159,7 @@ export async function runInit(deps: InitDeps = {}): Promise<Settings> {
     );
 
     const settings = buildSettingsFromAnswers({ style, lines, preset });
-    const width = deps.previewWidth ?? detectTerminalWidth();
+    const width = deps.previewWidth ?? statuslineWidth();
     log('');
     log('Preview (with sample data):');
     log(renderPreview(settings, width));
