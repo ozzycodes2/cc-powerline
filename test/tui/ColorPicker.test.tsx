@@ -129,6 +129,32 @@ describe('ColorPicker', () => {
     expect(h.state.screen).toBe('widgets');
   });
 
+  it('aligns the swatch grid into fixed-width columns', async () => {
+    const h = mount(ONE);
+    await delay();
+    const all = stripAnsi(h.lastFrame() ?? '').split('\n');
+    // Grid rows only — the "inherit" entry marks the first one. Slicing past the
+    // channel-label header avoids matching a color name shown there (e.g. "fg:
+    // brightWhite") instead of its swatch cell.
+    const lines = all.slice(all.findIndex((l) => l.includes('inherit')));
+    // Labels grouped by grid column (COLS = 4). Every label in a column must
+    // start at the same x, regardless of the widths of its neighbors' labels.
+    const columns = [
+      ['inherit', 'yellow', 'white', 'brightYellow', 'brightWhite'],
+      ['black', 'blue', 'gray', 'brightBlue'],
+      ['red', 'magenta', 'brightRed', 'brightMagenta'],
+      ['green', 'cyan', 'brightGreen', 'brightCyan'],
+    ];
+    for (const labels of columns) {
+      const offsets = labels.map((label) => {
+        const line = lines.find((l) => l.includes(` ${label}`))!;
+        expect(line, `line for ${label}`).toBeDefined();
+        return line.indexOf(` ${label}`);
+      });
+      expect(new Set(offsets).size, labels.join(',')).toBe(1);
+    }
+  });
+
   it('shows a guard message when the focused group is empty', async () => {
     const empty: Settings = {
       style: 'powerline',

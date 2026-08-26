@@ -29,6 +29,13 @@ const ENTRIES: { label: string; color: Color | undefined }[] = [
   ...NAMED_COLORS.map((c) => ({ label: c, color: c as Color })),
 ];
 
+// Widest label ("brightMagenta") sets the column width so every cell — cursor
+// caret, swatch, and label — starts at the same x and the grid stays aligned
+// regardless of which colors are present.
+const LABEL_WIDTH = Math.max(...ENTRIES.map((e) => e.label.length));
+// caret (1) + swatch (2) + gap (1) + label.
+const CELL_WIDTH = 1 + 2 + 1 + LABEL_WIDTH;
+
 function currentItem(state: TuiState) {
   const { lineIndex, side, itemIndex } = state.focus;
   return state.settings.lines[lineIndex]?.[side as Side][itemIndex];
@@ -126,14 +133,14 @@ export function ColorPicker({ state, dispatch }: ColorPickerProps) {
                 const idx = r * COLS + c;
                 const selected = idx === cursor;
                 return (
-                  <Box key={e.label} marginRight={2}>
+                  <Box key={e.label} width={CELL_WIDTH} marginRight={2}>
                     <Text color={selected ? 'cyan' : undefined}>
                       {selected ? '❯' : ' '}
                     </Text>
                     <Swatch color={e.color} />
                     <Text color={selected ? 'cyan' : undefined}>
                       {' '}
-                      {e.label}
+                      {e.label.padEnd(LABEL_WIDTH)}
                     </Text>
                   </Box>
                 );
