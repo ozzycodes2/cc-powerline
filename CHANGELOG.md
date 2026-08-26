@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-08-26
+
+### Fixed
+
+- The preview's sample directory no longer shows a private downstream
+  project name. It was hardcoded into the mock render context and surfaced
+  verbatim in the init wizard's live preview and the golden fixtures; it now
+  reads as the project's own name. The README image assets are baked
+  screenshots and will show the new name once they are re-captured.
+
 ## [0.2.8] - 2026-08-26
 
 ### Security
