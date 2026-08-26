@@ -6,6 +6,7 @@ import {
   formatDuration,
   formatMoney,
   formatPercent,
+  formatTokens,
 } from '../../src/widgets/format.js';
 
 describe('formatCost', () => {
@@ -36,6 +37,23 @@ describe('formatPercent', () => {
   it('rounds to a whole percent', () => {
     expect(formatPercent(42.4)).toBe('42%');
     expect(formatPercent(42.6)).toBe('43%');
+  });
+});
+
+describe('formatTokens', () => {
+  it('compacts to k/M with a single decimal, dropping a trailing .0', () => {
+    expect(formatTokens(512)).toBe('512');
+    expect(formatTokens(999)).toBe('999');
+    expect(formatTokens(1000)).toBe('1k');
+    expect(formatTokens(84_300)).toBe('84.3k');
+    expect(formatTokens(1_000_000)).toBe('1M');
+    expect(formatTokens(1_200_000)).toBe('1.2M');
+  });
+
+  it('reads non-positive or non-finite input as 0', () => {
+    expect(formatTokens(0)).toBe('0');
+    expect(formatTokens(-1)).toBe('0');
+    expect(formatTokens(Number.NaN)).toBe('0');
   });
 });
 

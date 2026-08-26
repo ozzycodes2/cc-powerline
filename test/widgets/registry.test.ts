@@ -41,6 +41,7 @@ describe('renderWidget', () => {
       'session-cost',
       'next-cost',
       'cache-hit-rate',
+      'total-tokens',
       'cache-window',
       'compactions',
       'rate-limit',
@@ -443,6 +444,32 @@ describe('renderWidget', () => {
         ),
       ).toBe('\u{f1c0} 75%');
       expect(renderWidget('cache-hit-rate', ctx({}))).toBeNull();
+    });
+  });
+
+  describe('total-tokens', () => {
+    it('sums input, output, and both cache streams, hidden at zero', () => {
+      expect(
+        renderWidget(
+          'total-tokens',
+          ctx({
+            totals: {
+              inputTokens: 12_000,
+              outputTokens: 3400,
+              cacheReadTokens: 60_000,
+              cacheCreationTokens: 9000,
+            },
+          }),
+          { icon: '' },
+        ),
+      ).toBe('84.4k');
+      // default glyph prefixes the count
+      expect(
+        renderWidget('total-tokens', ctx({ totals: { outputTokens: 500 } }), {
+          icon: 'T',
+        }),
+      ).toBe('T 500');
+      expect(renderWidget('total-tokens', ctx({}))).toBeNull();
     });
   });
 

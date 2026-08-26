@@ -29,6 +29,24 @@ export function formatPercent(n: number): string {
   return `${Math.round(n)}%`;
 }
 
+/**
+ * Compact a token count for a statusline segment: bare integer below 1k, then
+ * `k`/`M` with a single decimal that is dropped when it lands on `.0` — `512`,
+ * `84.3k`, `1.2M`, `1M`. Non-finite or negative input reads as `0`.
+ */
+export function formatTokens(n: number): string {
+  if (!Number.isFinite(n) || n <= 0) {
+    return '0';
+  }
+  if (n < 1000) {
+    return `${Math.round(n)}`;
+  }
+  const [value, suffix] =
+    n < 1_000_000 ? [n / 1000, 'k'] : [n / 1_000_000, 'M'];
+  // toFixed(1) then strip a trailing `.0` so round thousands read as `1k`, not `1.0k`.
+  return `${value.toFixed(1).replace(/\.0$/, '')}${suffix}`;
+}
+
 /** Trailing path component, tolerant of both separators and trailing slashes. */
 export function basename(path: string): string {
   const parts = path.split(/[/\\]/).filter(Boolean);

@@ -13,6 +13,7 @@ import {
   formatDuration,
   formatMoney,
   formatPercent,
+  formatTokens,
 } from './format.js';
 
 // Default Nerd Font glyphs (present in virtually every Nerd Font).
@@ -24,6 +25,7 @@ const ICON_BRANCH = '\u{e0a0}'; //  powerline branch
 const ICON_BRANCH_MAIN = '\u{f015}'; //  home (on the main/trunk branch)
 const ICON_WORKTREE = '\u{f126}'; //  code-fork (in a linked worktree)
 const ICON_CACHE = '\u{f1c0}'; //  database (cache)
+const ICON_TOKENS = '\u{f2db}'; //  microchip (tokens)
 
 /** The conventional trunk branch names that get the "main" icon. */
 const MAIN_BRANCHES = new Set(['main', 'master']);
@@ -241,6 +243,23 @@ const cacheHitRate = defineWidget({
   }),
 });
 
+const totalTokens = defineWidget({
+  type: 'total-tokens',
+  label: 'Total tokens',
+  description: 'All tokens consumed this session (input+output+cache)',
+  options: z.object({ icon: z.string().default(ICON_TOKENS) }),
+  render: prefixIcon((ctx) => {
+    const { inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens } =
+      ctx.totals;
+    const total =
+      inputTokens + outputTokens + cacheReadTokens + cacheCreationTokens;
+    return total <= 0 ? null : formatTokens(total);
+  }),
+  // Contribute only input/output; the cache streams come from cache-hit-rate's
+  // sample, so the merged preview total stays consistent across both widgets.
+  sample: () => ({ totals: { inputTokens: 12_000, outputTokens: 3400 } }),
+});
+
 const cacheWindow = defineWidget({
   type: 'cache-window',
   label: 'Cache window',
@@ -301,6 +320,7 @@ export const WIDGET_DEFS: WidgetDef[] = [
   sessionCost,
   nextCost,
   cacheHitRate,
+  totalTokens,
   cacheWindow,
   compactions,
   rateLimit,

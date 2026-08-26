@@ -153,6 +153,7 @@ over sample data without touching your config, run `cc-powerline preview`
 | `context-length` | percent of the context window used; `options.label`                                                                                     |
 | `session-cost`   | precise running cost from the transcript                                                                                                |
 | `cache-hit-rate` | cache-read share of all cache tokens; `options.label`                                                                                   |
+| `total-tokens`   | all tokens consumed this session (input+output+cache), compacted as `84.3k`/`1.2M`; `options.icon`                                      |
 | `cache-window`   | countdown to prompt-cache (5m/1h) expiry; `options.icon`                                                                                |
 | `compactions`    | count of compaction events this session; `options.icon`                                                                                 |
 | `rate-limit`     | 5-hour usage percentage; `options.label`                                                                                                |
