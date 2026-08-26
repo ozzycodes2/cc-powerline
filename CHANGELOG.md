@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-08-25
+
+### Fixed
+
+- Auto-contrast still picked unreadable foregrounds for the normal named colors.
+  Contrast was judged against dim SGR half-values (`yellow` as `[128,128,0]`),
+  but terminals paint those colors far brighter, so bright yellow/cyan segments
+  got white text, and a YIQ threshold left saturated greens white too. Contrast
+  now uses the real xterm palette RGB and WCAG relative luminance, so `yellow`,
+  `green`, and `cyan` backgrounds take dark text. Re-pick your theme to repaint
+  an already-saved config — the foreground is baked in at apply time.
+- The powerline right group was clipped inside Claude Code. Claude Code renders
+  the status line with its own horizontal chrome, so drawing to the full
+  detected width overflowed the visible edge. The render width now reserves a
+  few columns for that chrome; `CC_POWERLINE_WIDTH` still forces an exact width.
+
 ## [0.2.2] - 2026-08-25
 
 ### Fixed
@@ -91,7 +107,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context-length, session-cost, cache-hit-rate, cache-window, compactions,
   rate-limit, and separator.
 
-[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ozzycodes2/cc-powerline/compare/v0.1.2...v0.2.0
