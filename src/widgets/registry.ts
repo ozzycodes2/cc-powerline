@@ -121,7 +121,7 @@ const directory = defineWidget({
     return compressPath(dir, ctx.home);
   },
   sample: () => ({
-    status: { cwd: '/Users/you/Documents/work/voice-connect' },
+    status: { cwd: '/Users/you/Documents/work/cc-powerline' },
   }),
 });
 

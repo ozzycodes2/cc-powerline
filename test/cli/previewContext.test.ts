@@ -28,7 +28,7 @@ describe('previewContext derivation', () => {
   it('reproduces the canonical preview values', () => {
     const ctx = previewContext();
     expect(renderWidget('model', ctx)).toBe('Opus 4.8');
-    expect(renderWidget('directory', ctx)).toBe('~/D/w/voice-connect');
+    expect(renderWidget('directory', ctx)).toBe('~/D/w/cc-powerline');
     expect(renderWidget('cache-hit-rate', ctx)).toBe('\u{f1c0} 90%');
     expect(renderWidget('cache-window', ctx)).toBe(`${'\u{f017}'} 4:43`);
     expect(renderWidget('session-cost', ctx)).toBe('$1.23');

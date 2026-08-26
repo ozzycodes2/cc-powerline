@@ -113,7 +113,7 @@ describe('renderPreview', () => {
     expect(out).toContain('high'); // effort
     expect(out).toContain('main'); // branch
     expect(out).toContain('+12 -3'); // churn
-    expect(out).toContain('~/D/w/voice-connect'); // compressed dir
+    expect(out).toContain('~/D/w/cc-powerline'); // compressed dir
     expect(out).toContain('42%'); // context
     expect(out).toContain('\u{f1c0} 90%'); // cache-hit-rate icon + value
     expect(out).toContain('4:43'); // cache-window countdown

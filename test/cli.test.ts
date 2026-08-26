@@ -63,7 +63,7 @@ describe('preview command', () => {
     expect(out).toContain('high'); // model-effort
     expect(out).toContain('main'); // git-branch
     expect(out).toContain('+12 -3'); // git-changes
-    expect(out).toContain('~/D/w/voice-connect'); // directory
+    expect(out).toContain('~/D/w/cc-powerline'); // directory
     expect(out).toContain('42%'); // context-length
     expect(out).toContain('$1.23'); // session-cost
     expect(out).toContain('4¢→53¢'); // next-cost (warm→cold projection)
