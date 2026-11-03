@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-11-03
+
+### Fixed
+
+- Session cost and token totals now include subagents. Their transcripts
+  live in `<session-id>/subagents/` beside the main one and were previously
+  ignored.
+- Session cost is no longer roughly doubled. Claude Code repeats a message's
+  usage on every content-block line; each message is now counted once by
+  `message.id` + `requestId`, as ccusage does. Cached totals from earlier
+  releases are re-parsed once on upgrade.
+
 ## [0.2.10] - 2026-08-26
 
 ### Documentation
@@ -197,7 +209,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context-length, session-cost, cache-hit-rate, cache-window, compactions,
   rate-limit, and separator.
 
-[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.11...HEAD
+[0.2.11]: https://github.com/ozzycodes2/cc-powerline/releases/tag/v0.2.11
 [0.2.6]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.3...v0.2.4
