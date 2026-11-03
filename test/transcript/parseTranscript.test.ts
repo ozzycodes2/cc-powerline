@@ -69,6 +69,68 @@ describe('parseTranscript', () => {
   });
 });
 
+describe('parseTranscript dedup', () => {
+  const block = (id: string, requestId: string | undefined, input: number) =>
+    JSON.stringify({
+      type: 'assistant',
+      requestId,
+      message: { id, model: 'm', usage: { input_tokens: input } },
+    });
+
+  it('counts consecutive lines of one message once', () => {
+    const jsonl = [
+      block('a', 'r1', 1000),
+      block('a', 'r1', 1000),
+      block('a', 'r1', 1000),
+      block('b', 'r2', 10),
+    ].join('\n');
+    const r = parseTranscript(jsonl, PRICING);
+    expect(r.inputTokens).toBe(1010);
+    expect(r.costUsd).toBeCloseTo(1010e-6, 12);
+    expect(r.lastUsageKey).toBe('b:r2');
+  });
+
+  it('treats the same message id under a different request as distinct', () => {
+    const jsonl = [block('a', 'r1', 1), block('a', 'r2', 1)].join('\n');
+    expect(parseTranscript(jsonl, PRICING).inputTokens).toBe(2);
+  });
+
+  it('keys on the message id alone when requestId is absent', () => {
+    const jsonl = [block('a', undefined, 1), block('a', undefined, 1)].join(
+      '\n',
+    );
+    expect(parseTranscript(jsonl, PRICING).inputTokens).toBe(1);
+  });
+
+  it('never dedupes lines without a message id', () => {
+    const jsonl = [
+      assistant({ input_tokens: 1 }),
+      assistant({ input_tokens: 1 }),
+    ].join('\n');
+    const r = parseTranscript(jsonl, PRICING);
+    expect(r.inputTokens).toBe(2);
+    expect(r.lastUsageKey).toBeNull();
+  });
+
+  it("skips a leading repeat of the previous chunk's last message", () => {
+    const r = parseTranscript(
+      [block('a', 'r1', 1000), block('b', 'r2', 10)].join('\n'),
+      PRICING,
+      'a:r1',
+    );
+    expect(r.inputTokens).toBe(10);
+  });
+
+  it('carries the previous key through a chunk with no usage', () => {
+    const r = parseTranscript(
+      JSON.stringify({ type: 'user', message: { content: 'hi' } }),
+      PRICING,
+      'a:r1',
+    );
+    expect(r.lastUsageKey).toBe('a:r1');
+  });
+});
+
 describe('mergeTotals', () => {
   it('adds deltas and replaces contextTokens from the newest chunk', () => {
     const prev = {
@@ -87,6 +149,7 @@ describe('mergeTotals', () => {
       lastContextTokens: 42,
       lastCacheExpiresAt: 1000,
       lastCacheTtlMs: 300_000,
+      lastUsageKey: null,
     });
     expect(merged.costUsd).toBe(1.5);
     expect(merged.inputTokens).toBe(15);
@@ -113,6 +176,7 @@ describe('mergeTotals', () => {
       lastContextTokens: null,
       lastCacheExpiresAt: null,
       lastCacheTtlMs: null,
+      lastUsageKey: null,
     });
     expect(merged.contextTokens).toBe(99);
     expect(merged.cacheExpiresAt).toBe(500);

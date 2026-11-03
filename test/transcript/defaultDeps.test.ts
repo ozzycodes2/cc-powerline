@@ -1,10 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   defaultTranscriptDeps,
   loadTranscriptTotals,
+  subagentDir,
   transcriptCachePath,
 } from '../../src/transcript/transcriptCache.js';
 import type { PricingTable } from '../../src/types/Pricing.js';
@@ -45,6 +46,12 @@ describe('transcriptCachePath', () => {
   });
 });
 
+describe('subagentDir', () => {
+  it('maps a session transcript to its subagents directory', () => {
+    expect(subagentDir('/p/proj/abc.jsonl')).toBe('/p/proj/abc/subagents');
+  });
+});
+
 describe('defaultTranscriptDeps (real filesystem)', () => {
   it('parses a real transcript file and folds in appended bytes on the next call', async () => {
     const dir = await tmp();
@@ -59,6 +66,33 @@ describe('defaultTranscriptDeps (real filesystem)', () => {
     await writeFile(transcript, `${line(1000)}\n${line(500)}\n`, 'utf8');
     const second = await loadTranscriptTotals(transcript, PRICING, deps);
     expect(second.inputTokens).toBe(1500); // read only the appended tail
+  });
+
+  it('includes subagent transcripts stored beside the main one', async () => {
+    const dir = await tmp();
+    const transcript = join(dir, 'sess.jsonl');
+    const subs = join(dir, 'sess', 'subagents');
+    await mkdir(subs, { recursive: true });
+    await writeFile(transcript, `${line(1)}\n`, 'utf8');
+    await writeFile(join(subs, 'agent-b.jsonl'), `${line(10)}\n`, 'utf8');
+    await writeFile(join(subs, 'agent-a.jsonl'), `${line(100)}\n`, 'utf8');
+    await writeFile(join(subs, 'agent-a.meta.json'), '{}', 'utf8');
+    await writeFile(join(subs, 'other.jsonl'), `${line(9999)}\n`, 'utf8');
+
+    const deps = defaultTranscriptDeps(join(dir, 'cache.json'));
+    expect(await deps.listSubagents(transcript)).toEqual([
+      join(subs, 'agent-a.jsonl'),
+      join(subs, 'agent-b.jsonl'),
+    ]);
+    expect(
+      (await loadTranscriptTotals(transcript, PRICING, deps)).inputTokens,
+    ).toBe(111);
+  });
+
+  it('lists no subagents when the session has none', async () => {
+    const dir = await tmp();
+    const deps = defaultTranscriptDeps(join(dir, 'cache.json'));
+    expect(await deps.listSubagents(join(dir, 'sess.jsonl'))).toEqual([]);
   });
 
   it('reports null stat for a missing file', async () => {

@@ -1,10 +1,12 @@
 /**
  * Pure transcript parsing. A Claude Code transcript is JSONL; assistant
  * message lines carry `message.model` + `message.usage`, from which we sum a
- * precise running cost and cumulative token counts. `compact_boundary` events
- * are counted but never reset the cost — that spend already happened. The
- * live context size tracks the most recent assistant message, which is
- * naturally post-compaction.
+ * precise running cost and cumulative token counts. Claude Code writes one
+ * line per content block, each repeating the whole message's usage, so
+ * consecutive lines sharing a message id + request id are counted once (as
+ * ccusage does). `compact_boundary` events are counted but never reset the
+ * cost — that spend already happened. The live context size tracks the most
+ * recent assistant message, which is naturally post-compaction.
  */
 import { calculateCost } from '../pricing/calculateCost.js';
 import type { PricingTable, TokenUsage } from '../types/Pricing.js';
@@ -47,6 +49,12 @@ export interface ParseResult extends Omit<
   lastCacheExpiresAt: number | null;
   /** Cache TTL tier from the last cache-creating message in this chunk, or null. */
   lastCacheTtlMs: number | null;
+  /**
+   * Dedup key of the last usage-bearing line seen (this chunk or, if none, the
+   * one passed in). Feed it to the next chunk's parse so a message split
+   * across a read boundary is still counted once.
+   */
+  lastUsageKey: string | null;
 }
 
 export const ZERO_TOTALS: TranscriptTotals = {
@@ -99,10 +107,22 @@ function extractUsage(usage: Record<string, unknown>): {
   return { usage: tokenUsage, cacheCreationTotal };
 }
 
+function usageKey(
+  entry: Record<string, unknown>,
+  message: Record<string, unknown>,
+): string | null {
+  if (typeof message.id !== 'string') {
+    return null;
+  }
+  const requestId = typeof entry.requestId === 'string' ? entry.requestId : '';
+  return `${message.id}:${requestId}`;
+}
+
 /** Parse a whole (or complete-line prefix) transcript text into a delta. */
 export function parseTranscript(
   text: string,
   pricing: PricingTable,
+  prevUsageKey: string | null = null,
 ): ParseResult {
   const result: ParseResult = {
     costUsd: 0,
@@ -114,6 +134,7 @@ export function parseTranscript(
     lastContextTokens: null,
     lastCacheExpiresAt: null,
     lastCacheTtlMs: null,
+    lastUsageKey: prevUsageKey,
   };
 
   for (const line of text.split('\n')) {
@@ -138,6 +159,12 @@ export function parseTranscript(
     if (!message || !usageRaw) {
       continue;
     }
+
+    const key = usageKey(entry, message);
+    if (key !== null && key === result.lastUsageKey) {
+      continue;
+    }
+    result.lastUsageKey = key;
 
     const model = typeof message.model === 'string' ? message.model : undefined;
     const { usage, cacheCreationTotal } = extractUsage(usageRaw);

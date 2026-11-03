@@ -5,9 +5,9 @@ A precise-cost, powerline-capable statusline for [Claude Code](https://claude.co
 Two things set it apart from a generic statusline:
 
 1. **Precise session cost.** It does **not** pass through Claude Code's
-   reported `cost.total_cost_usd`. It re-derives spend from the transcript
-   using the same real per-token pricing formula as
-   [ccusage](https://github.com/ccusage/ccusage) — 5-minute vs. 1-hour
+   reported `cost.total_cost_usd`. It re-derives spend from the session's
+   transcript and those of any subagents it spawned, using the same real
+   per-token pricing formula as [ccusage](https://github.com/ccusage/ccusage) — 5-minute vs. 1-hour
    cache-creation split, long-context (200k) tiering, LiteLLM pricing — so the
    number matches what you'll actually be billed.
 2. **Exactly two render styles.** A true **powerline** style (left- and
@@ -151,7 +151,7 @@ over sample data without touching your config, run `cc-powerline preview`
 | `git-changes`    | working-tree churn `+added -deleted` vs. HEAD; `options.icon`                                                                           |
 | `directory`      | working directory; `options.mode` = `compressed` (default, powerline `~/D/w/proj`), `basename`, or `full`                               |
 | `context-length` | percent of the context window used; `options.label`                                                                                     |
-| `session-cost`   | precise running cost from the transcript                                                                                                |
+| `session-cost`   | precise running cost from the transcript, including subagents                                                                           |
 | `cache-hit-rate` | cache-read share of all cache tokens; `options.label`                                                                                   |
 | `total-tokens`   | all tokens consumed this session (input+output+cache), compacted as `84.3k`/`1.2M`; `options.icon`                                      |
 | `cache-window`   | countdown to prompt-cache (5m/1h) expiry; `options.icon`                                                                                |
