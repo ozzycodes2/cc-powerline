@@ -16,7 +16,8 @@ Set FontSize 16
 Set Width 1200
 Set Height 460
 Set Padding 20
-Set Theme "Catppuccin Mocha"
+# Fabric Dusk from fabric-theme v0.2.3, the palette the default preset uses.
+Set Theme {"name":"Fabric Dusk","black":"#212324","red":"#e04a3c","green":"#8db05a","yellow":"#f0b92a","blue":"#6f93c0","purple":"#c08a9a","cyan":"#6aaea6","white":"#d0d6e0","brightBlack":"#8a8f98","brightRed":"#e66b60","brightGreen":"#a0bd75","brightYellow":"#f3c44f","brightBlue":"#8aa8cc","brightPurple":"#cfa5b2","brightCyan":"#84bdb6","brightWhite":"#f7f8f8","background":"#101214","foreground":"#f7f8f8","selection":"#ff6a13","cursor":"#ff6a13"}
 Set TypingSpeed 90ms
 
 Hide
@@ -76,8 +77,6 @@ Sleep 500ms
 Enter
 Sleep 1s
 Screenshot "docs/media/theme-panel.png"
-Down
-Sleep 900ms
 Down
 Sleep 900ms
 Enter
