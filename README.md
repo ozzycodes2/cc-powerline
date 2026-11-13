@@ -113,21 +113,21 @@ over sample data without touching your config, run `cc-powerline preview`
     "separator": "",
     "rightSeparator": "",
     "defaultFg": "brightWhite",
-    "defaultBg": "#2d3142",
+    "defaultBg": "#6f93c0",
   },
 
   // one entry per output line; each has a left and right widget group
   "lines": [
     {
       "left": [
-        { "type": "model", "fg": "brightWhite", "bg": "#2d3142" },
-        { "type": "git-branch", "fg": "brightWhite", "bg": "#4f5d75" },
-        { "type": "directory", "fg": "brightWhite", "bg": "#3d5a80" },
+        { "type": "model", "fg": "#000000", "bg": "#6f93c0" },
+        { "type": "git-branch", "fg": "#171717", "bg": "#6aaea6" },
+        { "type": "directory", "fg": "#1b1b1b", "bg": "#8db05a" },
       ],
       "right": [
-        { "type": "context-length", "fg": "brightWhite", "bg": "#5c6b73" },
-        { "type": "cache-hit-rate", "fg": "brightWhite", "bg": "#6d597a" },
-        { "type": "session-cost", "fg": "black", "bg": "#2a9d8f" },
+        { "type": "context-length", "fg": "#000000", "bg": "#6f93c0" },
+        { "type": "cache-hit-rate", "fg": "#171717", "bg": "#6aaea6" },
+        { "type": "session-cost", "fg": "#1b1b1b", "bg": "#8db05a" },
       ],
     },
   ],
@@ -180,7 +180,14 @@ is readable without the harsh pure-white glare. Backgrounds where 7:1 is
 unreachable clamp to black or white (maximum contrast). The math is exact for
 `#rrggbb` backgrounds; named colors are resolved through the xterm-default
 palette, so a terminal with a heavily customized palette may differ slightly.
-Three themes are built in: `slate` (default), `mono`, and `ocean`.
+Five themes are built in. The default, `fabric`, is the ANSI hues of
+[Fabric](https://github.com/ozzycodes2/fabric-theme): blue, cyan, green, yellow
+and magenta, with red left for errors. `fabric-signal` is Fabric's orange
+leading each group over its neutral grays. Both read on either Fabric terminal
+ground; pair them with
+[Fabric for Ghostty](https://github.com/ozzycodes2/fabric-ghostty), and see
+every value on the [Fabric site](https://github.com/ozzycodes2/fabric-site).
+`slate`, `mono` and `ocean` are the other three.
 
 ![The theme panel: each palette previewed by its background-color ring](docs/media/theme-panel.png)
 

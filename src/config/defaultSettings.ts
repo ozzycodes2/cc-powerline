@@ -1,4 +1,7 @@
-/** The default configuration: a single powerline line with a sensible split. */
+/**
+ * The default configuration: a single powerline line with a sensible split,
+ * painted from the `fabric` preset.
+ */
 import type { Settings } from '../types/Settings.js';
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -6,14 +9,14 @@ export const DEFAULT_SETTINGS: Settings = {
   lines: [
     {
       left: [
-        { type: 'model', fg: 'brightWhite', bg: '#2d3142' },
-        { type: 'git-branch', fg: 'brightWhite', bg: '#4f5d75' },
-        { type: 'directory', fg: 'brightWhite', bg: '#3d5a80' },
+        { type: 'model', fg: '#000000', bg: '#6f93c0' },
+        { type: 'git-branch', fg: '#171717', bg: '#6aaea6' },
+        { type: 'directory', fg: '#1b1b1b', bg: '#8db05a' },
       ],
       right: [
-        { type: 'context-length', fg: 'brightWhite', bg: '#5c6b73' },
-        { type: 'cache-hit-rate', fg: 'brightWhite', bg: '#6d597a' },
-        { type: 'session-cost', fg: 'black', bg: '#2a9d8f' },
+        { type: 'context-length', fg: '#000000', bg: '#6f93c0' },
+        { type: 'cache-hit-rate', fg: '#171717', bg: '#6aaea6' },
+        { type: 'session-cost', fg: '#1b1b1b', bg: '#8db05a' },
       ],
     },
   ],

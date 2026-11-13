@@ -138,9 +138,9 @@ describe('runInit', () => {
     // style=1(powerline); 2 lines.
     // line 1: left model(1),git-branch(3),directory(5); right skipped.
     // line 2: left skipped; right context-length(6),session-cost(7).
-    // preset=3(ocean).
+    // preset=5(ocean).
     const settings = await runInit({
-      io: scriptedIO(['1', '2', '1,3,5', '', '', '6,7', '3']),
+      io: scriptedIO(['1', '2', '1,3,5', '', '', '6,7', '5']),
       previewWidth: 200,
       writeConfig: async (s) => {
         written = s;
