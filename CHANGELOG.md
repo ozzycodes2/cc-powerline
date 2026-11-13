@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-13
+
+### Changed
+
+- The default theme is now `fabric`: the ANSI blue, cyan, green, yellow and
+  magenta of the [Fabric](https://github.com/ozzycodes2/fabric-theme) palette.
+  Existing settings files keep their colors; only new configs and the
+  wizard's default pick change. `slate` remains as a built-in.
+
+### Added
+
+- `fabric-signal` theme: Fabric's orange leading each group over its
+  neutral grays.
+
+### Documentation
+
+- README media re-recorded in the Fabric Dusk terminal palette.
+
 ## [0.2.11] - 2026-11-03
 
 ### Fixed
@@ -209,7 +227,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   context-length, session-cost, cache-hit-rate, cache-window, compactions,
   rate-limit, and separator.
 
-[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.11...HEAD
+[Unreleased]: https://github.com/ozzycodes2/cc-powerline/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/ozzycodes2/cc-powerline/releases/tag/v0.3.0
 [0.2.11]: https://github.com/ozzycodes2/cc-powerline/releases/tag/v0.2.11
 [0.2.6]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/ozzycodes2/cc-powerline/compare/v0.2.4...v0.2.5
